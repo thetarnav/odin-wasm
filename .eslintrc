@@ -2,9 +2,9 @@
     "root": true,
     "parser": "@typescript-eslint/parser",
     "plugins": ["@typescript-eslint", "no-only-tests", "eslint-comments", "@nothing-but"],
-    "ignorePatterns": ["node_modules", "dist", "packages/*/dev"],
+    "ignorePatterns": ["node_modules", "dist"],
     "parserOptions": {
-        "project": ["./tsconfig.json", "./tsconfig.node.json", "./tsconfig.lib.json"],
+        "project": "./tsconfig.json",
         "tsconfigRootDir": ".",
         "sourceType": "module"
     },
@@ -39,12 +39,27 @@
         ],
         "eslint-comments/no-unused-disable": "warn",
         /*
+            code style | readability
+        */
+        "@typescript-eslint/explicit-function-return-type": [
+            "warn",
+            {
+                "allowExpressions": true,
+                "allowTypedFunctionExpressions": true,
+                "allowHigherOrderFunctions": true,
+                "allowDirectConstAssertionInArrowFunctions": true,
+                "allowConciseArrowFunctionExpressionsStartingWithVoid": true,
+                "allowIIFEs": true
+            }
+        ],
+        /*
             prevent unexpected behavior
         */
         "@typescript-eslint/ban-types": "warn",
         "@typescript-eslint/switch-exhaustiveness-check": "warn",
         "no-fallthrough": ["warn", {"allowEmptyCase": true}],
         "@nothing-but/no-ignored-return": "warn",
+        "@nothing-but/no-return-to-void": "warn",
         /*
             tests
         */

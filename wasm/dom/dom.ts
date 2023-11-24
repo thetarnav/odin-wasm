@@ -1,5 +1,5 @@
-import {ByteOffset, REG_SIZE} from './mem'
-import {odin_exports, wmi} from './runtime'
+import {ByteOffset, REG_SIZE} from '../mem.js'
+import {odin_exports, wmi} from '../runtime.js'
 
 export interface DomOdinExports {
     odin_dom_do_event_callback: (data: number, callback: number, ctx_ptr: number) => void

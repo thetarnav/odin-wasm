@@ -1,12 +1,14 @@
 {
     "name": "tsodin",
+    "author": "Damian Tarnawski <gthetarnav@gmail.com>",
     "private": true,
     "type": "module",
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
         "preview": "vite preview",
-        "test:unit": "vitest"
+        "lint": "eslint --ignore-path .gitignore --max-warnings 0 '**/*.{js,jsx,ts,tsx}' '!**/*.test.*' && eslint --ignore-path .gitignore '**/*.test.{js,jsx,ts,tsx}' --quiet --rule \"no-only-tests/no-only-tests: error\"",
+        "test": "vitest"
     },
     "devDependencies": {
         "@nothing-but/eslint-plugin": "^0.1.3",

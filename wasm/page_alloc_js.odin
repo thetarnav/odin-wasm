@@ -1,5 +1,5 @@
 //+build js
-package hive
+package wasm
 
 import "core:intrinsics"
 import "core:mem"
@@ -50,12 +50,11 @@ page_allocator :: proc() -> mem.Allocator {
 @(require_results)
 alloc_pages :: proc(
 	pages := 1,
-	allocator := global_allocator,
 	loc := #caller_location,
 ) -> (
 	buffer: []byte,
 	err: mem.Allocator_Error,
 ) {
 	length := pages * PAGE_SIZE
-	return mem.alloc_bytes(length, allocator = allocator, loc = loc)
+	return mem.alloc_bytes(length, allocator = page_allocator(), loc = loc)
 }

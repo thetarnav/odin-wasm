@@ -1,5 +1,31 @@
-import * as mem from './mem'
-import {wasm_memory} from './runtime'
+import * as mem from './mem.js'
+import {wasm_memory} from './runtime.js'
+
+export let CONSOLE_ENABLED: boolean = false
+export function enableConsole(): void {
+    CONSOLE_ENABLED = true
+}
+
+export function assert(condition?: boolean, ...data: any[]): void {
+    if (!CONSOLE_ENABLED) return
+    // eslint-disable-next-line no-console
+    console.assert(condition, ...data)
+}
+export function log(...data: any[]): void {
+    if (!CONSOLE_ENABLED) return
+    // eslint-disable-next-line no-console
+    console.log(...data)
+}
+export function warn(...data: any[]): void {
+    if (!CONSOLE_ENABLED) return
+    // eslint-disable-next-line no-console
+    console.warn(...data)
+}
+export function error(...data: any[]): void {
+    if (!CONSOLE_ENABLED) return
+    // eslint-disable-next-line no-console
+    console.error(...data)
+}
 
 function stripNewline(str: string): string {
     return str.replace(/\n$/, ' ')
@@ -8,7 +34,7 @@ function stripNewline(str: string): string {
 let buffer = ''
 let last_fd: null | number = null
 
-const writeToConsole = function (fd: number, str: string): void {
+function writeToConsole(fd: number, str: string): void {
     switch (true) {
         // invalid fd
         case fd !== 1 && fd !== 2:
@@ -17,8 +43,7 @@ const writeToConsole = function (fd: number, str: string): void {
             throw new Error(`Invalid fd (${fd}) to 'write' ${stripNewline(str)}`)
         // flush on newline
         case str === '\n':
-            // eslint-disable-next-line no-console
-            fd === 1 ? console.log(buffer) : console.error(buffer)
+            fd === 1 ? log(buffer) : error(buffer)
             buffer = ''
             last_fd = null
             break
@@ -36,6 +61,7 @@ const writeToConsole = function (fd: number, str: string): void {
 
 export const odin_env = {
     write: (fd: number, ptr: number, len: number): void => {
+        if (!CONSOLE_ENABLED) return
         const str = mem.load_string_raw(wasm_memory.buffer, ptr, len)
         writeToConsole(fd, str)
     },
