@@ -1,5 +1,5 @@
-import * as mem from './mem.js'
-import {wasm_memory} from './runtime.js'
+import * as mem from './memory.js'
+import {type WasmInstance} from './runtime.js'
 
 export let CONSOLE_ENABLED: boolean = false
 export function enableConsole(): void {
@@ -59,46 +59,51 @@ function writeToConsole(fd: number, str: string): void {
     }
 }
 
-export const odin_env = {
-    write: (fd: number, ptr: number, len: number): void => {
-        if (!CONSOLE_ENABLED) return
-        const str = mem.load_string_raw(wasm_memory.buffer, ptr, len)
-        writeToConsole(fd, str)
-    },
-    trap: (): never => {
-        throw new Error()
-    },
-    alert: (ptr: number, len: number): void => {
-        const str = mem.load_string_raw(wasm_memory.buffer, ptr, len)
-        alert(str)
-    },
-    abort: (): never => {
-        throw new Error('abort')
-    },
-    evaluate: (ptr: number, len: number) => {
-        const str = mem.load_string_raw(wasm_memory.buffer, ptr, len)
-        void eval.call(null, str)
-    },
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function makeOdinEnv(wasm: WasmInstance) {
+    return {
+        write: (fd: number, ptr: number, len: number): void => {
+            if (!CONSOLE_ENABLED) return
+            const str = mem.load_string_raw(wasm.memory.buffer, ptr, len)
+            writeToConsole(fd, str)
+        },
+        trap: (): never => {
+            throw new Error()
+        },
+        alert: (ptr: number, len: number): void => {
+            const str = mem.load_string_raw(wasm.memory.buffer, ptr, len)
+            alert(str)
+        },
+        abort: (): never => {
+            throw new Error('abort')
+        },
+        evaluate: (ptr: number, len: number) => {
+            const str = mem.load_string_raw(wasm.memory.buffer, ptr, len)
+            void eval.call(null, str)
+        },
 
-    time_now: (): bigint => BigInt(Date.now()),
-    tick_now: (): bigint => BigInt(performance.now()),
-    time_sleep: (duration_ms: number) => {
-        if (duration_ms > 0) {
-            // TODO(bill): Does this even make any sense?
-        }
-    },
+        time_now: (): bigint => BigInt(Date.now()),
+        tick_now: (): bigint => BigInt(performance.now()),
+        time_sleep: (duration_ms: number) => {
+            if (duration_ms > 0) {
+                // TODO(bill): Does this even make any sense?
+            }
+        },
 
-    sqrt: Math.sqrt,
-    sin: Math.sin,
-    cos: Math.cos,
-    pow: Math.pow,
-    fmuladd: (x: number, y: number, z: number): number => x * y + z,
-    ln: Math.log,
-    exp: Math.exp,
-    ldexp: (x: number, exp: number): number => x * Math.pow(2, exp),
+        sqrt: Math.sqrt,
+        sin: Math.sin,
+        cos: Math.cos,
+        pow: Math.pow,
+        fmuladd: (x: number, y: number, z: number): number => x * y + z,
+        ln: Math.log,
+        exp: Math.exp,
+        ldexp: (x: number, exp: number): number => x * Math.pow(2, exp),
 
-    rand_bytes: (addr: number, len: number): void => {
-        const view = new Uint8Array(wasm_memory.buffer, addr, len)
-        void crypto.getRandomValues(view)
-    },
+        rand_bytes: (addr: number, len: number): void => {
+            const view = new Uint8Array(wasm.memory.buffer, addr, len)
+            void crypto.getRandomValues(view)
+        },
+    }
 }
+
+export type OdinEnv = ReturnType<typeof makeOdinEnv>

@@ -1,332 +1,375 @@
-import {ByteOffset, REG_SIZE} from '../mem.js'
-import {odin_exports, wmi} from '../runtime.js'
+import * as mem from '../memory.js'
+import type {WasmInstance, OdinExports} from '../runtime.js'
 
-export interface DomOdinExports {
+export interface DomOdinExports extends OdinExports {
     odin_dom_do_event_callback: (data: number, callback: number, ctx_ptr: number) => void
 }
 
-const event_temp_data: {
-    id_ptr: number
-    id_len: number
-    event: Event
-    name_code: number
-} = {
-    id_ptr: 0,
-    id_len: 0,
-    event: null!,
-    name_code: 0,
-}
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function makeOdinDom(_wasm: WasmInstance) {
+    const wasm = _wasm as WasmInstance & {exports: DomOdinExports}
 
-const listener_map = new Map<number, EventListener>()
-
-export function init_event_raw(event_ptr: number /*Event*/) {
-    const offset = new ByteOffset(event_ptr)
-
-    const e = event_temp_data.event
-
-    /* kind: Event_Kind */
-    wmi.storeU32(offset.off(4), event_temp_data.name_code)
-
-    /* target_kind: Event_Target_Kind */
-    if (e.target == document) {
-        wmi.storeU32(offset.off(4), 1)
-    } else if (e.target == window) {
-        wmi.storeU32(offset.off(4), 2)
-    } else {
-        wmi.storeU32(offset.off(4), 0)
+    const event_temp_data: {
+        id_ptr: number
+        id_len: number
+        event: Event
+        name_code: number
+    } = {
+        id_ptr: 0,
+        id_len: 0,
+        event: null!,
+        name_code: 0,
     }
 
-    /* current_target_kind: Event_Target_Kind */
-    if (e.currentTarget == document) {
-        wmi.storeU32(offset.off(4), 1)
-    } else if (e.currentTarget == window) {
-        wmi.storeU32(offset.off(4), 2)
-    } else {
-        wmi.storeU32(offset.off(4), 0)
+    const listener_map = new Map<number, EventListener>()
+
+    const KEYBOARD_MAX_KEY_SIZE = 16
+    const KEYBOARD_MAX_CODE_SIZE = 16
+
+    return {
+        init_event_raw(event_ptr: number /*Event*/): void {
+            const offset = mem.makeByteOffset(event_ptr)
+            const data = new DataView(wasm.memory.buffer)
+
+            const e = event_temp_data.event
+
+            /* kind: Event_Kind */
+            mem.store_offset_u32(data, offset, event_temp_data.name_code)
+
+            /* target_kind: Event_Target_Kind */
+            if (e.target == document) {
+                mem.store_offset_u32(data, offset, 1)
+            } else if (e.target == window) {
+                mem.store_offset_u32(data, offset, 2)
+            } else {
+                mem.store_offset_u32(data, offset, 0)
+            }
+
+            /* current_target_kind: Event_Target_Kind */
+            if (e.currentTarget == document) {
+                mem.store_offset_u32(data, offset, 1)
+            } else if (e.currentTarget == window) {
+                mem.store_offset_u32(data, offset, 2)
+            } else {
+                mem.store_offset_u32(data, offset, 0)
+            }
+
+            /* id: string */
+            mem.store_offset_uint(data, offset, event_temp_data.id_ptr)
+            mem.store_offset_uint(data, offset, event_temp_data.id_len)
+            mem.store_offset_uint(data, offset, 0) // padding
+
+            /* timestamp: f64 */
+            mem.store_offset_f64(data, offset, e.timeStamp * 1e-3)
+
+            /* phase: Event_Phase */
+            mem.store_offset_u8(data, offset, e.eventPhase)
+
+            /* options: Event_Options */
+            let options = 0
+            if (!!e.bubbles) {
+                options |= 1 << 0 // 1
+            }
+            if (!!e.cancelable) {
+                options |= 1 << 1 // 2
+            }
+            if (!!e.composed) {
+                options |= 1 << 2 // 4
+            }
+            mem.store_offset_u8(data, offset, options)
+
+            mem.store_offset_b8(data, offset, !!e.isComposing)
+            mem.store_offset_b8(data, offset, !!e.isTrusted)
+
+            void mem.off(offset, 0, 8)
+            if (e instanceof MouseEvent) {
+                mem.store_offset_i64_number(data, offset, e.screenX)
+                mem.store_offset_i64_number(data, offset, e.screenY)
+                mem.store_offset_i64_number(data, offset, e.clientX)
+                mem.store_offset_i64_number(data, offset, e.clientY)
+                mem.store_offset_i64_number(data, offset, e.offsetX)
+                mem.store_offset_i64_number(data, offset, e.offsetY)
+                mem.store_offset_i64_number(data, offset, e.pageX)
+                mem.store_offset_i64_number(data, offset, e.pageY)
+                mem.store_offset_i64_number(data, offset, e.movementX)
+                mem.store_offset_i64_number(data, offset, e.movementY)
+
+                mem.store_offset_b8(data, offset, !!e.ctrlKey)
+                mem.store_offset_b8(data, offset, !!e.shiftKey)
+                mem.store_offset_b8(data, offset, !!e.altKey)
+                mem.store_offset_b8(data, offset, !!e.metaKey)
+
+                mem.store_offset_i16(data, offset, e.button)
+                mem.store_offset_u16(data, offset, e.buttons)
+            } else if (e instanceof KeyboardEvent) {
+                // Note: those strings are constructed
+                // on the native side from buffers that
+                // are filled later, so skip them
+                void mem.off(offset, mem.REG_SIZE * 2, mem.REG_SIZE)
+                void mem.off(offset, mem.REG_SIZE * 2, mem.REG_SIZE)
+
+                mem.store_offset_u8(data, offset, e.location)
+
+                mem.store_offset_b8(data, offset, !!e.ctrlKey)
+                mem.store_offset_b8(data, offset, !!e.shiftKey)
+                mem.store_offset_b8(data, offset, !!e.altKey)
+                mem.store_offset_b8(data, offset, !!e.metaKey)
+
+                mem.store_offset_b8(data, offset, !!e.repeat)
+
+                mem.store_offset_i32(data, offset, e.key.length)
+                mem.store_offset_i32(data, offset, e.code.length)
+                void mem.store_string_raw(
+                    wasm.memory.buffer,
+                    mem.off(offset, 16, 1),
+                    KEYBOARD_MAX_KEY_SIZE,
+                    e.key,
+                )
+                void mem.store_string_raw(
+                    wasm.memory.buffer,
+                    mem.off(offset, 16, 1),
+                    KEYBOARD_MAX_CODE_SIZE,
+                    e.code,
+                )
+            } else if (e instanceof WheelEvent) {
+                mem.store_offset_f64(data, offset, e.deltaX)
+                mem.store_offset_f64(data, offset, e.deltaY)
+                mem.store_offset_f64(data, offset, e.deltaZ)
+                mem.store_offset_u32(data, offset, e.deltaMode)
+            } else if (e instanceof Event) {
+                if ('scrollX' in e) {
+                    mem.store_offset_f64(data, offset, e.scrollX)
+                    mem.store_offset_f64(data, offset, e.scrollY)
+                }
+            }
+        },
+
+        add_event_listener(
+            id_ptr: number,
+            id_len: number,
+            name_ptr: number,
+            name_len: number,
+            name_code: number,
+            data_ptr: number,
+            callback: number,
+            use_capture: boolean,
+        ): boolean {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+            const element = document.getElementById(id)
+            if (!element) return false
+
+            function listener(e: Event): void {
+                const odin_ctx = wasm.exports.default_context_ptr()
+                event_temp_data.id_ptr = id_ptr
+                event_temp_data.id_len = id_len
+                event_temp_data.event = e
+                event_temp_data.name_code = name_code
+                wasm.exports.odin_dom_do_event_callback(data_ptr, callback, odin_ctx)
+            }
+            listener_map.set(callback, listener)
+            element.addEventListener(name, listener, !!use_capture)
+            return true
+        },
+
+        remove_event_listener(
+            id_ptr: number,
+            id_len: number,
+            name_ptr: number,
+            name_len: number,
+            data: number,
+            callback: number,
+        ): boolean {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+            const element = document.getElementById(id)
+            if (!element) {
+                return false
+            }
+
+            const listener = listener_map.get(callback)
+            if (!listener) return false
+
+            listener_map.delete(callback)
+            element.removeEventListener(name, listener)
+            return true
+        },
+
+        add_window_event_listener(
+            name_ptr: number,
+            name_len: number,
+            name_code: number,
+            data: number,
+            callback: number,
+            use_capture: boolean,
+        ): boolean {
+            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+            const element = window
+            function listener(e: Event): void {
+                const odin_ctx = wasm.exports.default_context_ptr()
+                event_temp_data.id_ptr = 0
+                event_temp_data.id_len = 0
+                event_temp_data.event = e
+                event_temp_data.name_code = name_code
+                wasm.exports.odin_dom_do_event_callback(data, callback, odin_ctx)
+            }
+            listener_map.set(callback, listener)
+            element.addEventListener(name, listener, !!use_capture)
+            return true
+        },
+
+        remove_window_event_listener(
+            name_ptr: number,
+            name_len: number,
+            data: number,
+            callback: number,
+        ): boolean {
+            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+            const element = window
+            const key = {data: data, callback: callback}
+
+            const listener = listener_map.get(callback)
+            if (!listener) return false
+
+            listener_map.delete(callback)
+            element.removeEventListener(name, listener)
+            return true
+        },
+
+        event_stop_propagation(): void {
+            if (event_temp_data && event_temp_data.event) {
+                event_temp_data.event.eventStopPropagation()
+            }
+        },
+        event_stop_immediate_propagation(): void {
+            if (event_temp_data && event_temp_data.event) {
+                event_temp_data.event.eventStopImmediatePropagation()
+            }
+        },
+        event_prevent_default(): void {
+            if (event_temp_data && event_temp_data.event) {
+                event_temp_data.event.preventDefault()
+            }
+        },
+
+        dispatch_custom_event(
+            id_ptr: number,
+            id_len: number,
+            name_ptr: number,
+            name_len: number,
+            options_bits: number,
+        ): boolean {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+            const options = {
+                bubbles: (options_bits & (1 << 0)) !== 0,
+                cancelabe: (options_bits & (1 << 1)) !== 0,
+                composed: (options_bits & (1 << 2)) !== 0,
+            }
+
+            const element = document.getElementById(id)
+            if (element) {
+                void element.dispatchEvent(new Event(name, options))
+                return true
+            }
+            return false
+        },
+        get_element_value_f64(id_ptr: number, id_len: number): number {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const element = document.getElementById(id)
+            return element ? element.value : 0
+        },
+        get_element_value_string(
+            id_ptr: number,
+            id_len: number,
+            buf_ptr: number,
+            buf_len: number,
+        ): number {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const element = document.getElementById(id)
+            if (!element) return 0
+
+            let str = element.value
+            if (buf_len > 0 && buf_ptr) {
+                const n = Math.min(buf_len, str.length)
+                str = str.substring(0, n)
+                mem.load_bytes(wasm.memory.buffer, buf_ptr, buf_len).set(
+                    new TextEncoder().encode(str),
+                )
+                return n
+            }
+
+            return 0
+        },
+        get_element_value_string_length(id_ptr: number, id_len: number): number {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const element = document.getElementById(id)
+            if (element) {
+                return element.value.length
+            }
+            return 0
+        },
+        get_element_min_max(ptr_array2_f64: number, id_ptr: number, id_len: number): void {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const element = document.getElementById(id)
+            if (element) {
+                const values = wmi.loadF64Array(ptr_array2_f64, 2)
+                values[0] = element.min
+                values[1] = element.max
+            }
+        },
+        set_element_value_f64(id_ptr: number, id_len: number, value: number): void {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const element = document.getElementById(id)
+            if (element) {
+                element.value = value
+            }
+        },
+        set_element_value_string(
+            id_ptr: number,
+            id_len: number,
+            value_ptr: number,
+            _value_id: number,
+        ): void {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const value = mem.load_string_raw(wasm.memory.buffer, value_ptr, value_len)
+            const element = document.getElementById(id)
+            if (element) {
+                element.value = value
+            }
+        },
+
+        get_bounding_client_rect(rect_ptr: number, id_ptr: number, id_len: number): void {
+            const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const element = document.getElementById(id)
+            if (element) {
+                const values = mem.load_f64_array(wasm.memory.buffer, rect_ptr, 4)
+                const rect = element.getBoundingClientRect()
+                values[0] = rect.left
+                values[1] = rect.top
+                values[2] = rect.right - rect.left
+                values[3] = rect.bottom - rect.top
+            }
+        },
+        window_get_rect(rect_ptr: number): void {
+            const values = mem.load_f64_array(wasm.memory.buffer, rect_ptr, 4)
+            values[0] = window.screenX
+            values[1] = window.screenY
+            values[2] = window.screen.width
+            values[3] = window.screen.height
+        },
+
+        window_get_scroll(pos_ptr: number): void {
+            const values = mem.load_f64_array(wasm.memory.buffer, pos_ptr, 2)
+            values[0] = window.scrollX
+            values[1] = window.scrollY
+        },
+        window_set_scroll(x: number, y: number): void {
+            window.scroll(x, y)
+        },
+
+        device_pixel_ratio(): number {
+            return window.devicePixelRatio
+        },
     }
-
-    /* id: string */
-    wmi.storeUint(offset.off(REG_SIZE), event_temp_data.id_ptr)
-    wmi.storeUint(offset.off(REG_SIZE), event_temp_data.id_len)
-    wmi.storeUint(offset.off(REG_SIZE), 0) // padding
-
-    /* timestamp: f64 */
-    wmi.storeF64(offset.off(8), e.timeStamp * 1e-3)
-
-    /* phase: Event_Phase */
-    wmi.storeU8(offset.off(1), e.eventPhase)
-
-    /* options: Event_Options */
-    let options = 0
-    if (!!e.bubbles) {
-        options |= 1 << 0 // 1
-    }
-    if (!!e.cancelable) {
-        options |= 1 << 1 // 2
-    }
-    if (!!e.composed) {
-        options |= 1 << 2 // 4
-    }
-    wmi.storeU8(offset.off(1), options)
-
-    wmi.storeU8(offset.off(1), !!e.isComposing)
-    wmi.storeU8(offset.off(1), !!e.isTrusted)
-
-    void offset.off(0, 8)
-    if (e instanceof MouseEvent) {
-        wmi.storeI64(offset.off(8), e.screenX)
-        wmi.storeI64(offset.off(8), e.screenY)
-        wmi.storeI64(offset.off(8), e.clientX)
-        wmi.storeI64(offset.off(8), e.clientY)
-        wmi.storeI64(offset.off(8), e.offsetX)
-        wmi.storeI64(offset.off(8), e.offsetY)
-        wmi.storeI64(offset.off(8), e.pageX)
-        wmi.storeI64(offset.off(8), e.pageY)
-        wmi.storeI64(offset.off(8), e.movementX)
-        wmi.storeI64(offset.off(8), e.movementY)
-
-        wmi.storeU8(offset.off(1), !!e.ctrlKey)
-        wmi.storeU8(offset.off(1), !!e.shiftKey)
-        wmi.storeU8(offset.off(1), !!e.altKey)
-        wmi.storeU8(offset.off(1), !!e.metaKey)
-
-        wmi.storeI16(offset.off(2), e.button)
-        wmi.storeU16(offset.off(2), e.buttons)
-    } else if (e instanceof KeyboardEvent) {
-        // Note: those strings are constructed
-        // on the native side from buffers that
-        // are filled later, so skip them
-        void offset.off(REG_SIZE * 2, REG_SIZE)
-        void offset.off(REG_SIZE * 2, REG_SIZE)
-
-        wmi.storeU8(offset.off(1), e.location)
-
-        wmi.storeU8(offset.off(1), !!e.ctrlKey)
-        wmi.storeU8(offset.off(1), !!e.shiftKey)
-        wmi.storeU8(offset.off(1), !!e.altKey)
-        wmi.storeU8(offset.off(1), !!e.metaKey)
-
-        wmi.storeU8(offset.off(1), !!e.repeat)
-
-        wmi.storeI32(offset.off(REG_SIZE), e.key.length)
-        wmi.storeI32(offset.off(REG_SIZE), e.code.length)
-        wmi.storeString(offset.off(16, 1), e.key)
-        wmi.storeString(offset.off(16, 1), e.code)
-    } else if (e instanceof WheelEvent) {
-        wmi.storeF64(offset.off(8), e.deltaX)
-        wmi.storeF64(offset.off(8), e.deltaY)
-        wmi.storeF64(offset.off(8), e.deltaZ)
-        wmi.storeU32(offset.off(4), e.deltaMode)
-    } else if (e instanceof Event) {
-        if ('scrollX' in e) {
-            wmi.storeF64(offset.off(8), e.scrollX)
-            wmi.storeF64(offset.off(8), e.scrollY)
-        }
-    }
-}
-
-export function add_event_listener(
-    id_ptr: number,
-    id_len: number,
-    name_ptr: number,
-    name_len: number,
-    name_code: number,
-    data: number,
-    callback: number,
-    use_capture: boolean,
-): boolean {
-    const id = wmi.loadString(id_ptr, id_len)
-    const name = wmi.loadString(name_ptr, name_len)
-    const element = document.getElementById(id)
-    if (!element) return false
-
-    const listener = (e: Event) => {
-        const odin_ctx = odin_exports.default_context_ptr()
-        event_temp_data.id_ptr = id_ptr
-        event_temp_data.id_len = id_len
-        event_temp_data.event = e
-        event_temp_data.name_code = name_code
-        odin_exports.odin_dom_do_event_callback(data, callback, odin_ctx)
-    }
-    listener_map.set(callback, listener)
-    element.addEventListener(name, listener, !!use_capture)
-    return true
-}
-
-export function remove_event_listener(
-    id_ptr: number,
-    id_len: number,
-    name_ptr: number,
-    name_len: number,
-    data: number,
-    callback: number,
-): boolean {
-    const id = wmi.loadString(id_ptr, id_len)
-    const name = wmi.loadString(name_ptr, name_len)
-    const element = document.getElementById(id)
-    if (!element) {
-        return false
-    }
-
-    const listener = listener_map.get(callback)
-    if (!listener) return false
-
-    listener_map.delete(callback)
-    element.removeEventListener(name, listener)
-    return true
-}
-
-export function add_window_event_listener(
-    name_ptr: number,
-    name_len: number,
-    name_code: number,
-    data: number,
-    callback: number,
-    use_capture: boolean,
-): boolean {
-    const name = wmi.loadString(name_ptr, name_len)
-    const element = window
-    const listener = (e: Event) => {
-        const odin_ctx = odin_exports.default_context_ptr()
-        event_temp_data.id_ptr = 0
-        event_temp_data.id_len = 0
-        event_temp_data.event = e
-        event_temp_data.name_code = name_code
-        odin_exports.odin_dom_do_event_callback(data, callback, odin_ctx)
-    }
-    listener_map.set(callback, listener)
-    element.addEventListener(name, listener, !!use_capture)
-    return true
-}
-
-export function remove_window_event_listener(name_ptr, name_len, data, callback) {
-    let name = wmi.loadString(name_ptr, name_len)
-    let element = window
-    let key = {data: data, callback: callback}
-
-    const listener = listener_map.get(callback)
-    if (!listener) return false
-
-    listener_map.delete(callback)
-    element.removeEventListener(name, listener)
-    return true
-}
-
-export function event_stop_propagation() {
-    if (event_temp_data && event_temp_data.event) {
-        event_temp_data.event.eventStopPropagation()
-    }
-}
-export function event_stop_immediate_propagation() {
-    if (event_temp_data && event_temp_data.event) {
-        event_temp_data.event.eventStopImmediatePropagation()
-    }
-}
-export function event_prevent_default() {
-    if (event_temp_data && event_temp_data.event) {
-        event_temp_data.event.preventDefault()
-    }
-}
-
-export function dispatch_custom_event(id_ptr, id_len, name_ptr, name_len, options_bits) {
-    let id = wmi.loadString(id_ptr, id_len)
-    let name = wmi.loadString(name_ptr, name_len)
-    let options = {
-        bubbles: (options_bits & (1 << 0)) !== 0,
-        cancelabe: (options_bits & (1 << 1)) !== 0,
-        composed: (options_bits & (1 << 2)) !== 0,
-    }
-
-    let element = document.getElementById(id)
-    if (element) {
-        element.dispatchEvent(new Event(name, options))
-        return true
-    }
-    return false
-}
-
-export function get_element_value_f64(id_ptr, id_len) {
-    let id = wmi.loadString(id_ptr, id_len)
-    let element = document.getElementById(id)
-    return element ? element.value : 0
-}
-export function get_element_value_string(id_ptr, id_len, buf_ptr, buf_len): number {
-    const id = wmi.loadString(id_ptr, id_len)
-    const element = document.getElementById(id)
-    if (!element) return 0
-
-    let str = element.value
-    if (buf_len > 0 && buf_ptr) {
-        let n = Math.min(buf_len, str.length)
-        str = str.substring(0, n)
-        this.mem.loadBytes(buf_ptr, buf_len).set(new TextEncoder().encode(str))
-        return n
-    }
-
-    return 0
-}
-export function get_element_value_string_length(id_ptr, id_len) {
-    let id = wmi.loadString(id_ptr, id_len)
-    let element = document.getElementById(id)
-    if (element) {
-        return element.value.length
-    }
-    return 0
-}
-export function get_element_min_max(ptr_array2_f64, id_ptr, id_len) {
-    let id = wmi.loadString(id_ptr, id_len)
-    let element = document.getElementById(id)
-    if (element) {
-        let values = wmi.loadF64Array(ptr_array2_f64, 2)
-        values[0] = element.min
-        values[1] = element.max
-    }
-}
-export function set_element_value_f64(id_ptr, id_len, value) {
-    let id = wmi.loadString(id_ptr, id_len)
-    let element = document.getElementById(id)
-    if (element) {
-        element.value = value
-    }
-}
-export function set_element_value_string(id_ptr, id_len, value_ptr, value_id) {
-    let id = wmi.loadString(id_ptr, id_len)
-    let value = wmi.loadString(value_ptr, value_len)
-    let element = document.getElementById(id)
-    if (element) {
-        element.value = value
-    }
-}
-
-export function get_bounding_client_rect(rect_ptr, id_ptr, id_len) {
-    let id = wmi.loadString(id_ptr, id_len)
-    let element = document.getElementById(id)
-    if (element) {
-        let values = wmi.loadF64Array(rect_ptr, 4)
-        let rect = element.getBoundingClientRect()
-        values[0] = rect.left
-        values[1] = rect.top
-        values[2] = rect.right - rect.left
-        values[3] = rect.bottom - rect.top
-    }
-}
-export function window_get_rect(rect_ptr) {
-    let values = wmi.loadF64Array(rect_ptr, 4)
-    values[0] = window.screenX
-    values[1] = window.screenY
-    values[2] = window.screen.width
-    values[3] = window.screen.height
-}
-
-export function window_get_scroll(pos_ptr) {
-    let values = wmi.loadF64Array(pos_ptr, 2)
-    values[0] = window.scrollX
-    values[1] = window.scrollY
-}
-export function window_set_scroll(x, y) {
-    window.scroll(x, y)
-}
-
-export function device_pixel_ratio() {
-    return window.devicePixelRatio
 }

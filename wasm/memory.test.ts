@@ -1,5 +1,5 @@
 import * as vi from 'vitest'
-import * as mem from './mem.js'
+import * as mem from './memory.js'
 
 void vi.describe('f16', () => {
     // prettier-ignore

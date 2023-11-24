@@ -1,11 +1,10 @@
-//+build js
+//+build js wasm32, js wasm64p32
 package wasm
 
 import "core:intrinsics"
 import "core:mem"
 
 PAGE_SIZE :: 64 * 1024
-
 page_alloc :: proc(page_count: int) -> (data: []byte, err: mem.Allocator_Error) {
 	prev_page_count := intrinsics.wasm_memory_grow(0, uintptr(page_count))
 	if prev_page_count < 0 {
@@ -45,16 +44,4 @@ page_allocator :: proc() -> mem.Allocator {
 	}
 
 	return {procedure = procedure, data = nil}
-}
-
-@(require_results)
-alloc_pages :: proc(
-	pages := 1,
-	loc := #caller_location,
-) -> (
-	buffer: []byte,
-	err: mem.Allocator_Error,
-) {
-	length := pages * PAGE_SIZE
-	return mem.alloc_bytes(length, allocator = page_allocator(), loc = loc)
 }

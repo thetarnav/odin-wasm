@@ -16,31 +16,39 @@ export const LITTLE_ENDIAN = /*#__PURE__*/ ((): boolean => {
     return new Int16Array(buffer)[0] === 256
 })()
 
-export class ByteOffset {
-    /**
-     * @param offset Initial offset
-     * @param alignment Defaults to the minimum of the amount and the register size. Will be rounded up to the nearest multiple of the alignment.
-     */
-    constructor(
-        public offset = 0,
-        public alignment = ALIGNMENT,
-    ) {}
+export interface ByteOffset {
+    offset: number
+    alignment: number
+}
 
-    /**
-     * Move the offset by the given amount.
-     *
-     * @param amount The amount of bytes to move by
-     * @returns The previous offset
-     */
-    off(amount: number): number {
-        const alignment = Math.min(amount, this.alignment)
-        if (this.offset % alignment != 0) {
-            this.offset += alignment - (this.offset % alignment)
-        }
-        const x = this.offset
-        this.offset += amount
-        return x
+/**
+ * @param offset Initial offset
+ * @param alignment Defaults to the minimum of the amount and the register size. Will be rounded up to the nearest multiple of the alignment.
+ */
+export function makeByteOffset(offset = 0, alignment = ALIGNMENT): ByteOffset {
+    return {
+        offset: offset,
+        alignment: alignment,
     }
+}
+
+/**
+ * Move the offset by the given amount.
+ *
+ * @param amount The amount of bytes to move by
+ * @returns The previous offset
+ */
+export function off(
+    offset: ByteOffset,
+    amount: number,
+    alignment: number = Math.min(amount, offset.alignment),
+): number {
+    if (offset.offset % alignment != 0) {
+        offset.offset += alignment - (offset.offset % alignment)
+    }
+    const x = offset.offset
+    offset.offset += amount
+    return x
 }
 
 export const load_b8 = (mem: DataView, addr: number): boolean => {
@@ -52,38 +60,38 @@ export const load_b64 = load_b8
 export const load_bool = load_b8
 
 export const load_offset_b8 = (mem: DataView, offset: ByteOffset): boolean => {
-    return load_b8(mem, offset.off(1))
+    return load_b8(mem, off(offset, 1))
 }
 export const load_offset_bool = load_offset_b8
 export const load_offset_b16 = (mem: DataView, offset: ByteOffset): boolean => {
-    return load_b16(mem, offset.off(2))
+    return load_b16(mem, off(offset, 2))
 }
 export const load_offset_b32 = (mem: DataView, offset: ByteOffset): boolean => {
-    return load_b32(mem, offset.off(4))
+    return load_b32(mem, off(offset, 4))
 }
 export const load_offset_b64 = (mem: DataView, offset: ByteOffset): boolean => {
-    return load_b64(mem, offset.off(8))
+    return load_b64(mem, off(offset, 8))
 }
 
 export const store_bool = (mem: DataView, ptr: number, value: boolean): void => {
     mem.setUint8(ptr, value as any)
 }
 export const store_offset_bool = (mem: DataView, offset: ByteOffset, value: boolean): void => {
-    mem.setUint8(offset.off(1), value as any)
+    mem.setUint8(off(offset, 1), value as any)
 }
 export const store_b8 = store_bool
 export const store_offset_b8 = store_offset_bool
 export const store_b16 = store_bool
 export const store_offset_b16 = (mem: DataView, offset: ByteOffset, value: boolean): void => {
-    mem.setUint8(offset.off(2), value as any)
+    mem.setUint8(off(offset, 2), value as any)
 }
 export const store_b32 = store_bool
 export const store_offset_b32 = (mem: DataView, offset: ByteOffset, value: boolean): void => {
-    mem.setUint8(offset.off(4), value as any)
+    mem.setUint8(off(offset, 4), value as any)
 }
 export const store_b64 = store_bool
 export const store_offset_b64 = (mem: DataView, offset: ByteOffset, value: boolean): void => {
-    mem.setUint8(offset.off(8), value as any)
+    mem.setUint8(off(offset, 8), value as any)
 }
 
 export const load_u8 = (mem: DataView, addr: number): number => {
@@ -95,18 +103,18 @@ export const load_i8 = (mem: DataView, addr: number): number => {
 }
 
 export const load_offset_u8 = (mem: DataView, offset: ByteOffset): number => {
-    return load_u8(mem, offset.off(1))
+    return load_u8(mem, off(offset, 1))
 }
 export const load_offset_byte = load_offset_u8
 export const load_offset_i8 = (mem: DataView, offset: ByteOffset): number => {
-    return load_i8(mem, offset.off(1))
+    return load_i8(mem, off(offset, 1))
 }
 
 export const store_u8 = (mem: DataView, ptr: number, value: number): void => {
     mem.setUint8(ptr, value)
 }
 export const store_offset_u8 = (mem: DataView, offset: ByteOffset, value: number): void => {
-    mem.setUint8(offset.off(1), value)
+    mem.setUint8(off(offset, 1), value)
 }
 export const store_byte = store_u8
 export const store_offset_byte = store_offset_u8
@@ -114,7 +122,7 @@ export const store_i8 = (mem: DataView, ptr: number, value: number): void => {
     mem.setInt8(ptr, value)
 }
 export const store_offset_i8 = (mem: DataView, offset: ByteOffset, value: number): void => {
-    mem.setInt8(offset.off(1), value)
+    mem.setInt8(off(offset, 1), value)
 }
 
 export const load_u16 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): number => {
@@ -137,22 +145,22 @@ export const load_i16be = (mem: DataView, addr: number): number => {
 }
 
 export const load_offset_u16 = (mem: DataView, offset: ByteOffset): number => {
-    return load_u16(mem, offset.off(2))
+    return load_u16(mem, off(offset, 2))
 }
 export const load_offset_i16 = (mem: DataView, offset: ByteOffset): number => {
-    return load_i16(mem, offset.off(2))
+    return load_i16(mem, off(offset, 2))
 }
 export const load_offset_u16le = (mem: DataView, offset: ByteOffset): number => {
-    return load_u16le(mem, offset.off(2))
+    return load_u16le(mem, off(offset, 2))
 }
 export const load_offset_i16le = (mem: DataView, offset: ByteOffset): number => {
-    return load_i16le(mem, offset.off(2))
+    return load_i16le(mem, off(offset, 2))
 }
 export const load_offset_u16be = (mem: DataView, offset: ByteOffset): number => {
-    return load_u16be(mem, offset.off(2))
+    return load_u16be(mem, off(offset, 2))
 }
 export const load_offset_i16be = (mem: DataView, offset: ByteOffset): number => {
-    return load_i16be(mem, offset.off(2))
+    return load_i16be(mem, off(offset, 2))
 }
 
 export const store_u16 = (mem: DataView, ptr: number, value: number, le = LITTLE_ENDIAN): void => {
@@ -164,7 +172,7 @@ export const store_offset_u16 = (
     value: number,
     le = LITTLE_ENDIAN,
 ): void => {
-    mem.setUint16(offset.off(2), value, le)
+    mem.setUint16(off(offset, 2), value, le)
 }
 export const store_i16 = (mem: DataView, ptr: number, value: number, le = LITTLE_ENDIAN): void => {
     mem.setInt16(ptr, value, le)
@@ -175,7 +183,7 @@ export const store_offset_i16 = (
     value: number,
     le = LITTLE_ENDIAN,
 ): void => {
-    mem.setInt16(offset.off(2), value, le)
+    mem.setInt16(off(offset, 2), value, le)
 }
 
 export const load_u32 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): number => {
@@ -186,10 +194,10 @@ export const load_i32 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): numbe
 }
 
 export const load_offset_u32 = (mem: DataView, offset: ByteOffset): number => {
-    return load_u32(mem, offset.off(4))
+    return load_u32(mem, off(offset, 4))
 }
 export const load_offset_i32 = (mem: DataView, offset: ByteOffset): number => {
-    return load_i32(mem, offset.off(4))
+    return load_i32(mem, off(offset, 4))
 }
 
 export const store_u32 = (mem: DataView, ptr: number, value: number, le = LITTLE_ENDIAN): void => {
@@ -201,7 +209,7 @@ export const store_offset_u32 = (
     value: number,
     le = LITTLE_ENDIAN,
 ): void => {
-    mem.setUint32(offset.off(4), value, le)
+    mem.setUint32(off(offset, 4), value, le)
 }
 export const store_i32 = (mem: DataView, ptr: number, value: number, le = LITTLE_ENDIAN): void => {
     mem.setInt32(ptr, value, le)
@@ -212,7 +220,7 @@ export const store_offset_i32 = (
     value: number,
     le = LITTLE_ENDIAN,
 ): void => {
-    mem.setInt32(offset.off(4), value, le)
+    mem.setInt32(off(offset, 4), value, le)
 }
 
 export const load_uint = (mem: DataView, addr: number): number => {
@@ -224,18 +232,18 @@ export const load_int = (mem: DataView, addr: number): number => {
 export const load_ptr = load_uint
 
 export const load_offset_uint = (mem: DataView, offset: ByteOffset): number => {
-    return load_uint(mem, offset.off(4))
+    return load_uint(mem, off(offset, 4))
 }
 export const load_offset_ptr = load_offset_uint
 export const load_offset_int = (mem: DataView, offset: ByteOffset): number => {
-    return load_int(mem, offset.off(4))
+    return load_int(mem, off(offset, 4))
 }
 
 export const store_uint = (mem: DataView, ptr: number, value: number): void => {
     mem.setUint32(ptr, value, LITTLE_ENDIAN)
 }
 export const store_offset_uint = (mem: DataView, offset: ByteOffset, value: number): void => {
-    mem.setUint32(offset.off(4), value, LITTLE_ENDIAN)
+    mem.setUint32(off(offset, 4), value, LITTLE_ENDIAN)
 }
 export const store_ptr = store_uint
 export const store_offset_ptr = store_offset_uint
@@ -243,7 +251,7 @@ export const store_int = (mem: DataView, ptr: number, value: number): void => {
     mem.setInt32(ptr, value, LITTLE_ENDIAN)
 }
 export const store_offset_int = (mem: DataView, offset: ByteOffset, value: number): void => {
-    mem.setInt32(offset.off(4), value, LITTLE_ENDIAN)
+    mem.setInt32(off(offset, 4), value, LITTLE_ENDIAN)
 }
 
 export const load_u64 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): bigint => {
@@ -254,10 +262,10 @@ export const load_i64 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): bigin
 }
 
 export const load_offset_u64 = (mem: DataView, offset: ByteOffset): bigint => {
-    return load_u64(mem, offset.off(8))
+    return load_u64(mem, off(offset, 8))
 }
 export const load_offset_i64 = (mem: DataView, offset: ByteOffset): bigint => {
-    return load_i64(mem, offset.off(8))
+    return load_i64(mem, off(offset, 8))
 }
 
 export const store_u64 = (mem: DataView, ptr: number, value: bigint, le = LITTLE_ENDIAN): void => {
@@ -269,7 +277,7 @@ export const store_offset_u64 = (
     value: bigint,
     le = LITTLE_ENDIAN,
 ): void => {
-    mem.setBigUint64(offset.off(8), value, le)
+    mem.setBigUint64(off(offset, 8), value, le)
 }
 export const store_i64 = (mem: DataView, ptr: number, value: bigint, le = LITTLE_ENDIAN): void => {
     mem.setBigInt64(ptr, value, le)
@@ -280,7 +288,7 @@ export const store_offset_i64 = (
     value: bigint,
     le = LITTLE_ENDIAN,
 ): void => {
-    mem.setBigInt64(offset.off(8), value, le)
+    mem.setBigInt64(off(offset, 8), value, le)
 }
 
 export const load_u64_number = (mem: DataView, addr: number, le = LITTLE_ENDIAN): number => {
@@ -313,10 +321,10 @@ export const store_i64_number = (
 }
 
 export const load_offset_u64_number = (mem: DataView, offset: ByteOffset): number => {
-    return load_u64_number(mem, offset.off(8))
+    return load_u64_number(mem, off(offset, 8))
 }
 export const load_offset_i64_number = (mem: DataView, offset: ByteOffset): number => {
-    return load_i64_number(mem, offset.off(8))
+    return load_i64_number(mem, off(offset, 8))
 }
 
 export const store_offset_u64_number = (
@@ -325,7 +333,7 @@ export const store_offset_u64_number = (
     value: number,
     le = LITTLE_ENDIAN,
 ): void => {
-    store_u64_number(mem, offset.off(8), value, le)
+    store_u64_number(mem, off(offset, 8), value, le)
 }
 export const store_offset_i64_number = (
     mem: DataView,
@@ -333,7 +341,7 @@ export const store_offset_i64_number = (
     value: number,
     le = LITTLE_ENDIAN,
 ): void => {
-    store_i64_number(mem, offset.off(8), value, le)
+    store_i64_number(mem, off(offset, 8), value, le)
 }
 
 export const load_u128 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): bigint => {
@@ -356,10 +364,10 @@ export const store_i128 = (mem: DataView, ptr: number, value: bigint, le = LITTL
 }
 
 export const load_offset_u128 = (mem: DataView, offset: ByteOffset): bigint => {
-    return load_u128(mem, offset.off(16))
+    return load_u128(mem, off(offset, 16))
 }
 export const load_offset_i128 = (mem: DataView, offset: ByteOffset): bigint => {
-    return load_i128(mem, offset.off(16))
+    return load_i128(mem, off(offset, 16))
 }
 
 export const store_offset_u128 = (
@@ -368,7 +376,7 @@ export const store_offset_u128 = (
     value: bigint,
     le = LITTLE_ENDIAN,
 ): void => {
-    store_u128(mem, offset.off(16), value, le)
+    store_u128(mem, off(offset, 16), value, le)
 }
 export const store_offset_i128 = (
     mem: DataView,
@@ -376,7 +384,7 @@ export const store_offset_i128 = (
     value: bigint,
     le = LITTLE_ENDIAN,
 ): void => {
-    store_i128(mem, offset.off(16), value, le)
+    store_i128(mem, off(offset, 16), value, le)
 }
 
 export const load_f16 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): number => {
@@ -397,7 +405,7 @@ export const load_f16 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): numbe
     }
 }
 export const load_offset_f16 = (mem: DataView, offset: ByteOffset): number => {
-    return load_f16(mem, offset.off(2))
+    return load_f16(mem, off(offset, 2))
 }
 
 export const store_f16 = (mem: DataView, ptr: number, value: number, le = LITTLE_ENDIAN): void => {
@@ -438,14 +446,14 @@ export const store_offset_f16 = (
     value: number,
     le = LITTLE_ENDIAN,
 ): void => {
-    store_f16(mem, offset.off(2), value, le)
+    store_f16(mem, off(offset, 2), value, le)
 }
 
 export const load_f32 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): number => {
     return mem.getFloat32(addr, le)
 }
 export const load_offset_f32 = (mem: DataView, offset: ByteOffset): number => {
-    return load_f32(mem, offset.off(4))
+    return load_f32(mem, off(offset, 4))
 }
 
 export const store_f32 = (mem: DataView, ptr: number, value: number, le = LITTLE_ENDIAN): void => {
@@ -457,14 +465,14 @@ export const store_offset_f32 = (
     value: number,
     le = LITTLE_ENDIAN,
 ): void => {
-    mem.setFloat32(offset.off(4), value, le)
+    mem.setFloat32(off(offset, 4), value, le)
 }
 
 export const load_f64 = (mem: DataView, addr: number, le = LITTLE_ENDIAN): number => {
     return mem.getFloat64(addr, le)
 }
 export const load_offset_f64 = (mem: DataView, offset: ByteOffset): number => {
-    return load_f64(mem, offset.off(8))
+    return load_f64(mem, off(offset, 8))
 }
 
 export const store_f64 = (mem: DataView, ptr: number, value: number, le = LITTLE_ENDIAN): void => {
@@ -476,7 +484,7 @@ export const store_offset_f64 = (
     value: number,
     le = LITTLE_ENDIAN,
 ): void => {
-    mem.setFloat64(offset.off(8), value, le)
+    mem.setFloat64(off(offset, 8), value, le)
 }
 
 export const load_slice = <T>(
@@ -487,7 +495,7 @@ export const load_slice = <T>(
     const raw_data_ptr = load_ptr(mem, slice_ptr)
     const raw_data_len = load_int(mem, slice_ptr + REG_SIZE)
 
-    const offset = new ByteOffset(raw_data_ptr)
+    const offset = makeByteOffset(raw_data_ptr)
     const items: T[] = new Array(raw_data_len)
     for (let i = 0; i < raw_data_len; i++) {
         items[i] = mapFn(mem, offset)
@@ -500,7 +508,7 @@ export const load_offset_slice = <T>(
     offset: ByteOffset,
     mapFn: (mem: DataView, offset: ByteOffset) => T,
 ): T[] => {
-    return load_slice(mem, offset.off(REG_SIZE + REG_SIZE), mapFn)
+    return load_slice(mem, off(offset, REG_SIZE + REG_SIZE), mapFn)
 }
 
 export const load_bytes = (buffer: ArrayBufferLike, ptr: number, len: number): Uint8Array => {
@@ -547,18 +555,18 @@ export const load_string_lbp = (mem: DataView, ptr: number): string => {
 }
 export const load_offset_string_lbp = (mem: DataView, offset: ByteOffset): string => {
     assert(offset.alignment === 1, 'Alignment must be 1 for LBP strings')
-    const len = load_u64_number(mem, offset.off(8))
-    return load_string_raw(mem.buffer, offset.off(len), len)
+    const len = load_u64_number(mem, off(offset, 8))
+    return load_string_raw(mem.buffer, off(offset, len), len)
 }
 
 export const load_offset_string = (mem: DataView, offset: ByteOffset): string => {
-    return load_string(mem, offset.off(8))
+    return load_string(mem, off(offset, 8))
 }
 export const load_offset_cstring = (mem: DataView, offset: ByteOffset): string => {
-    return load_cstring(mem, offset.off(4))
+    return load_cstring(mem, off(offset, 4))
 }
 export const load_offset_rune = (mem: DataView, offset: ByteOffset): string => {
-    return load_rune(mem, offset.off(4))
+    return load_rune(mem, off(offset, 4))
 }
 
 export const store_string_bytes = (
@@ -591,7 +599,7 @@ export const store_string = (mem: DataView, ptr: number, value: string): void =>
     store_u32(mem, ptr + 4, 0)
 }
 export const store_offset_string = (mem: DataView, offset: ByteOffset, value: string): void => {
-    store_string(mem, offset.off(8), value)
+    store_string(mem, off(offset, 8), value)
 }
 export const store_cstring_raw = (mem: DataView, ptr: number, value: string): void => {
     void store_string_raw(mem.buffer, ptr, value.length, value)
@@ -602,13 +610,13 @@ export const store_cstring = (mem: DataView, ptr: number, value: string): void =
     store_u32(mem, ptr, 0)
 }
 export const store_offset_cstring = (mem: DataView, offset: ByteOffset, value: string): void => {
-    store_cstring(mem, offset.off(4), value)
+    store_cstring(mem, off(offset, 4), value)
 }
 export const store_rune = (mem: DataView, ptr: number, value: string): void => {
     store_u32(mem, ptr, value.charCodeAt(0))
 }
 export const store_offset_rune = (mem: DataView, offset: ByteOffset, value: string): void => {
-    store_rune(mem, offset.off(4), value)
+    store_rune(mem, off(offset, 4), value)
 }
 
 export const load_f32_array = (

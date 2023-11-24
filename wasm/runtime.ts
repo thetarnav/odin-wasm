@@ -5,48 +5,41 @@ https://github.com/odin-lang/Odin/blob/master/vendor/wasm/js/runtime.js
 
 */
 
-import {odin_env} from './env.js'
-import {odin_ls} from './ls/local_storage.js'
+import {makeOdinEnv} from './env.js'
 
-export interface OdinExports {
+export interface OdinExports extends WebAssembly.Exports {
     memory: WebAssembly.Memory
     _start: () => void
     _end: () => void
     default_context_ptr: () => number
 }
 
-const env = {}
-
-export let wasm_memory: WebAssembly.Memory
-export let odin_exports: OdinExports | undefined
-
-export type WasmResult = {
-    wasm_memory: WebAssembly.Memory
-    odin_exports: OdinExports
+export interface WasmInstance {
+    exports: OdinExports
+    memory: WebAssembly.Memory
 }
 
-export async function runWasm(wasm_path: string): Promise<WasmResult> {
-    const imports: WebAssembly.Imports = {
-        env: env,
-        odin_env: odin_env,
-        odin_ls: odin_ls,
+export async function runWasm(wasm_path: string): Promise<WasmInstance> {
+    const result: WasmInstance = {
+        exports: null!,
+        memory: null!,
     }
 
     const response = await fetch(wasm_path)
     const file = await response.arrayBuffer()
-    const wasm = await WebAssembly.instantiate(file, imports)
-    odin_exports = wasm.instance.exports as any as OdinExports
+    const wasm = await WebAssembly.instantiate(file, {
+        env: {}, // TODO
+        odin_env: makeOdinEnv(result),
+    })
 
-    wasm_memory = odin_exports.memory
+    result.exports = wasm.instance.exports as any as OdinExports
+    result.memory = result.exports.memory
 
-    console.log('Exports', odin_exports)
-    console.log('Memory', odin_exports.memory)
+    console.log('Exports', result.exports)
+    console.log('Memory', result.memory)
 
-    odin_exports._start()
-    odin_exports._end()
+    result.exports._start()
+    result.exports._end()
 
-    return {
-        wasm_memory: wasm_memory,
-        odin_exports: odin_exports,
-    }
+    return result
 }
