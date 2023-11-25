@@ -19,35 +19,34 @@ function targetToKind(target: EventTarget | null): number {
     }
 }
 
+const KEYBOARD_MAX_KEY_SIZE = 16
+const KEYBOARD_MAX_CODE_SIZE = 16
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function makeOdinDOM(_wasm: WasmInstance) {
     const wasm = _wasm as WasmInstance & {exports: DomOdinExports}
 
-    const event_temp_data: {
-        id_ptr: number
-        id_len: number
-        event: Event
-        name_code: number
-    } = {
-        id_ptr: 0,
-        id_len: 0,
-        event: new Event(''),
-        name_code: 0,
-    }
+    let temp_id_ptr = 0
+    let temp_id_len = 0
+    let temp_event = new Event('')
+    let temp_name_code = 0
 
+    /**
+     * callback ptr to EventListener
+     */
     const listener_map = new Map<number, EventListener>()
-
-    const KEYBOARD_MAX_KEY_SIZE = 16
-    const KEYBOARD_MAX_CODE_SIZE = 16
 
     return {
         init_event_raw(event_ptr: number /*Event*/): void {
             const offset = mem.makeByteOffset(event_ptr)
             const data = new DataView(wasm.memory.buffer)
-            const e = event_temp_data.event
+            const e = temp_event
+            const name_code = temp_name_code
+            const id_ptr = temp_id_ptr
+            const id_len = temp_id_len
 
             /* kind: Event_Kind */
-            mem.store_offset_u32(data, offset, event_temp_data.name_code)
+            mem.store_offset_u32(data, offset, name_code)
 
             /* target_kind: Event_Target_Kind */
             mem.store_offset_u32(data, offset, targetToKind(e.target))
@@ -56,8 +55,8 @@ export function makeOdinDOM(_wasm: WasmInstance) {
             mem.store_offset_u32(data, offset, targetToKind(e.currentTarget))
 
             /* id: string */
-            mem.store_offset_uint(data, offset, event_temp_data.id_ptr)
-            mem.store_offset_uint(data, offset, event_temp_data.id_len)
+            mem.store_offset_uint(data, offset, id_ptr)
+            mem.store_offset_uint(data, offset, id_len)
             mem.store_offset_uint(data, offset, 0) // padding
 
             /* timestamp: f64 */
@@ -166,20 +165,47 @@ export function makeOdinDOM(_wasm: WasmInstance) {
             use_capture: boolean,
         ): boolean {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
-            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+
             const element = document.getElementById(id)
             if (!element) return false
 
             function listener(e: Event): void {
                 const odin_ctx = wasm.exports.default_context_ptr()
-                event_temp_data.id_ptr = id_ptr
-                event_temp_data.id_len = id_len
-                event_temp_data.event = e
-                event_temp_data.name_code = name_code
+                temp_id_ptr = id_ptr
+                temp_id_len = id_len
+                temp_event = e
+                temp_name_code = name_code
                 wasm.exports.odin_dom_do_event_callback(data_ptr, callback, odin_ctx)
             }
+
+            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+
             listener_map.set(callback, listener)
-            element.addEventListener(name, listener, !!use_capture)
+            element.addEventListener(name, listener, use_capture)
+
+            return true
+        },
+        add_window_event_listener(
+            name_ptr: number,
+            name_len: number,
+            name_code: number,
+            data_ptr: number,
+            callback: number,
+            use_capture: boolean,
+        ): boolean {
+            function listener(e: Event): void {
+                const odin_ctx = wasm.exports.default_context_ptr()
+                temp_id_ptr = 0
+                temp_id_len = 0
+                temp_event = e
+                temp_name_code = name_code
+                wasm.exports.odin_dom_do_event_callback(data_ptr, callback, odin_ctx)
+            }
+
+            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+            window.addEventListener(name, listener, use_capture)
+            listener_map.set(callback, listener)
+
             return true
         },
 
@@ -188,73 +214,49 @@ export function makeOdinDOM(_wasm: WasmInstance) {
             id_len: number,
             name_ptr: number,
             name_len: number,
-            data: number,
+            data_ptr: number,
             callback: number,
         ): boolean {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
-            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+
             const element = document.getElementById(id)
-            if (!element) {
-                return false
-            }
+            if (!element) return false
 
             const listener = listener_map.get(callback)
             if (!listener) return false
 
+            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+
             listener_map.delete(callback)
             element.removeEventListener(name, listener)
+
             return true
         },
-
-        add_window_event_listener(
-            name_ptr: number,
-            name_len: number,
-            name_code: number,
-            data: number,
-            callback: number,
-            use_capture: boolean,
-        ): boolean {
-            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
-            const element = window
-            function listener(e: Event): void {
-                const odin_ctx = wasm.exports.default_context_ptr()
-                event_temp_data.id_ptr = 0
-                event_temp_data.id_len = 0
-                event_temp_data.event = e
-                event_temp_data.name_code = name_code
-                wasm.exports.odin_dom_do_event_callback(data, callback, odin_ctx)
-            }
-            listener_map.set(callback, listener)
-            element.addEventListener(name, listener, !!use_capture)
-            return true
-        },
-
         remove_window_event_listener(
             name_ptr: number,
             name_len: number,
-            data: number,
+            data_ptr: number,
             callback: number,
         ): boolean {
-            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
-            const element = window
-            const key = {data: data, callback: callback}
-
             const listener = listener_map.get(callback)
             if (!listener) return false
 
+            const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+
             listener_map.delete(callback)
-            element.removeEventListener(name, listener)
+            window.removeEventListener(name, listener)
+
             return true
         },
 
         event_stop_propagation(): void {
-            event_temp_data.event.stopPropagation()
+            temp_event.stopPropagation()
         },
         event_stop_immediate_propagation(): void {
-            event_temp_data.event.stopImmediatePropagation()
+            temp_event.stopImmediatePropagation()
         },
         event_prevent_default(): void {
-            event_temp_data.event.preventDefault()
+            temp_event.preventDefault()
         },
 
         dispatch_custom_event(
@@ -265,19 +267,18 @@ export function makeOdinDOM(_wasm: WasmInstance) {
             options_bits: number,
         ): boolean {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+            const element = document.getElementById(id)
+            if (!element) return false
+
             const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
             const options: EventInit = {
                 bubbles: (options_bits & (1 << 0)) !== 0,
                 cancelable: (options_bits & (1 << 1)) !== 0,
                 composed: (options_bits & (1 << 2)) !== 0,
             }
+            void element.dispatchEvent(new Event(name, options))
 
-            const element = document.getElementById(id)
-            if (element) {
-                void element.dispatchEvent(new Event(name, options))
-                return true
-            }
-            return false
+            return true
         },
         get_element_value_f64(id_ptr: number, id_len: number): number {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
@@ -292,19 +293,17 @@ export function makeOdinDOM(_wasm: WasmInstance) {
         ): number {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const element = document.getElementById(id)
-            if (!(element instanceof HTMLInputElement)) return 0
+
+            if (!(element instanceof HTMLInputElement) || buf_len <= 0 || !buf_ptr) return 0
 
             let str = element.value
-            if (buf_len > 0 && buf_ptr) {
-                const n = Math.min(buf_len, str.length)
-                str = str.substring(0, n)
-                mem.load_bytes(wasm.memory.buffer, buf_ptr, buf_len).set(
-                    new TextEncoder().encode(str),
-                )
-                return n
-            }
+            const n = Math.min(buf_len, str.length)
+            str = str.substring(0, n)
 
-            return 0
+            const str_buf = mem.load_bytes(wasm.memory.buffer, buf_ptr, buf_len)
+            str_buf.set(new TextEncoder().encode(str))
+
+            return n
         },
         get_element_value_string_length(id_ptr: number, id_len: number): number {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
@@ -314,8 +313,10 @@ export function makeOdinDOM(_wasm: WasmInstance) {
         get_element_min_max(ptr_array2_f64: number, id_ptr: number, id_len: number): void {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const element = document.getElementById(id)
+
             if (element instanceof HTMLInputElement) {
                 const values = mem.load_f64_array(wasm.memory.buffer, ptr_array2_f64, 2)
+
                 values[0] = Number(element.min)
                 values[1] = Number(element.max)
             }
@@ -323,6 +324,7 @@ export function makeOdinDOM(_wasm: WasmInstance) {
         set_element_value_f64(id_ptr: number, id_len: number, value: number): void {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const element = document.getElementById(id)
+
             if (element instanceof HTMLInputElement) {
                 element.value = String(value)
             }
@@ -344,17 +346,19 @@ export function makeOdinDOM(_wasm: WasmInstance) {
         get_bounding_client_rect(rect_ptr: number, id_ptr: number, id_len: number): void {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const element = document.getElementById(id)
-            if (element) {
-                const values = mem.load_f64_array(wasm.memory.buffer, rect_ptr, 4)
-                const rect = element.getBoundingClientRect()
-                values[0] = rect.left
-                values[1] = rect.top
-                values[2] = rect.right - rect.left
-                values[3] = rect.bottom - rect.top
-            }
+            if (!element) return
+
+            const values = mem.load_f64_array(wasm.memory.buffer, rect_ptr, 4)
+            const rect = element.getBoundingClientRect()
+
+            values[0] = rect.left
+            values[1] = rect.top
+            values[2] = rect.right - rect.left
+            values[3] = rect.bottom - rect.top
         },
         window_get_rect(rect_ptr: number): void {
             const values = mem.load_f64_array(wasm.memory.buffer, rect_ptr, 4)
+
             values[0] = window.screenX
             values[1] = window.screenY
             values[2] = window.screen.width
@@ -363,6 +367,7 @@ export function makeOdinDOM(_wasm: WasmInstance) {
 
         window_get_scroll(pos_ptr: number): void {
             const values = mem.load_f64_array(wasm.memory.buffer, pos_ptr, 2)
+
             values[0] = window.scrollX
             values[1] = window.scrollY
         },
