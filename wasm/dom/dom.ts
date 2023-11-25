@@ -5,6 +5,20 @@ export interface DomOdinExports extends OdinExports {
     odin_dom_do_event_callback: (data: number, callback: number, ctx_ptr: number) => void
 }
 
+/**
+ * target to Event_Target_Kind
+ */
+function targetToKind(target: EventTarget | null): number {
+    switch (target) {
+        case document:
+            return 1
+        case window:
+            return 2
+        default:
+            return 0
+    }
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function makeOdinDom(_wasm: WasmInstance) {
     const wasm = _wasm as WasmInstance & {exports: DomOdinExports}
@@ -17,7 +31,7 @@ export function makeOdinDom(_wasm: WasmInstance) {
     } = {
         id_ptr: 0,
         id_len: 0,
-        event: null!,
+        event: new Event(''),
         name_code: 0,
     }
 
@@ -30,29 +44,16 @@ export function makeOdinDom(_wasm: WasmInstance) {
         init_event_raw(event_ptr: number /*Event*/): void {
             const offset = mem.makeByteOffset(event_ptr)
             const data = new DataView(wasm.memory.buffer)
-
             const e = event_temp_data.event
 
             /* kind: Event_Kind */
             mem.store_offset_u32(data, offset, event_temp_data.name_code)
 
             /* target_kind: Event_Target_Kind */
-            if (e.target == document) {
-                mem.store_offset_u32(data, offset, 1)
-            } else if (e.target == window) {
-                mem.store_offset_u32(data, offset, 2)
-            } else {
-                mem.store_offset_u32(data, offset, 0)
-            }
+            mem.store_offset_u32(data, offset, targetToKind(e.target))
 
             /* current_target_kind: Event_Target_Kind */
-            if (e.currentTarget == document) {
-                mem.store_offset_u32(data, offset, 1)
-            } else if (e.currentTarget == window) {
-                mem.store_offset_u32(data, offset, 2)
-            } else {
-                mem.store_offset_u32(data, offset, 0)
-            }
+            mem.store_offset_u32(data, offset, targetToKind(e.currentTarget))
 
             /* id: string */
             mem.store_offset_uint(data, offset, event_temp_data.id_ptr)
@@ -65,7 +66,7 @@ export function makeOdinDom(_wasm: WasmInstance) {
             /* phase: Event_Phase */
             mem.store_offset_u8(data, offset, e.eventPhase)
 
-            /* options: Event_Options */
+            /* Event_Options bitset */
             let options = 0
             if (!!e.bubbles) {
                 options |= 1 << 0 // 1
@@ -78,11 +79,61 @@ export function makeOdinDom(_wasm: WasmInstance) {
             }
             mem.store_offset_u8(data, offset, options)
 
-            mem.store_offset_b8(data, offset, !!e.isComposing)
-            mem.store_offset_b8(data, offset, !!e.isTrusted)
+            mem.store_offset_bool(data, offset, !!(e as InputEvent).isComposing)
+            mem.store_offset_bool(data, offset, !!e.isTrusted)
 
-            void mem.off(offset, 0, 8)
-            if (e instanceof MouseEvent) {
+            void mem.off(offset, 0, 8) // padding
+            // scroll
+            if (e.type === 'scroll') {
+                mem.store_offset_f64(data, offset, window.scrollX)
+                mem.store_offset_f64(data, offset, window.scrollY)
+            }
+            // visibility_change
+            else if (e.type === 'visibilitychange') {
+                mem.store_offset_bool(data, offset, !document.hidden)
+            }
+            // wheel
+            else if (e instanceof WheelEvent) {
+                mem.store_offset_f64(data, offset, e.deltaX)
+                mem.store_offset_f64(data, offset, e.deltaY)
+                mem.store_offset_f64(data, offset, e.deltaZ)
+                mem.store_offset_u32(data, offset, e.deltaMode)
+            }
+            // key
+            else if (e instanceof KeyboardEvent) {
+                // Note: those strings are constructed
+                // on the native side from buffers that
+                // are filled later, so skip them
+                void mem.off(offset, mem.REG_SIZE * 2, mem.REG_SIZE)
+                void mem.off(offset, mem.REG_SIZE * 2, mem.REG_SIZE)
+
+                /* Key_Location */
+                mem.store_offset_u8(data, offset, e.location)
+
+                mem.store_offset_bool(data, offset, !!e.ctrlKey)
+                mem.store_offset_bool(data, offset, !!e.shiftKey)
+                mem.store_offset_bool(data, offset, !!e.altKey)
+                mem.store_offset_bool(data, offset, !!e.metaKey)
+
+                mem.store_offset_bool(data, offset, !!e.repeat)
+
+                mem.store_offset_i32(data, offset, e.key.length)
+                mem.store_offset_i32(data, offset, e.code.length)
+                void mem.store_string_raw(
+                    wasm.memory.buffer,
+                    mem.off(offset, 16, 1),
+                    KEYBOARD_MAX_KEY_SIZE,
+                    e.key,
+                )
+                void mem.store_string_raw(
+                    wasm.memory.buffer,
+                    mem.off(offset, 16, 1),
+                    KEYBOARD_MAX_CODE_SIZE,
+                    e.code,
+                )
+            }
+            // mouse
+            else if (e instanceof MouseEvent) {
                 mem.store_offset_i64_number(data, offset, e.screenX)
                 mem.store_offset_i64_number(data, offset, e.screenY)
                 mem.store_offset_i64_number(data, offset, e.clientX)
@@ -101,46 +152,6 @@ export function makeOdinDom(_wasm: WasmInstance) {
 
                 mem.store_offset_i16(data, offset, e.button)
                 mem.store_offset_u16(data, offset, e.buttons)
-            } else if (e instanceof KeyboardEvent) {
-                // Note: those strings are constructed
-                // on the native side from buffers that
-                // are filled later, so skip them
-                void mem.off(offset, mem.REG_SIZE * 2, mem.REG_SIZE)
-                void mem.off(offset, mem.REG_SIZE * 2, mem.REG_SIZE)
-
-                mem.store_offset_u8(data, offset, e.location)
-
-                mem.store_offset_b8(data, offset, !!e.ctrlKey)
-                mem.store_offset_b8(data, offset, !!e.shiftKey)
-                mem.store_offset_b8(data, offset, !!e.altKey)
-                mem.store_offset_b8(data, offset, !!e.metaKey)
-
-                mem.store_offset_b8(data, offset, !!e.repeat)
-
-                mem.store_offset_i32(data, offset, e.key.length)
-                mem.store_offset_i32(data, offset, e.code.length)
-                void mem.store_string_raw(
-                    wasm.memory.buffer,
-                    mem.off(offset, 16, 1),
-                    KEYBOARD_MAX_KEY_SIZE,
-                    e.key,
-                )
-                void mem.store_string_raw(
-                    wasm.memory.buffer,
-                    mem.off(offset, 16, 1),
-                    KEYBOARD_MAX_CODE_SIZE,
-                    e.code,
-                )
-            } else if (e instanceof WheelEvent) {
-                mem.store_offset_f64(data, offset, e.deltaX)
-                mem.store_offset_f64(data, offset, e.deltaY)
-                mem.store_offset_f64(data, offset, e.deltaZ)
-                mem.store_offset_u32(data, offset, e.deltaMode)
-            } else if (e instanceof Event) {
-                if ('scrollX' in e) {
-                    mem.store_offset_f64(data, offset, e.scrollX)
-                    mem.store_offset_f64(data, offset, e.scrollY)
-                }
             }
         },
 
@@ -237,19 +248,13 @@ export function makeOdinDom(_wasm: WasmInstance) {
         },
 
         event_stop_propagation(): void {
-            if (event_temp_data && event_temp_data.event) {
-                event_temp_data.event.eventStopPropagation()
-            }
+            event_temp_data.event.stopPropagation()
         },
         event_stop_immediate_propagation(): void {
-            if (event_temp_data && event_temp_data.event) {
-                event_temp_data.event.eventStopImmediatePropagation()
-            }
+            event_temp_data.event.stopImmediatePropagation()
         },
         event_prevent_default(): void {
-            if (event_temp_data && event_temp_data.event) {
-                event_temp_data.event.preventDefault()
-            }
+            event_temp_data.event.preventDefault()
         },
 
         dispatch_custom_event(
@@ -261,9 +266,9 @@ export function makeOdinDom(_wasm: WasmInstance) {
         ): boolean {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
-            const options = {
+            const options: EventInit = {
                 bubbles: (options_bits & (1 << 0)) !== 0,
-                cancelabe: (options_bits & (1 << 1)) !== 0,
+                cancelable: (options_bits & (1 << 1)) !== 0,
                 composed: (options_bits & (1 << 2)) !== 0,
             }
 
@@ -277,7 +282,7 @@ export function makeOdinDom(_wasm: WasmInstance) {
         get_element_value_f64(id_ptr: number, id_len: number): number {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const element = document.getElementById(id)
-            return element ? element.value : 0
+            return element instanceof HTMLInputElement ? element.valueAsNumber : 0
         },
         get_element_value_string(
             id_ptr: number,
@@ -287,7 +292,7 @@ export function makeOdinDom(_wasm: WasmInstance) {
         ): number {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const element = document.getElementById(id)
-            if (!element) return 0
+            if (!(element instanceof HTMLInputElement)) return 0
 
             let str = element.value
             if (buf_len > 0 && buf_ptr) {
@@ -304,37 +309,34 @@ export function makeOdinDom(_wasm: WasmInstance) {
         get_element_value_string_length(id_ptr: number, id_len: number): number {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const element = document.getElementById(id)
-            if (element) {
-                return element.value.length
-            }
-            return 0
+            return element instanceof HTMLInputElement ? element.value.length : 0
         },
         get_element_min_max(ptr_array2_f64: number, id_ptr: number, id_len: number): void {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const element = document.getElementById(id)
-            if (element) {
-                const values = wmi.loadF64Array(ptr_array2_f64, 2)
-                values[0] = element.min
-                values[1] = element.max
+            if (element instanceof HTMLInputElement) {
+                const values = mem.load_f64_array(wasm.memory.buffer, ptr_array2_f64, 2)
+                values[0] = Number(element.min)
+                values[1] = Number(element.max)
             }
         },
         set_element_value_f64(id_ptr: number, id_len: number, value: number): void {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const element = document.getElementById(id)
-            if (element) {
-                element.value = value
+            if (element instanceof HTMLInputElement) {
+                element.value = String(value)
             }
         },
         set_element_value_string(
             id_ptr: number,
             id_len: number,
             value_ptr: number,
-            _value_id: number,
+            value_len: number,
         ): void {
             const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
             const value = mem.load_string_raw(wasm.memory.buffer, value_ptr, value_len)
             const element = document.getElementById(id)
-            if (element) {
+            if (element instanceof HTMLInputElement) {
                 element.value = value
             }
         },

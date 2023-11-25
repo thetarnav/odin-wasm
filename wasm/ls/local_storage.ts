@@ -2,7 +2,7 @@ import * as mem from '../memory.js'
 import type {WasmInstance} from '../runtime.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function makeOdinLs(wasm: WasmInstance) {
+export function makeOdinLS(wasm: WasmInstance) {
     return {
         get_bytes: (k_ptr: number, k_len: number, buf_ptr: number, buf_len: number): number => {
             const key = mem.load_string_bytes(wasm.memory.buffer, k_ptr, k_len)
