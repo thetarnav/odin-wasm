@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "Building wasm..."
+
+odin build . -out:dist/lib.wasm -target:js_wasm32
+
+echo "Done!"

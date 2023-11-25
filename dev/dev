@@ -1,0 +1,6 @@
+#!/bin/bash
+
+while sleep 0.1; do
+    find . |
+    entr -c -d ./build;
+done

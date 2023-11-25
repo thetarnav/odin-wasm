@@ -5,7 +5,10 @@ https://github.com/odin-lang/Odin/blob/master/vendor/wasm/js/runtime.js
 
 */
 
-import {makeOdinEnv} from './env.js'
+export * as env from './env.js'
+export * as mem from './memory.js'
+export * as dom from './dom/dom.js'
+export * as ls from './ls/local_storage.js'
 
 export interface OdinExports extends WebAssembly.Exports {
     memory: WebAssembly.Memory
@@ -17,29 +20,4 @@ export interface OdinExports extends WebAssembly.Exports {
 export interface WasmInstance {
     exports: OdinExports
     memory: WebAssembly.Memory
-}
-
-export async function runWasm(wasm_path: string): Promise<WasmInstance> {
-    const result: WasmInstance = {
-        exports: null!,
-        memory: null!,
-    }
-
-    const response = await fetch(wasm_path)
-    const file = await response.arrayBuffer()
-    const wasm = await WebAssembly.instantiate(file, {
-        env: {}, // TODO
-        odin_env: makeOdinEnv(result),
-    })
-
-    result.exports = wasm.instance.exports as any as OdinExports
-    result.memory = result.exports.memory
-
-    console.log('Exports', result.exports)
-    console.log('Memory', result.memory)
-
-    result.exports._start()
-    result.exports._end()
-
-    return result
 }

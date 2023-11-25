@@ -20,7 +20,7 @@ function targetToKind(target: EventTarget | null): number {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function makeOdinDom(_wasm: WasmInstance) {
+export function makeOdinDOM(_wasm: WasmInstance) {
     const wasm = _wasm as WasmInstance & {exports: DomOdinExports}
 
     const event_temp_data: {
