@@ -2,17 +2,21 @@ import * as vi from 'vitest'
 import * as mem from './memory.js'
 
 void vi.describe('f16', () => {
+    /**
+     * @type {(
+     *  [f: number, be_bits: number    , le_bits: number    ][]
+     * )}
+     */
     // prettier-ignore
-    const float_bit_pairs:
-        [float: number, be_bits: number    , le_bits: number    ][] = [
-        [  1.2        , 0b00111100_11001101, 0b11001101_00111100],
-        [ -1.2        , 0b10111100_11001101, 0b11001101_10111100],
-        [  0.0        , 0b00000000_00000000, 0b00000000_00000000],
-        [  1.0        , 0b00111100_00000000, 0b00000000_00111100],
-        [ -1.0        , 0b10111100_00000000, 0b00000000_10111100],
-        [-27.15625    , 0b11001110_11001010, 0b11001010_11001110],
-        [ Infinity    , 0b01111100_00000000, 0b00000000_01111100],
-        [-Infinity    , 0b11111100_00000000, 0b00000000_11111100],
+    const float_bit_pairs = [
+        [  1.2    , 0b00111100_11001101, 0b11001101_00111100],
+        [ -1.2    , 0b10111100_11001101, 0b11001101_10111100],
+        [  0.0    , 0b00000000_00000000, 0b00000000_00000000],
+        [  1.0    , 0b00111100_00000000, 0b00000000_00111100],
+        [ -1.0    , 0b10111100_00000000, 0b00000000_10111100],
+        [-27.15625, 0b11001110_11001010, 0b11001010_11001110],
+        [ Infinity, 0b01111100_00000000, 0b00000000_01111100],
+        [-Infinity, 0b11111100_00000000, 0b00000000_11111100],
     ]
 
     void vi.describe('loads f16', () => {
@@ -49,9 +53,13 @@ void vi.describe('f16', () => {
 })
 
 void vi.describe('u64', () => {
+    /**
+     * @type {(
+     *  [v: bigint        , bits: bigint              ][]
+     * )}
+     */
     // prettier-ignore
-    const pairs:
-        [v: bigint        , bits: bigint              ][] = [
+    const pairs = [
         [  0n             , 0x00_00_00_00_00_00_00_00n],
         [  1n             , 0x00_00_00_00_00_00_00_01n],
         [  2n             , 0x00_00_00_00_00_00_00_02n],
@@ -65,7 +73,7 @@ void vi.describe('u64', () => {
     const data = new DataView(new ArrayBuffer(8))
 
     for (const [v, bits] of pairs) {
-        for (const endian of ['le', 'be'] as const) {
+        for (const endian of ['le', 'be']) {
             const le = endian === 'le'
 
             vi.it(`${endian}: loads ${v}`, () => {
@@ -84,9 +92,13 @@ void vi.describe('u64', () => {
 })
 
 void vi.describe('u64 number', () => {
+    /**
+     * @type {(
+     *  [v: number       , bits: bigint              ][]
+     * )}
+     */
     // prettier-ignore
-    const pairs:
-        [v: number       , bits: bigint              ][] = [
+    const pairs = [
         [0               , 0x00_00_00_00_00_00_00_00n],
         [1               , 0x00_00_00_00_00_00_00_01n],
         [256             , 0x00_00_00_00_00_00_01_00n],
@@ -97,7 +109,7 @@ void vi.describe('u64 number', () => {
     const data = new DataView(new ArrayBuffer(8))
 
     for (const [v, bits] of pairs) {
-        for (const endian of ['le', 'be'] as const) {
+        for (const endian of ['le', 'be']) {
             const le = endian === 'le'
 
             vi.it(`${endian}: loads ${v}`, () => {
@@ -116,9 +128,13 @@ void vi.describe('u64 number', () => {
 })
 
 void vi.describe('i64', () => {
+    /**
+     * @type {(
+     *  [v: bigint        , bits: bigint              ][]
+     * )}
+     */
     // prettier-ignore
-    const pairs:
-        [v: bigint        , bits: bigint              ][] = [
+    const pairs = [
         [  0n             , 0x00_00_00_00_00_00_00_00n],
         [  1n             , 0x00_00_00_00_00_00_00_01n],
         [ -1n             , 0xFF_FF_FF_FF_FF_FF_FF_FFn],
@@ -135,7 +151,7 @@ void vi.describe('i64', () => {
     const data = new DataView(new ArrayBuffer(8))
 
     for (const [v, bits] of pairs) {
-        for (const endian of ['le', 'be'] as const) {
+        for (const endian of ['le', 'be']) {
             const le = endian === 'le'
 
             vi.it(`${endian}: loads ${v}`, () => {
@@ -154,9 +170,13 @@ void vi.describe('i64', () => {
 })
 
 void vi.describe('i64 number', () => {
+    /**
+     * @type {(
+     *  [v: number        , bits: bigint              ][]
+     * )}
+     */
     // prettier-ignore
-    const pairs:
-        [v: number        , bits: bigint              ][] = [
+    const pairs = [
         [ 0               , 0x00_00_00_00_00_00_00_00n],
         [ 1               , 0x00_00_00_00_00_00_00_01n],
         [-1               , 0xFF_FF_FF_FF_FF_FF_FF_FFn],
@@ -173,7 +193,7 @@ void vi.describe('i64 number', () => {
     const data = new DataView(new ArrayBuffer(8))
 
     for (const [v, bits] of pairs) {
-        for (const endian of ['le', 'be'] as const) {
+        for (const endian of ['le', 'be']) {
             const le = endian === 'le'
 
             vi.it(`${endian}: loads ${v}`, () => {
@@ -192,9 +212,13 @@ void vi.describe('i64 number', () => {
 })
 
 void vi.describe('u128', () => {
+    /**
+     * @type {(
+     *  [v: bigint, bits: [bigint              , bigint                    ]][]
+     * )}
+     */
     // prettier-ignore
-    const pairs:
-        [v: bigint, bits: [bigint              , bigint                    ]][] = [
+    const pairs = [
         [0n       , [0x00_00_00_00_00_00_00_00n, 0x00_00_00_00_00_00_00_00n]],
         [1n       , [0x00_00_00_00_00_00_00_00n, 0x00_00_00_00_00_00_00_01n]],
         [256n     , [0x00_00_00_00_00_00_00_00n, 0x00_00_00_00_00_00_01_00n]],
@@ -204,20 +228,20 @@ void vi.describe('u128', () => {
     const data = new DataView(new ArrayBuffer(16))
 
     for (const [v, [bits_a, bits_b]] of pairs) {
-        for (const endian of ['le', 'be'] as const) {
+        for (const endian of ['le', 'be']) {
             const le = endian === 'le'
 
             vi.it(`${endian}: loads ${v}`, () => {
-                data.setBigUint64(0 + 8 * (le as any), bits_a, le)
-                data.setBigUint64(0 + 8 * (!le as any), bits_b, le)
+                data.setBigUint64(0 + 8 * /**@type {any} */ (le), bits_a, le)
+                data.setBigUint64(0 + 8 * /**@type {any} */ (!le), bits_b, le)
                 const loaded = mem.load_u128(data, 0, le)
                 vi.expect(loaded).toBe(v)
             })
 
             vi.it(`${endian}: stores ${v}`, () => {
                 mem.store_u128(data, 0, v, le)
-                const loaded_a = data.getBigUint64(0 + 8 * (le as any), le)
-                const loaded_b = data.getBigUint64(0 + 8 * (!le as any), le)
+                const loaded_a = data.getBigUint64(0 + 8 * /**@type {any} */ (le), le)
+                const loaded_b = data.getBigUint64(0 + 8 * /**@type {any} */ (!le), le)
                 vi.expect(loaded_a).toBe(bits_a)
                 vi.expect(loaded_b).toBe(bits_b)
             })
@@ -226,9 +250,13 @@ void vi.describe('u128', () => {
 })
 
 void vi.describe('i128', () => {
+    /**
+     * @type {(
+     *  [v: bigint   , bits: [bigint              , bigint                    ]][]
+     * )}
+     */
     // prettier-ignore
-    const pairs:
-        [v: bigint   , bits: [bigint              , bigint                    ]][] = [
+    const pairs = [
         [0n          , [0x00_00_00_00_00_00_00_00n, 0x00_00_00_00_00_00_00_00n]],
         [1n          , [0x00_00_00_00_00_00_00_00n, 0x00_00_00_00_00_00_00_01n]],
         [-1n         , [0xFF_FF_FF_FF_FF_FF_FF_FFn, 0xFF_FF_FF_FF_FF_FF_FF_FFn]],
@@ -243,20 +271,20 @@ void vi.describe('i128', () => {
     const data = new DataView(new ArrayBuffer(16))
 
     for (const [v, [bits_a, bits_b]] of pairs) {
-        for (const endian of ['le', 'be'] as const) {
+        for (const endian of ['le', 'be']) {
             const le = endian === 'le'
 
             vi.it(`${endian}: loads ${v}`, () => {
-                data.setBigUint64(0 + 8 * (le as any), bits_a, le)
-                data.setBigUint64(0 + 8 * (!le as any), bits_b, le)
+                data.setBigUint64(0 + 8 * /**@type {any}*/ (le), bits_a, le)
+                data.setBigUint64(0 + 8 * /**@type {any}*/ (!le), bits_b, le)
                 const loaded = mem.load_i128(data, 0, le)
                 vi.expect(loaded).toBe(v)
             })
 
             vi.it(`${endian}: stores ${v}`, () => {
                 mem.store_i128(data, 0, v, le)
-                const loaded_a = data.getBigUint64(0 + 8 * (le as any), le)
-                const loaded_b = data.getBigUint64(0 + 8 * (!le as any), le)
+                const loaded_a = data.getBigUint64(0 + 8 * /**@type {any}*/ (le), le)
+                const loaded_b = data.getBigUint64(0 + 8 * /**@type {any}*/ (!le), le)
                 vi.expect(loaded_a).toBe(bits_a)
                 vi.expect(loaded_b).toBe(bits_b)
             })
