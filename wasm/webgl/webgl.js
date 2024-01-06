@@ -1,1427 +1,1821 @@
-class WebGLInterface {
-    constructor(wasmMemoryInterface) {
-        this.wasmMemoryInterface = wasmMemoryInterface
-        this.ctxElement = null
-        this.ctx = null
-        this.ctxVersion = 1.0
-        this.counter = 1
-        this.lastError = 0
-        this.buffers = []
-        this.mappedBuffers = {}
-        this.programs = []
-        this.framebuffers = []
-        this.renderbuffers = []
-        this.textures = []
-        this.uniforms = []
-        this.shaders = []
-        this.vaos = []
-        this.contexts = []
-        this.currentContext = null
-        this.offscreenCanvases = {}
-        this.timerQueriesEXT = []
-        this.queries = []
-        this.samplers = []
-        this.transformFeedbacks = []
-        this.syncs = []
-        this.programInfos = {}
-    }
+import * as mem from "../memory.js"
 
-    get mem() {
-        return this.wasmMemoryInterface
-    }
+/**
+ * @typedef {import('../types.js').WasmInstance} WasmInstance
+ * @typedef {import('./types.js').WebGLInterface} WebGLInterface
+ */
 
-    /** @returns {boolean} */
-    setCurrentContext(element, contextSettings) {
-        if (!element) {
-            return false
-        }
-        if (this.ctxElement == element) {
-            return true
-        }
+/**
+ * @param {WasmInstance} wasm
+ * @returns {WebGLInterface}
+ */
+function makeWebGLInterface(wasm) {
+	return {
+		wasm: wasm,
+		element: null,
+		/* will be set later, most of the time we want to assert that it's not null */
+		ctx: /**@type {*}*/ (null),
+		version: 1,
+		counter: 1,
+		last_error: 0,
+		buffers: [],
+		mappedBuffers: {},
+		programs: [],
+		framebuffers: [],
+		renderbuffers: [],
+		textures: [],
+		uniforms: [],
+		shaders: [],
+		vaos: [],
+		contexts: [],
+		currentContext: null,
+		offscreenCanvases: {},
+		timerQueriesEXT: [],
+		queries: [],
+		samplers: [],
+		transformFeedbacks: [],
+		syncs: [],
+		programInfos: {},
+	}
+}
 
-        contextSettings = contextSettings ?? {}
-        this.ctx =
-            element.getContext('webgl2', contextSettings) ||
-            element.getContext('webgl', contextSettings)
-        if (!this.ctx) {
-            return false
-        }
-        this.ctxElement = element
-        if (this.ctx.getParameter(0x1f02).indexOf('WebGL 2.0') !== -1) {
-            this.ctxVersion = 2.0
-        } else {
-            this.ctxVersion = 1.0
-        }
-        return true
-    }
+const EMPTY_U8_ARRAY = new Uint8Array(0)
 
-    /** @returns {void} */
-    assertWebGL2() {
-        if (this.ctxVersion < 2) {
-            throw new Error('WebGL2 procedure called in a canvas without a WebGL2 context')
-        }
-    }
-    /** @returns {number} */
-    getNewId(table) {
-        for (var ret = this.counter++, i = table.length; i < ret; i++) {
-            table[i] = null
-        }
-        return ret
-    }
-    /** @returns {void} */
-    recordError(errorCode) {
-        this.lastError || (this.lastError = errorCode)
-    }
-    /** @returns {void} */
-    populateUniformTable(program) {
-        let p = this.programs[program]
-        this.programInfos[program] = {
-            uniforms: {},
-            maxUniformLength: 0,
-            maxAttributeLength: -1,
-            maxUniformBlockNameLength: -1,
-        }
-        for (
-            let ptable = this.programInfos[program],
-                utable = ptable.uniforms,
-                numUniforms = this.ctx.getProgramParameter(p, this.ctx.ACTIVE_UNIFORMS),
-                i = 0;
-            i < numUniforms;
-            ++i
-        ) {
-            let u = this.ctx.getActiveUniform(p, i)
-            let name = u.name
-            if (
-                ((ptable.maxUniformLength = Math.max(ptable.maxUniformLength, name.length + 1)),
-                name.indexOf(']', name.length - 1) !== -1)
-            ) {
-                name = name.slice(0, name.lastIndexOf('['))
-            }
-            let loc = this.ctx.getUniformLocation(p, name)
-            if (loc !== null) {
-                let id = this.getNewId(this.uniforms)
-                ;(utable[name] = [u.size, id]), (this.uniforms[id] = loc)
-                for (let j = 1; j < u.size; ++j) {
-                    let n = name + '[' + j + ']'
-                    let loc = this.ctx.getUniformLocation(p, n)
-                    let id = this.getNewId(this.uniforms)
-                    this.uniforms[id] = loc
-                }
-            }
-        }
-    }
-    /** @returns {string} */
-    getSource(shader, strings_ptr, strings_length) {
-        const STRING_SIZE = 2 * 4
-        let source = ''
-        for (let i = 0; i < strings_length; i++) {
-            let ptr = this.mem.loadPtr(strings_ptr + i * STRING_SIZE)
-            let len = this.mem.loadPtr(strings_ptr + i * STRING_SIZE + 4)
-            let str = this.mem.loadString(ptr, len)
-            source += str
-        }
-        return source
-    }
+/**
+ * @param {WebGLInterface} webgl
+ * @param {?} element
+ * @param {WebGLContextAttributes | undefined} context_settings
+ * @returns {boolean} */
+function setCurrentContext(webgl, element, context_settings) {
+	if (!(element instanceof HTMLCanvasElement)) return false
+	if (webgl.element === element) return true
 
-    /** @returns {{ SetCurrentContextById: (name_ptr: any, name_len: any) => boolean; CreateCurrentContextById: (name_ptr: any, name_len: any, attributes: any) => boolean; GetCurrentContextAttributes: () => number; DrawingBufferWidth: () => any; DrawingBufferHeight: () => any; IsExtensionSupported: (name_ptr: any, name_len: any) => boolean; GetError: () => any; GetWebGLVersion: (major_ptr: any, minor_ptr: any) => void; GetESVersion: (major_ptr: any, minor_ptr: any) => void; ActiveTexture: (x: any) => void; AttachShader: (program: any, shader: any) => void; BindAttribLocation: (program: any, index: any, name_ptr: any, name_len: any) => void; BindBuffer: (target: any, buffer: any) => void; BindFramebuffer: (target: any, framebuffer: any) => void; BindTexture: (target: any, texture: any) => void; BlendColor: (red: any, green: any, blue: any, alpha: any) => void; BlendEquation: (mode: any) => void; BlendFunc: (sfactor: any, dfactor: any) => void; BlendFuncSeparate: (srcRGB: any, dstRGB: any, srcAlpha: any, dstAlpha: any) => void; BufferData: (target: any, size: any, data: any, usage: any) => void; BufferSubData: (target: any, offset: any, size: any, data: any) => void; Clear: (x: any) => void; ClearColor: (r: any, g: any, b: any, a: any) => void; ClearDepth: (x: any) => void; ClearStencil: (x: any) => void; ColorMask: (r: any, g: any, b: any, a: any) => void; CompileShader: (shader: any) => void; CompressedTexImage2D: (target: any, level: any, internalformat: any, width: any, height: any, border: any, imageSize: any, data: any) => void; CompressedTexSubImage2D: (target: any, level: any, xoffset: any, yoffset: any, width: any, height: any, format: any, imageSize: any, data: any) => void; CopyTexImage2D: (target: any, level: any, internalformat: any, x: any, y: any, width: any, height: any, border: any) => void; CopyTexSubImage2D: (target: any, level: any, xoffset: any, yoffset: any, x: any, y: any, width: any, height: any) => void; CreateBuffer: () => number; CreateFramebuffer: () => number; CreateProgram: () => number; CreateRenderbuffer: () => number; CreateShader: (shaderType: any) => number; CreateTexture: () => number; CullFace: (mode: any) => void; DeleteBuffer: (id: any) => void; DeleteFramebuffer: (id: any) => void; DeleteProgram: (id: any) => void; DeleteRenderbuffer: (id: any) => void; DeleteShader: (id: any) => void; DeleteTexture: (id: any) => void; DepthFunc: (func: any) => void; DepthMask: (flag: any) => void; DepthRange: (zNear: any, zFar: any) => void; DetachShader: (program: any, shader: any) => void; Disable: (cap: any) => void; DisableVertexAttribArray: (index: any) => void; DrawArrays: (mode: any, first: any, count: any) => void; DrawElements: (mode: any, count: any, type: any, indices: any) => void; Enable: (cap: any) => void; EnableVertexAttribArray: (index: any) => void; Finish: () => void; Flush: () => void; FramebufferRenderBuffer: (target: any, attachment: any, renderbuffertarget: any, renderbuffer: any) => void; FramebufferTexture2D: (target: any, attachment: any, textarget: any, texture: any, level: any) => void; FrontFace: (mode: any) => void; GenerateMipmap: (target: any) => void; GetAttribLocation: (program: any, name_ptr: any, name_len: any) => any; GetParameter: (pname: any) => any; GetProgramParameter: (program: any, pname: any) => any; GetProgramInfoLog: (program: any, buf_ptr: any, buf_len: any, length_ptr: any) => void; GetShaderInfoLog: (shader: any, buf_ptr: any, buf_len: any, length_ptr: any) => void; GetShaderiv: (shader: any, pname: any, p: any) => void; GetUniformLocation: (program: any, name_ptr: any, name_len: any) => any; GetVertexAttribOffset: (index: any, pname: any) => any; Hint: (target: any, mode: any) => void; IsBuffer: (buffer: any) => any; IsEnabled: (enabled: any) => any; IsFramebuffer: (framebuffer: any) => any; IsProgram: (program: any) => any; IsRenderbuffer: (renderbuffer: any) => any; IsShader: (shader: any) => any; IsTexture: (texture: any) => any; LineWidth: (width: any) => void; LinkProgram: (program: any) => void; PixelStorei: (pname: any, param: any) => void; PolygonOffset: (factor: any, units: any) => void; ReadnPixels: (x: any, y: any, width: any, height: any, format: any, type: any, bufSize: any, data: any) => void; RenderbufferStorage: (target: any, internalformat: any, width: any, height: any) => void; SampleCoverage: (value: any, invert: any) => void; Scissor: (x: any, y: any, width: any, height: any) => void; ShaderSource: (shader: any, strings_ptr: any, strings_length: any) => void; StencilFunc: (func: any, ref: any, mask: any) => void; StencilFuncSeparate: (face: any, func: any, ref: any, mask: any) => void; StencilMask: (mask: any) => void; StencilMaskSeparate: (face: any, mask: any) => void; StencilOp: (fail: any, zfail: any, zpass: any) => void; StencilOpSeparate: (face: any, fail: any, zfail: any, zpass: any) => void; TexImage2D: (target: any, level: any, internalformat: any, width: any, height: any, border: any, format: any, type: any, size: any, data: any) => void; TexParameterf: (target: any, pname: any, param: any) => void; TexParameteri: (target: any, pname: any, param: any) => void; TexSubImage2D: (target: any, level: any, xoffset: any, yoffset: any, width: any, height: any, format: any, type: any, size: any, data: any) => void; Uniform1f: (location: any, v0: any) => void; Uniform2f: (location: any, v0: any, v1: any) => void; Uniform3f: (location: any, v0: any, v1: any, v2: any) => void; Uniform4f: (location: any, v0: any, v1: any, v2: any, v3: any) => void; Uniform1i: (location: any, v0: any) => void; Uniform2i: (location: any, v0: any, v1: any) => void; Uniform3i: (location: any, v0: any, v1: any, v2: any) => void; Uniform4i: (location: any, v0: any, v1: any, v2: any, v3: any) => void; UniformMatrix2fv: (location: any, addr: any) => void; UniformMatrix3fv: (location: any, addr: any) => void; UniformMatrix4fv: (location: any, addr: any) => void; UseProgram: (program: any) => void; ValidateProgram: (program: any) => void; VertexAttrib1f: (index: any, x: any) => void; VertexAttrib2f: (index: any, x: any, y: any) => void; VertexAttrib3f: (index: any, x: any, y: any, z: any) => void; VertexAttrib4f: (index: any, x: any, y: any, z: any, w: any) => void; VertexAttribPointer: (index: any, size: any, type: any, normalized: any, stride: any, ptr: any) => void; Viewport: (x: any, y: any, w: any, h: any) => void; }} */
-    getWebGL1Interface() {
-        return {
-            SetCurrentContextById: (name_ptr, name_len) => {
-                let name = this.mem.loadString(name_ptr, name_len)
-                let element = getElement(name)
-                return this.setCurrentContext(element, {
-                    alpha: true,
-                    antialias: true,
-                    depth: true,
-                    premultipliedAlpha: true,
-                })
-            },
-            CreateCurrentContextById: (name_ptr, name_len, attributes) => {
-                let name = this.mem.loadString(name_ptr, name_len)
-                let element = getElement(name)
+	const ctx =
+		element.getContext("webgl2", context_settings) ||
+		element.getContext("webgl", context_settings)
+	if (!ctx) return false
 
-                let contextSettings = {
-                    alpha: !(attributes & (1 << 0)),
-                    antialias: !(attributes & (1 << 1)),
-                    depth: !(attributes & (1 << 2)),
-                    failIfMajorPerformanceCaveat: !!(attributes & (1 << 3)),
-                    premultipliedAlpha: !(attributes & (1 << 4)),
-                    preserveDrawingBuffer: !!(attributes & (1 << 5)),
-                    stencil: !!(attributes & (1 << 6)),
-                    desynchronized: !!(attributes & (1 << 7)),
-                }
+	webgl.ctx = ctx
+	webgl.element = element
+	webgl.version = webgl.ctx.getParameter(0x1f02).indexOf("WebGL 2.0") !== -1 ? 2 : 1
 
-                return this.setCurrentContext(element, contextSettings)
-            },
-            GetCurrentContextAttributes: () => {
-                if (!this.ctx) {
-                    return 0
-                }
-                let attrs = this.ctx.getContextAttributes()
-                let res = 0
-                if (!attrs.alpha) res |= 1 << 0
-                if (!attrs.antialias) res |= 1 << 1
-                if (!attrs.depth) res |= 1 << 2
-                if (attrs.failIfMajorPerformanceCaveat) res |= 1 << 3
-                if (!attrs.premultipliedAlpha) res |= 1 << 4
-                if (attrs.preserveDrawingBuffer) res |= 1 << 5
-                if (attrs.stencil) res |= 1 << 6
-                if (attrs.desynchronized) res |= 1 << 7
-                return res
-            },
+	return true
+}
 
-            DrawingBufferWidth: () => this.ctx.drawingBufferWidth,
-            DrawingBufferHeight: () => this.ctx.drawingBufferHeight,
+/**
+ * @param {WebGLInterface} webgl
+ * @returns {void | never} */
+function assertWebGL2(webgl) {
+	if (webgl.version < 2) {
+		throw new Error("WebGL2 procedure called in a canvas without a WebGL2 context")
+	}
+}
+/**
+ * @param {WebGLInterface} webgl
+ * @returns {number} */
+function getNewId(webgl, table) {
+	for (var ret = webgl.counter++, i = table.length; i < ret; i++) {
+		table[i] = null
+	}
+	return ret
+}
+/**
+ * @param {WebGLInterface} webgl
+ * @param {number} error_code
+ * @returns {void} */
+function recordError(webgl, error_code) {
+	if (!webgl.last_error) {
+		webgl.last_error = error_code
+	}
+}
+/**
+ * @param {WebGLInterface} webgl
+ * @param {number} program_id
+ * @returns {void} */
+function populateUniformTable(webgl, program_id) {
+	const program = webgl.programs[program_id]
+	webgl.programInfos[program_id] = {
+		uniforms: {},
+		maxUniformLength: 0,
+		maxAttributeLength: -1,
+		maxUniformBlockNameLength: -1,
+	}
+	for (
+		let ptable = webgl.programInfos[program_id],
+			utable = ptable.uniforms,
+			numUniforms = webgl.ctx.getProgramParameter(program, webgl.ctx.ACTIVE_UNIFORMS),
+			i = 0;
+		i < numUniforms;
+		++i
+	) {
+		const u = webgl.ctx.getActiveUniform(program, i)
+		if (!u) continue
 
-            IsExtensionSupported: (name_ptr, name_len) => {
-                let name = this.mem.loadString(name_ptr, name_len)
-                let extensions = this.ctx.getSupportedExtensions()
-                return extensions.indexOf(name) !== -1
-            },
+		let name = u.name
+		if (
+			((ptable.maxUniformLength = Math.max(ptable.maxUniformLength, name.length + 1)),
+			name.indexOf("]", name.length - 1) !== -1)
+		) {
+			name = name.slice(0, name.lastIndexOf("["))
+		}
 
-            GetError: () => {
-                let err = this.lastError
-                this.recordError(0)
-                if (err) {
-                    return err
-                }
-                return this.ctx.getError()
-            },
+		let loc = webgl.ctx.getUniformLocation(program, name)
+		if (!loc) continue
 
-            GetWebGLVersion: (major_ptr, minor_ptr) => {
-                let version = this.ctx.getParameter(0x1f02)
-                if (version.indexOf('WebGL 2.0') !== -1) {
-                    this.mem.storeI32(major_ptr, 2)
-                    this.mem.storeI32(minor_ptr, 0)
-                    return
-                }
+		let id = getNewId(webgl, webgl.uniforms)
+		;(utable[name] = [u.size, id]), (webgl.uniforms[id] = loc)
+		for (let j = 1; j < u.size; ++j) {
+			let n = name + "[" + j + "]"
+			let loc = webgl.ctx.getUniformLocation(program, n)
+			let id = getNewId(webgl, webgl.uniforms)
+			webgl.uniforms[id] = loc
+		}
+	}
+}
+/**
+ * @param {WebGLInterface} webgl
+ * @param {number} strings_ptr
+ * @param {number} strings_length
+ * @returns {string} */
+function getSource(webgl, strings_ptr, strings_length) {
+	const data = new DataView(webgl.wasm.memory.buffer)
+	const STRING_SIZE = 2 * 4
+	let source = ""
+	for (let i = 0; i < strings_length; i++) {
+		source += mem.load_string(data, strings_ptr + i * STRING_SIZE)
+	}
+	return source
+}
 
-                this.mem.storeI32(major_ptr, 1)
-                this.mem.storeI32(minor_ptr, 0)
-            },
-            GetESVersion: (major_ptr, minor_ptr) => {
-                let version = this.ctx.getParameter(0x1f02)
-                if (version.indexOf('OpenGL ES 3.0') !== -1) {
-                    this.mem.storeI32(major_ptr, 3)
-                    this.mem.storeI32(minor_ptr, 0)
-                    return
-                }
+/**
+ * @param {import('../types.js').WasmInstance} wasm
+ * @returns WebGL bindings for Odin
+ */
+export function makeOdinWebGl(wasm) {
+	const webgl = makeWebGLInterface(wasm)
 
-                this.mem.storeI32(major_ptr, 2)
-                this.mem.storeI32(minor_ptr, 0)
-            },
+	return {
+		/**
+		 * @param {number} name_ptr
+		 * @param {number} name_len
+		 * @returns {boolean} */
+		SetCurrentContextById: (name_ptr, name_len) => {
+			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+			const element = document.getElementById(name)
 
-            ActiveTexture: x => {
-                this.ctx.activeTexture(x)
-            },
-            AttachShader: (program, shader) => {
-                this.ctx.attachShader(this.programs[program], this.shaders[shader])
-            },
-            BindAttribLocation: (program, index, name_ptr, name_len) => {
-                let name = this.mem.loadString(name_ptr, name_len)
-                this.ctx.bindAttribLocation(this.programs[program], index, name)
-            },
-            BindBuffer: (target, buffer) => {
-                let bufferObj = buffer ? this.buffers[buffer] : null
-                if (target == 35051) {
-                    this.ctx.currentPixelPackBufferBinding = buffer
-                } else {
-                    if (target == 35052) {
-                        this.ctx.currentPixelUnpackBufferBinding = buffer
-                    }
-                    this.ctx.bindBuffer(target, bufferObj)
-                }
-            },
-            BindFramebuffer: (target, framebuffer) => {
-                this.ctx.bindFramebuffer(
-                    target,
-                    framebuffer ? this.framebuffers[framebuffer] : null,
-                )
-            },
-            BindTexture: (target, texture) => {
-                this.ctx.bindTexture(target, texture ? this.textures[texture] : null)
-            },
-            BlendColor: (red, green, blue, alpha) => {
-                this.ctx.blendColor(red, green, blue, alpha)
-            },
-            BlendEquation: mode => {
-                this.ctx.blendEquation(mode)
-            },
-            BlendFunc: (sfactor, dfactor) => {
-                this.ctx.blendFunc(sfactor, dfactor)
-            },
-            BlendFuncSeparate: (srcRGB, dstRGB, srcAlpha, dstAlpha) => {
-                this.ctx.blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
-            },
+			return setCurrentContext(webgl, element, {
+				alpha: true,
+				antialias: true,
+				depth: true,
+				premultipliedAlpha: true,
+			})
+		},
+		/**
+		 * @param {number} name_ptr element id
+		 * @param {number} name_len
+		 * @param {number} attrs bitset
+		 * @returns {boolean} */
+		CreateCurrentContextById: (name_ptr, name_len, attrs) => {
+			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+			const element = document.getElementById(name)
 
-            BufferData: (target, size, data, usage) => {
-                if (data) {
-                    this.ctx.bufferData(target, this.mem.loadBytes(data, size), usage)
-                } else {
-                    this.ctx.bufferData(target, size, usage)
-                }
-            },
-            BufferSubData: (target, offset, size, data) => {
-                if (data) {
-                    this.ctx.bufferSubData(target, offset, this.mem.loadBytes(data, size))
-                } else {
-                    this.ctx.bufferSubData(target, offset, null)
-                }
-            },
+			return setCurrentContext(
+				webgl,
+				element,
+				// prettier-ignore
+				{
+				alpha: 						   !(attrs & (1 << 0)),
+				antialias: 					   !(attrs & (1 << 1)),
+				depth: 						   !(attrs & (1 << 2)),
+				failIfMajorPerformanceCaveat: !!(attrs & (1 << 3)),
+				premultipliedAlpha: 		   !(attrs & (1 << 4)),
+				preserveDrawingBuffer: 		  !!(attrs & (1 << 5)),
+				stencil: 					  !!(attrs & (1 << 6)),
+				desynchronized: 			  !!(attrs & (1 << 7)),
+				},
+			)
+		},
+		/**
+		 * @returns {number} */
+		// prettier-ignore
+		GetCurrentContextAttributes() {
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+			if (!webgl.ctx) return 0
 
-            Clear: x => {
-                this.ctx.clear(x)
-            },
-            ClearColor: (r, g, b, a) => {
-                this.ctx.clearColor(r, g, b, a)
-            },
-            ClearDepth: x => {
-                this.ctx.clearDepth(x)
-            },
-            ClearStencil: x => {
-                this.ctx.clearStencil(x)
-            },
-            ColorMask: (r, g, b, a) => {
-                this.ctx.colorMask(!!r, !!g, !!b, !!a)
-            },
-            CompileShader: shader => {
-                this.ctx.compileShader(this.shaders[shader])
-            },
+			const attrs = webgl.ctx.getContextAttributes()
+			if (!attrs) return 0
 
-            CompressedTexImage2D: (
-                target,
-                level,
-                internalformat,
-                width,
-                height,
-                border,
-                imageSize,
-                data,
-            ) => {
-                if (data) {
-                    this.ctx.compressedTexImage2D(
-                        target,
-                        level,
-                        internalformat,
-                        width,
-                        height,
-                        border,
-                        this.mem.loadBytes(data, imageSize),
-                    )
-                } else {
-                    this.ctx.compressedTexImage2D(
-                        target,
-                        level,
-                        internalformat,
-                        width,
-                        height,
-                        border,
-                        null,
-                    )
-                }
-            },
-            CompressedTexSubImage2D: (
-                target,
-                level,
-                xoffset,
-                yoffset,
-                width,
-                height,
-                format,
-                imageSize,
-                data,
-            ) => {
-                if (data) {
-                    this.ctx.compressedTexSubImage2D(
-                        target,
-                        level,
-                        xoffset,
-                        yoffset,
-                        width,
-                        height,
-                        format,
-                        this.mem.loadBytes(data, imageSize),
-                    )
-                } else {
-                    this.ctx.compressedTexSubImage2D(
-                        target,
-                        level,
-                        xoffset,
-                        yoffset,
-                        width,
-                        height,
-                        format,
-                        null,
-                    )
-                }
-            },
+			let res = 0
+			if (!attrs.alpha) 						 res |= 1 << 0
+			if (!attrs.antialias) 					 res |= 1 << 1
+			if (!attrs.depth) 						 res |= 1 << 2
+			if ( attrs.failIfMajorPerformanceCaveat) res |= 1 << 3
+			if (!attrs.premultipliedAlpha) 			 res |= 1 << 4
+			if ( attrs.preserveDrawingBuffer) 		 res |= 1 << 5
+			if ( attrs.stencil) 					 res |= 1 << 6
+			if ( attrs.desynchronized) 				 res |= 1 << 7
 
-            CopyTexImage2D: (target, level, internalformat, x, y, width, height, border) => {
-                this.ctx.copyTexImage2D(target, level, internalformat, x, y, width, height, border)
-            },
-            CopyTexSubImage2D: (target, level, xoffset, yoffset, x, y, width, height) => {
-                this.ctx.copyTexImage2D(target, level, xoffset, yoffset, x, y, width, height)
-            },
+			return res
+		},
+		/**
+		 * @returns {number} */
+		DrawingBufferWidth: () => webgl.ctx.drawingBufferWidth,
+		/**
+		 * @returns {number} */
+		DrawingBufferHeight: () => webgl.ctx.drawingBufferHeight,
+		/**
+		 * @param {number} name_ptr extension name
+		 * @param {number} name_len
+		 * @returns {boolean} */
+		IsExtensionSupported(name_ptr, name_len) {
+			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+			const extensions = webgl.ctx.getSupportedExtensions()
+			return extensions ? extensions.indexOf(name) !== -1 : false
+		},
+		/**
+		 * @returns {number} */
+		GetError() {
+			if (webgl.last_error) {
+				const err = webgl.last_error
+				webgl.last_error = 0
+				return err
+			}
+			return webgl.ctx.getError()
+		},
+		/**
+		 * @param {number} major_ptr
+		 * @param {number} minor_ptr
+		 * @returns {void} */
+		GetWebGLVersion(major_ptr, minor_ptr) {
+			const data = new DataView(wasm.memory.buffer)
+			mem.store_i32(data, major_ptr, webgl.version)
+			mem.store_i32(data, minor_ptr, 0)
+		},
+		/**
+		 * @param {number} major_ptr
+		 * @param {number} minor_ptr
+		 * @returns {void} */
+		GetESVersion(major_ptr, minor_ptr) {
+			const major = webgl.ctx.getParameter(0x1f02).indexOf("OpenGL ES 3.0") !== -1 ? 3 : 2
+			const data = new DataView(wasm.memory.buffer)
+			mem.store_i32(data, major_ptr, major)
+			mem.store_i32(data, minor_ptr, 0)
+		},
+		/**
+		 * @param {number} texture
+		 * @returns {void} */
+		ActiveTexture(texture) {
+			webgl.ctx.activeTexture(texture)
+		},
+		/**
+		 * @param {number} program
+		 * @param {number} shader
+		 * @returns {void} */
+		AttachShader(program, shader) {
+			webgl.ctx.attachShader(webgl.programs[program], webgl.shaders[shader])
+		},
+		/**
+		 * @param {number} program
+		 * @param {number} index
+		 * @param {number} name_ptr
+		 * @param {number} name_len
+		 * @returns {void} */
+		BindAttribLocation(program, index, name_ptr, name_len) {
+			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+			webgl.ctx.bindAttribLocation(webgl.programs[program], index, name)
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} buffer
+		 * @returns {void} */
+		BindBuffer(target, buffer) {
+			const bufferObj = buffer ? webgl.buffers[buffer] : null
+			if (target == 35051) {
+				webgl.ctx.currentPixelPackBufferBinding = buffer
+			} else {
+				if (target == 35052) {
+					webgl.ctx.currentPixelUnpackBufferBinding = buffer
+				}
+				webgl.ctx.bindBuffer(target, bufferObj)
+			}
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} framebuffer
+		 * @returns {void} */
+		BindFramebuffer(target, framebuffer) {
+			webgl.ctx.bindFramebuffer(target, framebuffer ? webgl.framebuffers[framebuffer] : null)
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} texture
+		 * @returns {void} */
+		BindTexture(target, texture) {
+			webgl.ctx.bindTexture(target, texture ? webgl.textures[texture] : null)
+		},
+		/**
+		 * @param {number} r
+		 * @param {number} g
+		 * @param {number} b
+		 * @param {number} a
+		 * @returns {void} */
+		BlendColor(r, g, b, a) {
+			webgl.ctx.blendColor(r, g, b, a)
+		},
+		/**
+		 * @param {number} mode
+		 * @returns {void} */
+		BlendEquation(mode) {
+			webgl.ctx.blendEquation(mode)
+		},
+		/**
+		 * @param {number} sfactor
+		 * @param {number} dfactor
+		 * @returns {void} */
+		BlendFunc(sfactor, dfactor) {
+			webgl.ctx.blendFunc(sfactor, dfactor)
+		},
+		/**
+		 * @param {number} srcRGB
+		 * @param {number} dstRGB
+		 * @param {number} srcAlpha
+		 * @param {number} dstAlpha
+		 * @returns {void} */
+		BlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha) {
+			webgl.ctx.blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} size
+		 * @param {number} data
+		 * @param {number} usage
+		 * @returns {void} */
+		BufferData: (target, size, data, usage) => {
+			if (data) {
+				webgl.ctx.bufferData(target, mem.load_bytes(wasm.memory.buffer, data, size), usage)
+			} else {
+				webgl.ctx.bufferData(target, size, usage)
+			}
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} offset
+		 * @param {number} size
+		 * @param {number} data
+		 * @returns {void} */
+		BufferSubData: (target, offset, size, data) => {
+			webgl.ctx.bufferSubData(
+				target,
+				offset,
+				data ? mem.load_bytes(wasm.memory.buffer, data, size) : EMPTY_U8_ARRAY,
+			)
+		},
+		/**
+		 * @param {number} mask
+		 * @returns {void} */
+		Clear: mask => {
+			webgl.ctx.clear(mask)
+		},
+		/**
+		 *
+		 * @param {number} r
+		 * @param {number} g
+		 * @param {number} b
+		 * @param {number} a
+		 * @returns {void} */
+		ClearColor: (r, g, b, a) => {
+			webgl.ctx.clearColor(r, g, b, a)
+		},
+		/**
+		 * @param {number} depth
+		 * @returns {void} */
+		ClearDepth: depth => {
+			webgl.ctx.clearDepth(depth)
+		},
+		/**
+		 * @param {number} s
+		 * @returns {void} */
+		ClearStencil: s => {
+			webgl.ctx.clearStencil(s)
+		},
+		/**
+		 *
+		 * @param {number} r
+		 * @param {number} g
+		 * @param {number} b
+		 * @param {number} a
+		 * @returns {void} */
+		ColorMask: (r, g, b, a) => {
+			webgl.ctx.colorMask(!!r, !!g, !!b, !!a)
+		},
+		/**
+		 * @param {number} shader
+		 * @returns {void} */
+		CompileShader: shader => {
+			webgl.ctx.compileShader(webgl.shaders[shader])
+		},
+		CompressedTexImage2D: (
+			/** @type {number} */ target,
+			/** @type {number} */ level,
+			/** @type {number} */ internalformat,
+			/** @type {number} */ width,
+			/** @type {number} */ height,
+			/** @type {number} */ border,
+			/** @type {number} */ imageSize,
+			/** @type {number} */ data,
+		) => {
+			webgl.ctx.compressedTexImage2D(
+				target,
+				level,
+				internalformat,
+				width,
+				height,
+				border,
+				data ? mem.load_bytes(wasm.memory.buffer, data, imageSize) : EMPTY_U8_ARRAY,
+			)
+		},
+		CompressedTexSubImage2D: (
+			/** @type {number} */ target,
+			/** @type {number} */ level,
+			/** @type {number} */ xoffset,
+			/** @type {number} */ yoffset,
+			/** @type {number} */ width,
+			/** @type {number} */ height,
+			/** @type {number} */ format,
+			/** @type {number} */ imageSize,
+			/** @type {number} */ data,
+		) => {
+			webgl.ctx.compressedTexSubImage2D(
+				target,
+				level,
+				xoffset,
+				yoffset,
+				width,
+				height,
+				format,
+				data ? mem.load_bytes(wasm.memory.buffer, data, imageSize) : EMPTY_U8_ARRAY,
+			)
+		},
+		CopyTexImage2D: (
+			/**@type {number}*/ target,
+			/**@type {number}*/ level,
+			/**@type {number}*/ internalformat,
+			/**@type {number}*/ x,
+			/**@type {number}*/ y,
+			/**@type {number}*/ width,
+			/**@type {number}*/ height,
+			/**@type {number}*/ border,
+		) => {
+			webgl.ctx.copyTexImage2D(target, level, internalformat, x, y, width, height, border)
+		},
+		CopyTexSubImage2D: (
+			/**@type {number}*/ target,
+			/**@type {number}*/ level,
+			/**@type {number}*/ xoffset,
+			/**@type {number}*/ yoffset,
+			/**@type {number}*/ x,
+			/**@type {number}*/ y,
+			/**@type {number}*/ width,
+			/**@type {number}*/ height,
+		) => {
+			webgl.ctx.copyTexImage2D(target, level, xoffset, yoffset, x, y, width, height)
+		},
+		/**
+		 * @returns {number} */
+		CreateBuffer: () => {
+			const buffer = webgl.ctx.createBuffer()
+			if (!buffer) {
+				recordError(webgl, 1282)
+				return 0
+			}
+			const id = getNewId(webgl, webgl.buffers)
+			buffer.name = id
+			webgl.buffers[id] = buffer
+			return id
+		},
+		/**
+		 * @returns {number} */
+		CreateFramebuffer: () => {
+			const buffer = webgl.ctx.createFramebuffer()
+			if (!buffer) {
+				recordError(webgl, 1282)
+				return 0
+			}
+			const id = getNewId(webgl, webgl.framebuffers)
+			buffer.name = id
+			webgl.framebuffers[id] = buffer
+			return id
+		},
+		/**
+		 * @returns {number} */
+		CreateRenderbuffer: () => {
+			const buffer = webgl.ctx.createRenderbuffer()
+			if (!buffer) {
+				recordError(webgl, 1282)
+				return 0
+			}
+			const id = getNewId(webgl, webgl.renderbuffers)
+			buffer.name = id
+			webgl.renderbuffers[id] = buffer
+			return id
+		},
+		/**
+		 * @returns {number} */
+		CreateProgram: () => {
+			const program = webgl.ctx.createProgram()
+			if (!program) {
+				recordError(webgl, 1282)
+				return 0
+			}
+			const id = getNewId(webgl, webgl.programs)
+			program.name = id
+			webgl.programs[id] = program
+			return id
+		},
+		/**
+		 * @param {number} shaderType
+		 * @returns {number} */
+		CreateShader: shaderType => {
+			const shader = webgl.ctx.createShader(shaderType)
+			if (!shader) {
+				recordError(webgl, 1282)
+				return 0
+			}
+			const id = getNewId(webgl, webgl.shaders)
+			shader.name = id
+			webgl.shaders[id] = shader
+			return id
+		},
+		/**
+		 * @returns {number} */
+		CreateTexture: () => {
+			const texture = webgl.ctx.createTexture()
+			if (!texture) {
+				recordError(webgl, 1282)
+				return 0
+			}
+			const id = getNewId(webgl, webgl.textures)
+			texture.name = id
+			webgl.textures[id] = texture
+			return id
+		},
+		/**
+		 * @param {number} mode
+		 * @returns {void} */
+		CullFace: mode => {
+			webgl.ctx.cullFace(mode)
+		},
+		/**
+		 * @param {number} id
+		 * @returns {void} */
+		DeleteBuffer: id => {
+			if (id === 0) return
 
-            CreateBuffer: () => {
-                let buffer = this.ctx.createBuffer()
-                if (!buffer) {
-                    this.recordError(1282)
-                    return 0
-                }
-                let id = this.getNewId(this.buffers)
-                buffer.name = id
-                this.buffers[id] = buffer
-                return id
-            },
-            CreateFramebuffer: () => {
-                let buffer = this.ctx.createFramebuffer()
-                let id = this.getNewId(this.framebuffers)
-                buffer.name = id
-                this.framebuffers[id] = buffer
-                return id
-            },
-            CreateProgram: () => {
-                let program = this.ctx.createProgram()
-                let id = this.getNewId(this.programs)
-                program.name = id
-                this.programs[id] = program
-                return id
-            },
-            CreateRenderbuffer: () => {
-                let buffer = this.ctx.createRenderbuffer()
-                let id = this.getNewId(this.renderbuffers)
-                buffer.name = id
-                this.renderbuffers[id] = buffer
-                return id
-            },
-            CreateShader: shaderType => {
-                let shader = this.ctx.createShader(shaderType)
-                let id = this.getNewId(this.shaders)
-                shader.name = id
-                this.shaders[id] = shader
-                return id
-            },
-            CreateTexture: () => {
-                let texture = this.ctx.createTexture()
-                if (!texture) {
-                    this.recordError(1282)
-                    return 0
-                }
-                let id = this.getNewId(this.textures)
-                texture.name = id
-                this.textures[id] = texture
-                return id
-            },
+			const obj = webgl.buffers[id]
+			if (obj) {
+				webgl.ctx.deleteBuffer(obj)
+				webgl.buffers[id] = 0
+			}
+		},
+		/**
+		 * @param {number} id
+		 * @returns {void} */
+		DeleteFramebuffer: id => {
+			if (id === 0) return
 
-            CullFace: mode => {
-                this.ctx.cullFace(mode)
-            },
+			const obj = webgl.framebuffers[id]
+			if (obj) {
+				webgl.ctx.deleteFramebuffer(obj)
+				webgl.framebuffers[id] = 0
+			}
+		},
+		/**
+		 * @param {number} id
+		 * @returns {void} */
+		DeleteProgram: id => {
+			if (id === 0) return
 
-            DeleteBuffer: id => {
-                let obj = this.buffers[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteBuffer(obj)
-                    this.buffers[id] = null
-                }
-            },
-            DeleteFramebuffer: id => {
-                let obj = this.framebuffers[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteFramebuffer(obj)
-                    this.framebuffers[id] = null
-                }
-            },
-            DeleteProgram: id => {
-                let obj = this.programs[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteProgram(obj)
-                    this.programs[id] = null
-                }
-            },
-            DeleteRenderbuffer: id => {
-                let obj = this.renderbuffers[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteRenderbuffer(obj)
-                    this.renderbuffers[id] = null
-                }
-            },
-            DeleteShader: id => {
-                let obj = this.shaders[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteShader(obj)
-                    this.shaders[id] = null
-                }
-            },
-            DeleteTexture: id => {
-                let obj = this.textures[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteTexture(obj)
-                    this.textures[id] = null
-                }
-            },
+			const obj = webgl.programs[id]
+			if (obj) {
+				webgl.ctx.deleteProgram(obj)
+				webgl.programs[id] = 0
+			}
+		},
+		/**
+		 * @param {number} id
+		 * @returns {void} */
+		DeleteRenderbuffer: id => {
+			if (id === 0) return
 
-            DepthFunc: func => {
-                this.ctx.depthFunc(func)
-            },
-            DepthMask: flag => {
-                this.ctx.depthMask(!!flag)
-            },
-            DepthRange: (zNear, zFar) => {
-                this.ctx.depthRange(zNear, zFar)
-            },
-            DetachShader: (program, shader) => {
-                this.ctx.detachShader(this.programs[program], this.shaders[shader])
-            },
-            Disable: cap => {
-                this.ctx.disable(cap)
-            },
-            DisableVertexAttribArray: index => {
-                this.ctx.disableVertexAttribArray(index)
-            },
-            DrawArrays: (mode, first, count) => {
-                this.ctx.drawArrays(mode, first, count)
-            },
-            DrawElements: (mode, count, type, indices) => {
-                this.ctx.drawElements(mode, count, type, indices)
-            },
+			const obj = webgl.renderbuffers[id]
+			if (obj) {
+				webgl.ctx.deleteRenderbuffer(obj)
+				webgl.renderbuffers[id] = 0
+			}
+		},
+		/**
+		 * @param {number} id
+		 * @returns {void} */
+		DeleteShader: id => {
+			if (id === 0) return
 
-            Enable: cap => {
-                this.ctx.enable(cap)
-            },
-            EnableVertexAttribArray: index => {
-                this.ctx.enableVertexAttribArray(index)
-            },
-            Finish: () => {
-                this.ctx.finish()
-            },
-            Flush: () => {
-                this.ctx.flush()
-            },
-            FramebufferRenderBuffer: (target, attachment, renderbuffertarget, renderbuffer) => {
-                this.ctx.framebufferRenderBuffer(
-                    target,
-                    attachment,
-                    renderbuffertarget,
-                    this.renderbuffers[renderbuffer],
-                )
-            },
-            FramebufferTexture2D: (target, attachment, textarget, texture, level) => {
-                this.ctx.framebufferTexture2D(
-                    target,
-                    attachment,
-                    textarget,
-                    this.textures[texture],
-                    level,
-                )
-            },
-            FrontFace: mode => {
-                this.ctx.frontFace(mode)
-            },
+			const obj = webgl.shaders[id]
+			if (obj) {
+				webgl.ctx.deleteShader(obj)
+				webgl.shaders[id] = 0
+			}
+		},
+		/**
+		 * @param {number} id
+		 * @returns {void} */
+		DeleteTexture: id => {
+			if (id === 0) return
 
-            GenerateMipmap: target => {
-                this.ctx.generateMipmap(target)
-            },
+			const obj = webgl.textures[id]
+			if (obj) {
+				webgl.ctx.deleteTexture(obj)
+				webgl.textures[id] = 0
+			}
+		},
+		/**
+		 * @param {number} func
+		 * @returns {void} */
+		DepthFunc: func => {
+			webgl.ctx.depthFunc(func)
+		},
+		/**
+		 * @param {boolean} flag
+		 * @returns {void} */
+		DepthMask: flag => {
+			webgl.ctx.depthMask(flag)
+		},
+		/**
+		 * @param {number} zNear
+		 * @param {number} zFar
+		 * @returns {void} */
+		DepthRange: (zNear, zFar) => {
+			webgl.ctx.depthRange(zNear, zFar)
+		},
+		/**
+		 * @param {number} program
+		 * @param {number} shader
+		 * @returns {void} */
+		DetachShader: (program, shader) => {
+			webgl.ctx.detachShader(webgl.programs[program], webgl.shaders[shader])
+		},
+		/**
+		 * @param {number} cap
+		 * @returns {void} */
+		Disable: cap => {
+			webgl.ctx.disable(cap)
+		},
+		/**
+		 * @param {number} index
+		 * @returns {void} */
+		DisableVertexAttribArray: index => {
+			webgl.ctx.disableVertexAttribArray(index)
+		},
+		/**
+		 * @param {number} mode
+		 * @param {number} first
+		 * @param {number} count
+		 * @returns {void} */
+		DrawArrays: (mode, first, count) => {
+			webgl.ctx.drawArrays(mode, first, count)
+		},
+		/**
+		 * @param {number} mode
+		 * @param {number} count
+		 * @param {number} type
+		 * @param {number} indices
+		 * @returns {void} */
+		DrawElements: (mode, count, type, indices) => {
+			webgl.ctx.drawElements(mode, count, type, indices)
+		},
+		/**
+		 * @param {number} cap
+		 * @returns {void} */
+		Enable: cap => {
+			webgl.ctx.enable(cap)
+		},
+		/**
+		 * @param {number} index
+		 * @returns {void} */
+		EnableVertexAttribArray: index => {
+			webgl.ctx.enableVertexAttribArray(index)
+		},
+		/**
+		 * @returns {void} */
+		Finish: () => {
+			webgl.ctx.finish()
+		},
+		/**
+		 * @returns {void} */
+		Flush: () => {
+			webgl.ctx.flush()
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} attachment
+		 * @param {number} renderbuffertarget
+		 * @param {number} renderbuffer
+		 * @returns {void} */
+		FramebufferRenderbuffer: (target, attachment, renderbuffertarget, renderbuffer) => {
+			webgl.ctx.framebufferRenderbuffer(
+				target,
+				attachment,
+				renderbuffertarget,
+				webgl.renderbuffers[renderbuffer],
+			)
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} attachment
+		 * @param {number} textarget
+		 * @param {number} texture
+		 * @param {number} level
+		 * @returns {void} */
+		FramebufferTexture2D: (target, attachment, textarget, texture, level) => {
+			webgl.ctx.framebufferTexture2D(
+				target,
+				attachment,
+				textarget,
+				webgl.textures[texture],
+				level,
+			)
+		},
+		/**
+		 * @param {number} mode
+		 * @returns {void} */
+		FrontFace: mode => {
+			webgl.ctx.frontFace(mode)
+		},
+		/**
+		 * @param {number} target
+		 * @returns {void} */
+		GenerateMipmap: target => {
+			webgl.ctx.generateMipmap(target)
+		},
+		/**
+		 * @param {number} program
+		 * @param {number} name_ptr
+		 * @param {number} name_len
+		 * @returns {number} */
+		GetAttribLocation: (program, name_ptr, name_len) => {
+			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+			return webgl.ctx.getAttribLocation(webgl.programs[program], name)
+		},
+		/**
+		 * @param {number} pname
+		 * @returns {number} */
+		GetParameter: pname => {
+			return webgl.ctx.getParameter(pname)
+		},
+		/**
+		 * @param {number} program
+		 * @param {number} pname
+		 * @returns {number} */
+		GetProgramParameter: (program, pname) => {
+			return webgl.ctx.getProgramParameter(webgl.programs[program], pname)
+		},
+		/**
+		 * @param {number} program
+		 * @param {number} buf_ptr
+		 * @param {number} buf_len
+		 * @param {number} length_ptr
+		 * @returns {void} */
+		GetProgramInfoLog: (program, buf_ptr, buf_len, length_ptr) => {
+			if (buf_len <= 0 || !buf_ptr) return
 
-            GetAttribLocation: (program, name_ptr, name_len) => {
-                let name = this.mem.loadString(name_ptr, name_len)
-                return this.ctx.getAttribLocation(this.programs[program], name)
-            },
+			const log = webgl.ctx.getProgramInfoLog(webgl.programs[program]) ?? "(unknown error)"
+			const n = mem.store_string_raw(wasm.memory.buffer, buf_ptr, buf_len, log)
+			mem.store_int(new DataView(wasm.memory.buffer), length_ptr, n)
+		},
+		/**
+		 * @param {number} shader
+		 * @param {number} buf_ptr
+		 * @param {number} buf_len
+		 * @param {number} length_ptr
+		 * @returns {void} */
+		GetShaderInfoLog: (shader, buf_ptr, buf_len, length_ptr) => {
+			if (buf_len <= 0 || !buf_ptr) return
 
-            GetParameter: pname => {
-                return this.ctx.getParameter(pname)
-            },
-            GetProgramParameter: (program, pname) => {
-                return this.ctx.getProgramParameter(this.programs[program], pname)
-            },
-            GetProgramInfoLog: (program, buf_ptr, buf_len, length_ptr) => {
-                let log = this.ctx.getProgramInfoLog(this.programs[program])
-                if (log === null) {
-                    log = '(unknown error)'
-                }
-                if (buf_len > 0 && buf_ptr) {
-                    let n = Math.min(buf_len, log.length)
-                    log = log.substring(0, n)
-                    this.mem.loadBytes(buf_ptr, buf_len).set(new TextEncoder().encode(log))
+			const log = webgl.ctx.getShaderInfoLog(webgl.shaders[shader]) ?? "(unknown error)"
+			const n = mem.store_string_raw(wasm.memory.buffer, buf_ptr, buf_len, log)
+			mem.store_int(new DataView(wasm.memory.buffer), length_ptr, n)
+		},
+		/**
+		 * @param {number} shader_id
+		 * @param {number} pname
+		 * @param {number} p
+		 * @returns {void} */
+		GetShaderiv: (shader_id, pname, p) => {
+			if (!p) {
+				recordError(webgl, 1281)
+				return
+			}
 
-                    this.mem.storeInt(length_ptr, n)
-                }
-            },
-            GetShaderInfoLog: (shader, buf_ptr, buf_len, length_ptr) => {
-                let log = this.ctx.getShaderInfoLog(this.shaders[shader])
-                if (log === null) {
-                    log = '(unknown error)'
-                }
-                if (buf_len > 0 && buf_ptr) {
-                    let n = Math.min(buf_len, log.length)
-                    log = log.substring(0, n)
-                    this.mem.loadBytes(buf_ptr, buf_len).set(new TextEncoder().encode(log))
+			const data = new DataView(wasm.memory.buffer)
+			const shader = webgl.shaders[shader_id]
 
-                    this.mem.storeInt(length_ptr, n)
-                }
-            },
-            GetShaderiv: (shader, pname, p) => {
-                if (p) {
-                    if (pname == 35716) {
-                        let log = this.ctx.getShaderInfoLog(this.shaders[shader])
-                        if (log === null) {
-                            log = '(unknown error)'
-                        }
-                        this.mem.storeInt(p, log.length + 1)
-                    } else if (pname == 35720) {
-                        let source = this.ctx.getShaderSource(this.shaders[shader])
-                        let sourceLength =
-                            source === null || source.length == 0 ? 0 : source.length + 1
-                        this.mem.storeInt(p, sourceLength)
-                    } else {
-                        let param = this.ctx.getShaderParameter(this.shaders[shader], pname)
-                        this.mem.storeI32(p, param)
-                    }
-                } else {
-                    this.recordError(1281)
-                }
-            },
+			switch (pname) {
+				case 35716: {
+					const log = webgl.ctx.getShaderInfoLog(shader) ?? "(unknown error)"
+					mem.store_int(data, p, log.length + 1)
+					break
+				}
+				case 35720: {
+					const source = webgl.ctx.getShaderSource(shader)
+					const sourceLength =
+						source === null || source.length == 0 ? 0 : source.length + 1
+					mem.store_int(data, p, sourceLength)
+					break
+				}
+				default: {
+					const param = webgl.ctx.getShaderParameter(shader, pname)
+					mem.store_i32(data, p, param)
+					break
+				}
+			}
+		},
+		/**
+		 * @param {number} program
+		 * @param {number} name_ptr
+		 * @param {number} name_len
+		 * @returns {number} */
+		GetUniformLocation: (program, name_ptr, name_len) => {
+			let name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
+			let array_offset = 0
 
-            GetUniformLocation: (program, name_ptr, name_len) => {
-                let name = this.mem.loadString(name_ptr, name_len)
-                let arrayOffset = 0
-                if (name.indexOf(']', name.length - 1) !== -1) {
-                    let ls = name.lastIndexOf('['),
-                        arrayIndex = name.slice(ls + 1, -1)
-                    if (arrayIndex.length > 0 && (arrayOffset = parseInt(arrayIndex)) < 0) {
-                        return -1
-                    }
-                    name = name.slice(0, ls)
-                }
-                var ptable = this.programInfos[program]
-                if (!ptable) {
-                    return -1
-                }
-                var uniformInfo = ptable.uniforms[name]
-                return uniformInfo && arrayOffset < uniformInfo[0]
-                    ? uniformInfo[1] + arrayOffset
-                    : -1
-            },
+			if (name.indexOf("]", name.length - 1) !== -1) {
+				const ls = name.lastIndexOf("["),
+					array_index = name.slice(ls + 1, -1)
 
-            GetVertexAttribOffset: (index, pname) => {
-                return this.ctx.getVertexAttribOffset(index, pname)
-            },
+				if (array_index.length > 0 && (array_offset = parseInt(array_index)) < 0) {
+					return -1
+				}
 
-            Hint: (target, mode) => {
-                this.ctx.hint(target, mode)
-            },
+				name = name.slice(0, ls)
+			}
 
-            IsBuffer: buffer => this.ctx.isBuffer(this.buffers[buffer]),
-            IsEnabled: enabled => this.ctx.isEnabled(this.enableds[enabled]),
-            IsFramebuffer: framebuffer => this.ctx.isFramebuffer(this.framebuffers[framebuffer]),
-            IsProgram: program => this.ctx.isProgram(this.programs[program]),
-            IsRenderbuffer: renderbuffer =>
-                this.ctx.isRenderbuffer(this.renderbuffers[renderbuffer]),
-            IsShader: shader => this.ctx.isShader(this.shaders[shader]),
-            IsTexture: texture => this.ctx.isTexture(this.textures[texture]),
+			const ptable = webgl.programInfos[program]
+			if (!ptable) return -1
 
-            LineWidth: width => {
-                this.ctx.lineWidth(width)
-            },
-            LinkProgram: program => {
-                this.ctx.linkProgram(this.programs[program])
-                this.programInfos[program] = null
-                this.populateUniformTable(program)
-            },
-            PixelStorei: (pname, param) => {
-                this.ctx.pixelStorei(pname, param)
-            },
-            PolygonOffset: (factor, units) => {
-                this.ctx.polygonOffset(factor, units)
-            },
+			const uniform_info = ptable.uniforms[name]
+			return uniform_info && array_offset < uniform_info[0]
+				? uniform_info[1] + array_offset
+				: -1
+		},
+		/**
+		 * @param {number} index
+		 * @param {number} pname
+		 * @returns {number} */
+		GetVertexAttribOffset: (index, pname) => {
+			return webgl.ctx.getVertexAttribOffset(index, pname)
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} mode
+		 * @returns {void} */
+		Hint: (target, mode) => {
+			webgl.ctx.hint(target, mode)
+		},
+		/**
+		 * @param {number} buffer
+		 * @returns {boolean} */
+		IsBuffer: buffer => webgl.ctx.isBuffer(webgl.buffers[buffer]),
+		/**
+		 * @param {number} cap
+		 * @returns {boolean} */
+		IsEnabled: cap => webgl.ctx.isEnabled(cap),
+		/**
+		 * @param {number} framebuffer
+		 * @returns {boolean} */
+		IsFramebuffer: framebuffer => webgl.ctx.isFramebuffer(webgl.framebuffers[framebuffer]),
+		/**
+		 * @param {number} program
+		 * @returns {boolean} */
+		IsProgram: program => webgl.ctx.isProgram(webgl.programs[program]),
+		/**
+		 * @param {number} renderbuffer
+		 * @returns {boolean} */
+		IsRenderbuffer: renderbuffer => webgl.ctx.isRenderbuffer(webgl.renderbuffers[renderbuffer]),
+		/**
+		 * @param {number} shader
+		 * @returns {boolean} */
+		IsShader: shader => webgl.ctx.isShader(webgl.shaders[shader]),
+		/**
+		 * @param {number} texture
+		 * @returns {boolean} */
+		IsTexture: texture => webgl.ctx.isTexture(webgl.textures[texture]),
+		/**
+		 * @param {number} width
+		 */
+		LineWidth: width => {
+			webgl.ctx.lineWidth(width)
+		},
+		/**
+		 * @param {number} program
+		 * @returns {void} */
+		LinkProgram: program => {
+			webgl.ctx.linkProgram(webgl.programs[program])
+			webgl.programInfos[program] = null
+			populateUniformTable(webgl, program)
+		},
+		/**
+		 * @param {number} pname
+		 * @param {number} param
+		 * @returns {void} */
+		PixelStorei: (pname, param) => {
+			webgl.ctx.pixelStorei(pname, param)
+		},
+		/**
+		 * @param {number} factor
+		 * @param {number} units
+		 * @returns {void} */
+		PolygonOffset: (factor, units) => {
+			webgl.ctx.polygonOffset(factor, units)
+		},
+		/**
+		 * @param {number} x
+		 * @param {number} y
+		 * @param {number} width
+		 * @param {number} height
+		 * @param {number} format
+		 * @param {number} type
+		 * @param {number} data_len
+		 * @param {number} data_ptr
+		 * @returns {void} */
+		ReadnPixels: (x, y, width, height, format, type, data_len, data_ptr) => {
+			webgl.ctx.readPixels(
+				x,
+				y,
+				width,
+				height,
+				format,
+				type,
+				mem.load_bytes(wasm.memory.buffer, data_ptr, data_len),
+			)
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} internalformat
+		 * @param {number} width
+		 * @param {number} height
+		 * @returns {void} */
+		RenderbufferStorage: (target, internalformat, width, height) => {
+			webgl.ctx.renderbufferStorage(target, internalformat, width, height)
+		},
+		/**
+		 * @param {number} value
+		 * @param {boolean} invert
+		 * @returns {void} */
+		SampleCoverage: (value, invert) => {
+			webgl.ctx.sampleCoverage(value, invert)
+		},
+		/**
+		 * @param {number} x
+		 * @param {number} y
+		 * @param {number} width
+		 * @param {number} height
+		 * @returns {void} */
+		Scissor: (x, y, width, height) => {
+			webgl.ctx.scissor(x, y, width, height)
+		},
+		/**
+		 * @param {number} shader
+		 * @param {number} strings_ptr
+		 * @param {number} strings_length
+		 * @returns {void} */
+		ShaderSource: (shader, strings_ptr, strings_length) => {
+			const source = getSource(webgl, strings_ptr, strings_length)
+			webgl.ctx.shaderSource(webgl.shaders[shader], source)
+		},
+		/**
+		 * @param {number} func
+		 * @param {number} ref
+		 * @param {number} mask
+		 * @returns {void} */
+		StencilFunc: (func, ref, mask) => {
+			webgl.ctx.stencilFunc(func, ref, mask)
+		},
+		/**
+		 * @param {number} face
+		 * @param {number} func
+		 * @param {number} ref
+		 * @param {number} mask
+		 * @returns {void} */
+		StencilFuncSeparate: (face, func, ref, mask) => {
+			webgl.ctx.stencilFuncSeparate(face, func, ref, mask)
+		},
+		/**
+		 * @param {number} mask
+		 * @returns {void} */
+		StencilMask: mask => {
+			webgl.ctx.stencilMask(mask)
+		},
+		/**
+		 * @param {number} face
+		 * @param {number} mask
+		 * @returns {void} */
+		StencilMaskSeparate: (face, mask) => {
+			webgl.ctx.stencilMaskSeparate(face, mask)
+		},
+		/**
+		 * @param {number} fail
+		 * @param {number} zfail
+		 * @param {number} zpass
+		 * @returns {void} */
+		StencilOp: (fail, zfail, zpass) => {
+			webgl.ctx.stencilOp(fail, zfail, zpass)
+		},
+		/**
+		 * @param {number} face
+		 * @param {number} fail
+		 * @param {number} zfail
+		 * @param {number} zpass
+		 * @returns {void} */
+		StencilOpSeparate: (face, fail, zfail, zpass) => {
+			webgl.ctx.stencilOpSeparate(face, fail, zfail, zpass)
+		},
+		TexImage2D: (
+			/**@type {number}*/ target,
+			/**@type {number}*/ level,
+			/**@type {number}*/ internalformat,
+			/**@type {number}*/ width,
+			/**@type {number}*/ height,
+			/**@type {number}*/ border,
+			/**@type {number}*/ format,
+			/**@type {number}*/ type,
+			/**@type {number}*/ size,
+			/**@type {number}*/ data,
+		) => {
+			webgl.ctx.texImage2D(
+				target,
+				level,
+				internalformat,
+				width,
+				height,
+				border,
+				format,
+				type,
+				data ? mem.load_bytes(wasm.memory.buffer, data, size) : EMPTY_U8_ARRAY,
+			)
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} pname
+		 * @param {number} param
+		 * @returns {void} */
+		TexParameterf: (target, pname, param) => {
+			webgl.ctx.texParameterf(target, pname, param)
+		},
+		/**
+		 * @param {number} target
+		 * @param {number} pname
+		 * @param {number} param
+		 * @returns {void} */
+		TexParameteri: (target, pname, param) => {
+			webgl.ctx.texParameteri(target, pname, param)
+		},
+		TexSubImage2D: (
+			/**@type {number}*/ target,
+			/**@type {number}*/ level,
+			/**@type {number}*/ xoffset,
+			/**@type {number}*/ yoffset,
+			/**@type {number}*/ width,
+			/**@type {number}*/ height,
+			/**@type {number}*/ format,
+			/**@type {number}*/ type,
+			/**@type {number}*/ size,
+			/**@type {number}*/ data,
+		) => {
+			webgl.ctx.texSubImage2D(
+				target,
+				level,
+				xoffset,
+				yoffset,
+				width,
+				height,
+				format,
+				type,
+				data ? mem.load_bytes(wasm.memory.buffer, data, size) : EMPTY_U8_ARRAY,
+			)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} x
+		 * @returns {void} */
+		Uniform1f: (location, x) => {
+			webgl.ctx.uniform1f(webgl.uniforms[location], x)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} x
+		 * @param {number} y
+		 * @returns {void} */
+		Uniform2f: (location, x, y) => {
+			webgl.ctx.uniform2f(webgl.uniforms[location], x, y)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} x
+		 * @param {number} y
+		 * @param {number} z
+		 * @returns {void} */
+		Uniform3f: (location, x, y, z) => {
+			webgl.ctx.uniform3f(webgl.uniforms[location], x, y, z)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} x
+		 * @param {number} y
+		 * @param {number} z
+		 * @param {number} w
+		 * @returns {void} */
+		Uniform4f: (location, x, y, z, w) => {
+			webgl.ctx.uniform4f(webgl.uniforms[location], x, y, z, w)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} x
+		 * @returns {void} */
+		Uniform1i: (location, x) => {
+			webgl.ctx.uniform1i(webgl.uniforms[location], x)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} x
+		 * @param {number} y
+		 * @returns {void} */
+		Uniform2i: (location, x, y) => {
+			webgl.ctx.uniform2i(webgl.uniforms[location], x, y)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} x
+		 * @param {number} y
+		 * @param {number} z
+		 * @returns {void} */
+		Uniform3i: (location, x, y, z) => {
+			webgl.ctx.uniform3i(webgl.uniforms[location], x, y, z)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} x
+		 * @param {number} y
+		 * @param {number} z
+		 * @param {number} w
+		 * @returns {void} */
+		Uniform4i: (location, x, y, z, w) => {
+			webgl.ctx.uniform4i(webgl.uniforms[location], x, y, z, w)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} addr
+		 * @returns {void} */
+		UniformMatrix2fv: (location, addr) => {
+			webgl.ctx.uniformMatrix4fv(
+				webgl.uniforms[location],
+				false,
+				new Float32Array(wasm.memory.buffer, addr, 2 * 2),
+			)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} addr
+		 * @returns {void} */
+		UniformMatrix3fv: (location, addr) => {
+			webgl.ctx.uniformMatrix4fv(
+				webgl.uniforms[location],
+				false,
+				new Float32Array(wasm.memory.buffer, addr, 3 * 3),
+			)
+		},
+		/**
+		 * @param {number} location
+		 * @param {number} addr
+		 * @returns {void} */
+		UniformMatrix4fv: (location, addr) => {
+			webgl.ctx.uniformMatrix4fv(
+				webgl.uniforms[location],
+				false,
+				new Float32Array(wasm.memory.buffer, addr, 4 * 4),
+			)
+		},
 
-            ReadnPixels: (x, y, width, height, format, type, bufSize, data) => {
-                this.ctx.readPixels(x, y, width, format, type, this.mem.loadBytes(data, bufSize))
-            },
-            RenderbufferStorage: (target, internalformat, width, height) => {
-                this.ctx.renderbufferStorage(target, internalformat, width, height)
-            },
-            SampleCoverage: (value, invert) => {
-                this.ctx.sampleCoverage(value, !!invert)
-            },
-            Scissor: (x, y, width, height) => {
-                this.ctx.scissor(x, y, width, height)
-            },
-            ShaderSource: (shader, strings_ptr, strings_length) => {
-                let source = this.getSource(shader, strings_ptr, strings_length)
-                this.ctx.shaderSource(this.shaders[shader], source)
-            },
+		UseProgram: program => {
+			if (program) webgl.ctx.useProgram(webgl.programs[program])
+		},
+		ValidateProgram: program => {
+			if (program) webgl.ctx.validateProgram(webgl.programs[program])
+		},
 
-            StencilFunc: (func, ref, mask) => {
-                this.ctx.stencilFunc(func, ref, mask)
-            },
-            StencilFuncSeparate: (face, func, ref, mask) => {
-                this.ctx.stencilFuncSeparate(face, func, ref, mask)
-            },
-            StencilMask: mask => {
-                this.ctx.stencilMask(mask)
-            },
-            StencilMaskSeparate: (face, mask) => {
-                this.ctx.stencilMaskSeparate(face, mask)
-            },
-            StencilOp: (fail, zfail, zpass) => {
-                this.ctx.stencilOp(fail, zfail, zpass)
-            },
-            StencilOpSeparate: (face, fail, zfail, zpass) => {
-                this.ctx.stencilOpSeparate(face, fail, zfail, zpass)
-            },
+		VertexAttrib1f: (index, x) => {
+			webgl.ctx.vertexAttrib1f(index, x)
+		},
+		VertexAttrib2f: (index, x, y) => {
+			webgl.ctx.vertexAttrib2f(index, x, y)
+		},
+		VertexAttrib3f: (index, x, y, z) => {
+			webgl.ctx.vertexAttrib3f(index, x, y, z)
+		},
+		VertexAttrib4f: (index, x, y, z, w) => {
+			webgl.ctx.vertexAttrib4f(index, x, y, z, w)
+		},
+		VertexAttribPointer: (index, size, type, normalized, stride, ptr) => {
+			webgl.ctx.vertexAttribPointer(index, size, type, !!normalized, stride, ptr)
+		},
 
-            TexImage2D: (
-                target,
-                level,
-                internalformat,
-                width,
-                height,
-                border,
-                format,
-                type,
-                size,
-                data,
-            ) => {
-                if (data) {
-                    this.ctx.texImage2D(
-                        target,
-                        level,
-                        internalformat,
-                        width,
-                        height,
-                        border,
-                        format,
-                        type,
-                        this.mem.loadBytes(data, size),
-                    )
-                } else {
-                    this.ctx.texImage2D(
-                        target,
-                        level,
-                        internalformat,
-                        width,
-                        height,
-                        border,
-                        format,
-                        type,
-                        null,
-                    )
-                }
-            },
-            TexParameterf: (target, pname, param) => {
-                this.ctx.texParameterf(target, pname, param)
-            },
-            TexParameteri: (target, pname, param) => {
-                this.ctx.texParameteri(target, pname, param)
-            },
-            TexSubImage2D: (
-                target,
-                level,
-                xoffset,
-                yoffset,
-                width,
-                height,
-                format,
-                type,
-                size,
-                data,
-            ) => {
-                this.ctx.texSubImage2D(
-                    target,
-                    level,
-                    xoffset,
-                    yoffset,
-                    width,
-                    height,
-                    format,
-                    type,
-                    this.mem.loadBytes(data, size),
-                )
-            },
+		Viewport: (x, y, w, h) => {
+			webgl.ctx.viewport(x, y, w, h)
+		},
+	}
+}
 
-            Uniform1f: (location, v0) => {
-                this.ctx.uniform1f(this.uniforms[location], v0)
-            },
-            Uniform2f: (location, v0, v1) => {
-                this.ctx.uniform2f(this.uniforms[location], v0, v1)
-            },
-            Uniform3f: (location, v0, v1, v2) => {
-                this.ctx.uniform3f(this.uniforms[location], v0, v1, v2)
-            },
-            Uniform4f: (location, v0, v1, v2, v3) => {
-                this.ctx.uniform4f(this.uniforms[location], v0, v1, v2, v3)
-            },
+/**
+ * @param {import('../types.js').WasmInstance} wasm
+ * @returns WebGL bindings for Odin
+ */
+export function makeOdinWegGl2(wasm) {
+	return {
+		/* Buffer objects */
+		CopyBufferSubData: (readTarget, writeTarget, readOffset, writeOffset, size) => {
+			webgl.assertWebGL2()
+			webgl.ctx.copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size)
+		},
+		GetBufferSubData: (
+			target,
+			srcByteOffset,
+			dst_buffer_ptr,
+			dst_buffer_len,
+			dstOffset,
+			length,
+		) => {
+			webgl.assertWebGL2()
+			webgl.ctx.getBufferSubData(
+				target,
+				srcByteOffset,
+				webgl.mem.loadBytes(dst_buffer_ptr, dst_buffer_len),
+				dstOffset,
+				length,
+			)
+		},
 
-            Uniform1i: (location, v0) => {
-                this.ctx.uniform1i(this.uniforms[location], v0)
-            },
-            Uniform2i: (location, v0, v1) => {
-                this.ctx.uniform2i(this.uniforms[location], v0, v1)
-            },
-            Uniform3i: (location, v0, v1, v2) => {
-                this.ctx.uniform3i(this.uniforms[location], v0, v1, v2)
-            },
-            Uniform4i: (location, v0, v1, v2, v3) => {
-                this.ctx.uniform4i(this.uniforms[location], v0, v1, v2, v3)
-            },
+		/* Framebuffer objects */
+		BlitFramebuffer: (srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter) => {
+			webgl.assertWebGL2()
+			webgl.ctx.glitFramebuffer(
+				srcX0,
+				srcY0,
+				srcX1,
+				srcY1,
+				dstX0,
+				dstY0,
+				dstX1,
+				dstY1,
+				mask,
+				filter,
+			)
+		},
+		FramebufferTextureLayer: (target, attachment, texture, level, layer) => {
+			webgl.assertWebGL2()
+			webgl.ctx.framebufferTextureLayer(
+				target,
+				attachment,
+				webgl.textures[texture],
+				level,
+				layer,
+			)
+		},
+		InvalidateFramebuffer: (target, attachments_ptr, attachments_len) => {
+			webgl.assertWebGL2()
+			let attachments = webgl.mem.loadU32Array(attachments_ptr, attachments_len)
+			webgl.ctx.invalidateFramebuffer(target, attachments)
+		},
+		InvalidateSubFramebuffer: (
+			target,
+			attachments_ptr,
+			attachments_len,
+			x,
+			y,
+			width,
+			height,
+		) => {
+			webgl.assertWebGL2()
+			let attachments = webgl.mem.loadU32Array(attachments_ptr, attachments_len)
+			webgl.ctx.invalidateSubFramebuffer(target, attachments, x, y, width, height)
+		},
+		ReadBuffer: src => {
+			webgl.assertWebGL2()
+			webgl.ctx.readBuffer(src)
+		},
 
-            UniformMatrix2fv: (location, addr) => {
-                let array = this.mem.loadF32Array(addr, 2 * 2)
-                this.ctx.uniformMatrix4fv(this.uniforms[location], false, array)
-            },
-            UniformMatrix3fv: (location, addr) => {
-                let array = this.mem.loadF32Array(addr, 3 * 3)
-                this.ctx.uniformMatrix4fv(this.uniforms[location], false, array)
-            },
-            UniformMatrix4fv: (location, addr) => {
-                let array = this.mem.loadF32Array(addr, 4 * 4)
-                this.ctx.uniformMatrix4fv(this.uniforms[location], false, array)
-            },
+		/* Renderbuffer objects */
+		RenderbufferStorageMultisample: (target, samples, internalformat, width, height) => {
+			webgl.assertWebGL2()
+			webgl.ctx.renderbufferStorageMultisample(target, samples, internalformat, width, height)
+		},
 
-            UseProgram: program => {
-                if (program) this.ctx.useProgram(this.programs[program])
-            },
-            ValidateProgram: program => {
-                if (program) this.ctx.validateProgram(this.programs[program])
-            },
+		/* Texture objects */
 
-            VertexAttrib1f: (index, x) => {
-                this.ctx.vertexAttrib1f(index, x)
-            },
-            VertexAttrib2f: (index, x, y) => {
-                this.ctx.vertexAttrib2f(index, x, y)
-            },
-            VertexAttrib3f: (index, x, y, z) => {
-                this.ctx.vertexAttrib3f(index, x, y, z)
-            },
-            VertexAttrib4f: (index, x, y, z, w) => {
-                this.ctx.vertexAttrib4f(index, x, y, z, w)
-            },
-            VertexAttribPointer: (index, size, type, normalized, stride, ptr) => {
-                this.ctx.vertexAttribPointer(index, size, type, !!normalized, stride, ptr)
-            },
+		TexStorage3D: (target, levels, internalformat, width, height, depth) => {
+			webgl.assertWebGL2()
+			webgl.ctx.texStorage3D(target, level, internalformat, width, heigh, depth)
+		},
+		TexImage3D: (
+			target,
+			level,
+			internalformat,
+			width,
+			height,
+			depth,
+			border,
+			format,
+			type,
+			size,
+			data,
+		) => {
+			webgl.assertWebGL2()
+			if (data) {
+				webgl.ctx.texImage3D(
+					target,
+					level,
+					internalformat,
+					width,
+					height,
+					depth,
+					border,
+					format,
+					type,
+					webgl.mem.loadBytes(data, size),
+				)
+			} else {
+				webgl.ctx.texImage3D(
+					target,
+					level,
+					internalformat,
+					width,
+					height,
+					depth,
+					border,
+					format,
+					type,
+					null,
+				)
+			}
+		},
+		TexSubImage3D: (
+			target,
+			level,
+			xoffset,
+			yoffset,
+			zoffset,
+			width,
+			height,
+			depth,
+			format,
+			type,
+			size,
+			data,
+		) => {
+			webgl.assertWebGL2()
+			webgl.ctx.texSubImage3D(
+				target,
+				level,
+				xoffset,
+				yoffset,
+				zoffset,
+				width,
+				height,
+				depth,
+				format,
+				type,
+				webgl.mem.loadBytes(data, size),
+			)
+		},
+		CompressedTexImage3D: (
+			target,
+			level,
+			internalformat,
+			width,
+			height,
+			depth,
+			border,
+			imageSize,
+			data,
+		) => {
+			webgl.assertWebGL2()
+			if (data) {
+				webgl.ctx.compressedTexImage3D(
+					target,
+					level,
+					internalformat,
+					width,
+					height,
+					depth,
+					border,
+					webgl.mem.loadBytes(data, imageSize),
+				)
+			} else {
+				webgl.ctx.compressedTexImage3D(
+					target,
+					level,
+					internalformat,
+					width,
+					height,
+					depth,
+					border,
+					null,
+				)
+			}
+		},
+		CompressedTexSubImage3D: (
+			target,
+			level,
+			xoffset,
+			yoffset,
+			zoffset,
+			width,
+			height,
+			depth,
+			format,
+			imageSize,
+			data,
+		) => {
+			webgl.assertWebGL2()
+			if (data) {
+				webgl.ctx.compressedTexSubImage3D(
+					target,
+					level,
+					xoffset,
+					yoffset,
+					zoffset,
+					width,
+					height,
+					depth,
+					format,
+					webgl.mem.loadBytes(data, imageSize),
+				)
+			} else {
+				webgl.ctx.compressedTexSubImage3D(
+					target,
+					level,
+					xoffset,
+					yoffset,
+					zoffset,
+					width,
+					height,
+					depth,
+					format,
+					null,
+				)
+			}
+		},
 
-            Viewport: (x, y, w, h) => {
-                this.ctx.viewport(x, y, w, h)
-            },
-        }
-    }
+		CopyTexSubImage3D: (target, level, xoffset, yoffset, zoffset, x, y, width, height) => {
+			webgl.assertWebGL2()
+			webgl.ctx.copyTexImage3D(target, level, xoffset, yoffset, zoffset, x, y, width, height)
+		},
 
-    /** @returns {{ CopyBufferSubData: (readTarget: any, writeTarget: any, readOffset: any, writeOffset: any, size: any) => void; GetBufferSubData: (target: any, srcByteOffset: any, dst_buffer_ptr: any, dst_buffer_len: any, dstOffset: any, length: any) => void; BlitFramebuffer: (srcX0: any, srcY0: any, srcX1: any, srcY1: any, dstX0: any, dstY0: any, dstX1: any, dstY1: any, mask: any, filter: any) => void; FramebufferTextureLayer: (target: any, attachment: any, texture: any, level: any, layer: any) => void; InvalidateFramebuffer: (target: any, attachments_ptr: any, attachments_len: any) => void; InvalidateSubFramebuffer: (target: any, attachments_ptr: any, attachments_len: any, x: any, y: any, width: any, height: any) => void; ReadBuffer: (src: any) => void; RenderbufferStorageMultisample: (target: any, samples: any, internalformat: any, width: any, height: any) => void; TexStorage3D: (target: any, levels: any, internalformat: any, width: any, height: any, depth: any) => void; TexImage3D: (target: any, level: any, internalformat: any, width: any, height: any, depth: any, border: any, format: any, type: any, size: any, data: any) => void; TexSubImage3D: (target: any, level: any, xoffset: any, yoffset: any, zoffset: any, width: any, height: any, depth: any, format: any, type: any, size: any, data: any) => void; CompressedTexImage3D: (target: any, level: any, internalformat: any, width: any, height: any, depth: any, border: any, imageSize: any, data: any) => void; CompressedTexSubImage3D: (target: any, level: any, xoffset: any, yoffset: any, zoffset: any, width: any, height: any, depth: any, format: any, imageSize: any, data: any) => void; CopyTexSubImage3D: (target: any, level: any, xoffset: any, yoffset: any, zoffset: any, x: any, y: any, width: any, height: any) => void; GetFragDataLocation: (program: any, name_ptr: any, name_len: any) => any; Uniform1ui: (location: any, v0: any) => void; Uniform2ui: (location: any, v0: any, v1: any) => void; Uniform3ui: (location: any, v0: any, v1: any, v2: any) => void; Uniform4ui: (location: any, v0: any, v1: any, v2: any, v3: any) => void; UniformMatrix3x2fv: (location: any, addr: any) => void; UniformMatrix4x2fv: (location: any, addr: any) => void; UniformMatrix2x3fv: (location: any, addr: any) => void; UniformMatrix4x3fv: (location: any, addr: any) => void; UniformMatrix2x4fv: (location: any, addr: any) => void; UniformMatrix3x4fv: (location: any, addr: any) => void; VertexAttribI4i: (index: any, x: any, y: any, z: any, w: any) => void; VertexAttribI4ui: (index: any, x: any, y: any, z: any, w: any) => void; VertexAttribIPointer: (index: any, size: any, type: any, stride: any, offset: any) => void; VertexAttribDivisor: (index: any, divisor: any) => void; DrawArraysInstanced: (mode: any, first: any, count: any, instanceCount: any) => void; DrawElementsInstanced: (mode: any, count: any, type: any, offset: any, instanceCount: any) => void; DrawRangeElements: (mode: any, start: any, end: any, count: any, type: any, offset: any) => void; DrawBuffers: (buffers_ptr: any, buffers_len: any) => void; ClearBufferfv: (buffer: any, drawbuffer: any, values_ptr: any, values_len: any) => void; ClearBufferiv: (buffer: any, drawbuffer: any, values_ptr: any, values_len: any) => void; ClearBufferuiv: (buffer: any, drawbuffer: any, values_ptr: any, values_len: any) => void; ClearBufferfi: (buffer: any, drawbuffer: any, depth: any, stencil: any) => void; CreateQuery: () => number; DeleteQuery: (id: any) => void; IsQuery: (query: any) => any; BeginQuery: (target: any, query: any) => void; EndQuery: (target: any) => void; GetQuery: (target: any, pname: any) => any; CreateSampler: () => number; DeleteSampler: (id: any) => void; IsSampler: (sampler: any) => any; BindSampler: (unit: any, sampler: any) => void; SamplerParameteri: (sampler: any, pname: any, param: any) => void; SamplerParameterf: (sampler: any, pname: any, param: any) => void; FenceSync: (condition: any, flags: any) => number; IsSync: (sync: any) => any; DeleteSync: (id: any) => void; ClientWaitSync: (sync: any, flags: any, timeout: any) => any; WaitSync: (sync: any, flags: any, timeout: any) => void; CreateTransformFeedback: () => number; DeleteTransformFeedback: (id: any) => void; IsTransformFeedback: (tf: any) => any; BindTransformFeedback: (target: any, tf: any) => void; BeginTransformFeedback: (primitiveMode: any) => void; EndTransformFeedback: () => void; TransformFeedbackVaryings: (program: any, varyings_ptr: any, varyings_len: any, bufferMode: any) => void; PauseTransformFeedback: () => void; ResumeTransformFeedback: () => void; BindBufferBase: (target: any, index: any, buffer: any) => void; BindBufferRange: (target: any, index: any, buffer: any, offset: any, size: any) => void; GetUniformBlockIndex: (program: any, uniformBlockName_ptr: any, uniformBlockName_len: any) => any; GetActiveUniformBlockName: (program: any, uniformBlockIndex: any, buf_ptr: any, buf_len: any, length_ptr: any) => void; UniformBlockBinding: (program: any, uniformBlockIndex: any, uniformBlockBinding: any) => void; CreateVertexArray: () => number; DeleteVertexArray: (id: any) => void; IsVertexArray: (vertexArray: any) => any; BindVertexArray: (vertexArray: any) => void; }} */
-    getWebGL2Interface() {
-        return {
-            /* Buffer objects */
-            CopyBufferSubData: (readTarget, writeTarget, readOffset, writeOffset, size) => {
-                this.assertWebGL2()
-                this.ctx.copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size)
-            },
-            GetBufferSubData: (
-                target,
-                srcByteOffset,
-                dst_buffer_ptr,
-                dst_buffer_len,
-                dstOffset,
-                length,
-            ) => {
-                this.assertWebGL2()
-                this.ctx.getBufferSubData(
-                    target,
-                    srcByteOffset,
-                    this.mem.loadBytes(dst_buffer_ptr, dst_buffer_len),
-                    dstOffset,
-                    length,
-                )
-            },
+		/* Programs and shaders */
+		GetFragDataLocation: (program, name_ptr, name_len) => {
+			webgl.assertWebGL2()
+			return webgl.ctx.getFragDataLocation(
+				webgl.programs[program],
+				webgl.mem.loadString(name_ptr, name_len),
+			)
+		},
 
-            /* Framebuffer objects */
-            BlitFramebuffer: (
-                srcX0,
-                srcY0,
-                srcX1,
-                srcY1,
-                dstX0,
-                dstY0,
-                dstX1,
-                dstY1,
-                mask,
-                filter,
-            ) => {
-                this.assertWebGL2()
-                this.ctx.glitFramebuffer(
-                    srcX0,
-                    srcY0,
-                    srcX1,
-                    srcY1,
-                    dstX0,
-                    dstY0,
-                    dstX1,
-                    dstY1,
-                    mask,
-                    filter,
-                )
-            },
-            FramebufferTextureLayer: (target, attachment, texture, level, layer) => {
-                this.assertWebGL2()
-                this.ctx.framebufferTextureLayer(
-                    target,
-                    attachment,
-                    this.textures[texture],
-                    level,
-                    layer,
-                )
-            },
-            InvalidateFramebuffer: (target, attachments_ptr, attachments_len) => {
-                this.assertWebGL2()
-                let attachments = this.mem.loadU32Array(attachments_ptr, attachments_len)
-                this.ctx.invalidateFramebuffer(target, attachments)
-            },
-            InvalidateSubFramebuffer: (
-                target,
-                attachments_ptr,
-                attachments_len,
-                x,
-                y,
-                width,
-                height,
-            ) => {
-                this.assertWebGL2()
-                let attachments = this.mem.loadU32Array(attachments_ptr, attachments_len)
-                this.ctx.invalidateSubFramebuffer(target, attachments, x, y, width, height)
-            },
-            ReadBuffer: src => {
-                this.assertWebGL2()
-                this.ctx.readBuffer(src)
-            },
+		/* Uniforms */
+		Uniform1ui: (location, v0) => {
+			webgl.assertWebGL2()
+			webgl.ctx.uniform1ui(webgl.uniforms[location], v0)
+		},
+		Uniform2ui: (location, v0, v1) => {
+			webgl.assertWebGL2()
+			webgl.ctx.uniform2ui(webgl.uniforms[location], v0, v1)
+		},
+		Uniform3ui: (location, v0, v1, v2) => {
+			webgl.assertWebGL2()
+			webgl.ctx.uniform3ui(webgl.uniforms[location], v0, v1, v2)
+		},
+		Uniform4ui: (location, v0, v1, v2, v3) => {
+			webgl.assertWebGL2()
+			webgl.ctx.uniform4ui(webgl.uniforms[location], v0, v1, v2, v3)
+		},
 
-            /* Renderbuffer objects */
-            RenderbufferStorageMultisample: (target, samples, internalformat, width, height) => {
-                this.assertWebGL2()
-                this.ctx.renderbufferStorageMultisample(
-                    target,
-                    samples,
-                    internalformat,
-                    width,
-                    height,
-                )
-            },
+		UniformMatrix3x2fv: (location, addr) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadF32Array(addr, 3 * 2)
+			webgl.ctx.uniformMatrix3x2fv(webgl.uniforms[location], false, array)
+		},
+		UniformMatrix4x2fv: (location, addr) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadF32Array(addr, 4 * 2)
+			webgl.ctx.uniformMatrix4x2fv(webgl.uniforms[location], false, array)
+		},
+		UniformMatrix2x3fv: (location, addr) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadF32Array(addr, 2 * 3)
+			webgl.ctx.uniformMatrix2x3fv(webgl.uniforms[location], false, array)
+		},
+		UniformMatrix4x3fv: (location, addr) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadF32Array(addr, 4 * 3)
+			webgl.ctx.uniformMatrix4x3fv(webgl.uniforms[location], false, array)
+		},
+		UniformMatrix2x4fv: (location, addr) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadF32Array(addr, 2 * 4)
+			webgl.ctx.uniformMatrix2x4fv(webgl.uniforms[location], false, array)
+		},
+		UniformMatrix3x4fv: (location, addr) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadF32Array(addr, 3 * 4)
+			webgl.ctx.uniformMatrix3x4fv(webgl.uniforms[location], false, array)
+		},
 
-            /* Texture objects */
+		/* Vertex attribs */
+		VertexAttribI4i: (index, x, y, z, w) => {
+			webgl.assertWebGL2()
+			webgl.ctx.vertexAttribI4i(index, x, y, z, w)
+		},
+		VertexAttribI4ui: (index, x, y, z, w) => {
+			webgl.assertWebGL2()
+			webgl.ctx.vertexAttribI4ui(index, x, y, z, w)
+		},
+		VertexAttribIPointer: (index, size, type, stride, offset) => {
+			webgl.assertWebGL2()
+			webgl.ctx.vertexAttribIPointer(index, size, type, stride, offset)
+		},
 
-            TexStorage3D: (target, levels, internalformat, width, height, depth) => {
-                this.assertWebGL2()
-                this.ctx.texStorage3D(target, level, internalformat, width, heigh, depth)
-            },
-            TexImage3D: (
-                target,
-                level,
-                internalformat,
-                width,
-                height,
-                depth,
-                border,
-                format,
-                type,
-                size,
-                data,
-            ) => {
-                this.assertWebGL2()
-                if (data) {
-                    this.ctx.texImage3D(
-                        target,
-                        level,
-                        internalformat,
-                        width,
-                        height,
-                        depth,
-                        border,
-                        format,
-                        type,
-                        this.mem.loadBytes(data, size),
-                    )
-                } else {
-                    this.ctx.texImage3D(
-                        target,
-                        level,
-                        internalformat,
-                        width,
-                        height,
-                        depth,
-                        border,
-                        format,
-                        type,
-                        null,
-                    )
-                }
-            },
-            TexSubImage3D: (
-                target,
-                level,
-                xoffset,
-                yoffset,
-                zoffset,
-                width,
-                height,
-                depth,
-                format,
-                type,
-                size,
-                data,
-            ) => {
-                this.assertWebGL2()
-                this.ctx.texSubImage3D(
-                    target,
-                    level,
-                    xoffset,
-                    yoffset,
-                    zoffset,
-                    width,
-                    height,
-                    depth,
-                    format,
-                    type,
-                    this.mem.loadBytes(data, size),
-                )
-            },
-            CompressedTexImage3D: (
-                target,
-                level,
-                internalformat,
-                width,
-                height,
-                depth,
-                border,
-                imageSize,
-                data,
-            ) => {
-                this.assertWebGL2()
-                if (data) {
-                    this.ctx.compressedTexImage3D(
-                        target,
-                        level,
-                        internalformat,
-                        width,
-                        height,
-                        depth,
-                        border,
-                        this.mem.loadBytes(data, imageSize),
-                    )
-                } else {
-                    this.ctx.compressedTexImage3D(
-                        target,
-                        level,
-                        internalformat,
-                        width,
-                        height,
-                        depth,
-                        border,
-                        null,
-                    )
-                }
-            },
-            CompressedTexSubImage3D: (
-                target,
-                level,
-                xoffset,
-                yoffset,
-                zoffset,
-                width,
-                height,
-                depth,
-                format,
-                imageSize,
-                data,
-            ) => {
-                this.assertWebGL2()
-                if (data) {
-                    this.ctx.compressedTexSubImage3D(
-                        target,
-                        level,
-                        xoffset,
-                        yoffset,
-                        zoffset,
-                        width,
-                        height,
-                        depth,
-                        format,
-                        this.mem.loadBytes(data, imageSize),
-                    )
-                } else {
-                    this.ctx.compressedTexSubImage3D(
-                        target,
-                        level,
-                        xoffset,
-                        yoffset,
-                        zoffset,
-                        width,
-                        height,
-                        depth,
-                        format,
-                        null,
-                    )
-                }
-            },
+		/* Writing to the drawing buffer */
+		VertexAttribDivisor: (index, divisor) => {
+			webgl.assertWebGL2()
+			webgl.ctx.vertexAttribDivisor(index, divisor)
+		},
+		DrawArraysInstanced: (mode, first, count, instanceCount) => {
+			webgl.assertWebGL2()
+			webgl.ctx.drawArraysInstanced(mode, first, count, instanceCount)
+		},
+		DrawElementsInstanced: (mode, count, type, offset, instanceCount) => {
+			webgl.assertWebGL2()
+			webgl.ctx.drawElementsInstanced(mode, count, type, offset, instanceCount)
+		},
+		DrawRangeElements: (mode, start, end, count, type, offset) => {
+			webgl.assertWebGL2()
+			webgl.ctx.drawRangeElements(mode, start, end, count, type, offset)
+		},
 
-            CopyTexSubImage3D: (target, level, xoffset, yoffset, zoffset, x, y, width, height) => {
-                this.assertWebGL2()
-                this.ctx.copyTexImage3D(
-                    target,
-                    level,
-                    xoffset,
-                    yoffset,
-                    zoffset,
-                    x,
-                    y,
-                    width,
-                    height,
-                )
-            },
+		/* Multiple Render Targets */
+		DrawBuffers: (buffers_ptr, buffers_len) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadU32Array(buffers_ptr, buffers_len)
+			webgl.ctx.drawBuffers(array)
+		},
+		ClearBufferfv: (buffer, drawbuffer, values_ptr, values_len) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadF32Array(values_ptr, values_len)
+			webgl.ctx.clearBufferfv(buffer, drawbuffer, array)
+		},
+		ClearBufferiv: (buffer, drawbuffer, values_ptr, values_len) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadI32Array(values_ptr, values_len)
+			webgl.ctx.clearBufferiv(buffer, drawbuffer, array)
+		},
+		ClearBufferuiv: (buffer, drawbuffer, values_ptr, values_len) => {
+			webgl.assertWebGL2()
+			let array = webgl.mem.loadU32Array(values_ptr, values_len)
+			webgl.ctx.clearBufferuiv(buffer, drawbuffer, array)
+		},
+		ClearBufferfi: (buffer, drawbuffer, depth, stencil) => {
+			webgl.assertWebGL2()
+			webgl.ctx.clearBufferfi(buffer, drawbuffer, depth, stencil)
+		},
 
-            /* Programs and shaders */
-            GetFragDataLocation: (program, name_ptr, name_len) => {
-                this.assertWebGL2()
-                return this.ctx.getFragDataLocation(
-                    this.programs[program],
-                    this.mem.loadString(name_ptr, name_len),
-                )
-            },
+		/* Query Objects */
+		CreateQuery: () => {
+			webgl.assertWebGL2()
+			let query = webgl.ctx.createQuery()
+			let id = getNewId(webgl, webgl.queries)
+			query.name = id
+			webgl.queries[id] = query
+			return id
+		},
+		DeleteQuery: id => {
+			webgl.assertWebGL2()
+			let obj = webgl.querys[id]
+			if (obj && id != 0) {
+				webgl.ctx.deleteQuery(obj)
+				webgl.querys[id] = null
+			}
+		},
+		IsQuery: query => {
+			webgl.assertWebGL2()
+			return webgl.ctx.isQuery(webgl.queries[query])
+		},
+		BeginQuery: (target, query) => {
+			webgl.assertWebGL2()
+			webgl.ctx.beginQuery(target, webgl.queries[query])
+		},
+		EndQuery: target => {
+			webgl.assertWebGL2()
+			webgl.ctx.endQuery(target)
+		},
+		GetQuery: (target, pname) => {
+			webgl.assertWebGL2()
+			let query = webgl.ctx.getQuery(target, pname)
+			if (!query) {
+				return 0
+			}
+			if (webgl.queries.indexOf(query) !== -1) {
+				return query.name
+			}
+			let id = getNewId(webgl, webgl.queries)
+			query.name = id
+			webgl.queries[id] = query
+			return id
+		},
 
-            /* Uniforms */
-            Uniform1ui: (location, v0) => {
-                this.assertWebGL2()
-                this.ctx.uniform1ui(this.uniforms[location], v0)
-            },
-            Uniform2ui: (location, v0, v1) => {
-                this.assertWebGL2()
-                this.ctx.uniform2ui(this.uniforms[location], v0, v1)
-            },
-            Uniform3ui: (location, v0, v1, v2) => {
-                this.assertWebGL2()
-                this.ctx.uniform3ui(this.uniforms[location], v0, v1, v2)
-            },
-            Uniform4ui: (location, v0, v1, v2, v3) => {
-                this.assertWebGL2()
-                this.ctx.uniform4ui(this.uniforms[location], v0, v1, v2, v3)
-            },
+		/* Sampler Objects */
+		CreateSampler: () => {
+			webgl.assertWebGL2()
+			let sampler = webgl.ctx.createSampler()
+			let id = getNewId(webgl, webgl.samplers)
+			sampler.name = id
+			webgl.samplers[id] = sampler
+			return id
+		},
+		DeleteSampler: id => {
+			webgl.assertWebGL2()
+			let obj = webgl.samplers[id]
+			if (obj && id != 0) {
+				webgl.ctx.deleteSampler(obj)
+				webgl.samplers[id] = null
+			}
+		},
+		IsSampler: sampler => {
+			webgl.assertWebGL2()
+			return webgl.ctx.isSampler(webgl.samplers[sampler])
+		},
+		BindSampler: (unit, sampler) => {
+			webgl.assertWebGL2()
+			webgl.ctx.bindSampler(unit, webgl.samplers[Sampler])
+		},
+		SamplerParameteri: (sampler, pname, param) => {
+			webgl.assertWebGL2()
+			webgl.ctx.samplerParameteri(webgl.samplers[sampler], pname, param)
+		},
+		SamplerParameterf: (sampler, pname, param) => {
+			webgl.assertWebGL2()
+			webgl.ctx.samplerParameterf(webgl.samplers[sampler], pname, param)
+		},
 
-            UniformMatrix3x2fv: (location, addr) => {
-                this.assertWebGL2()
-                let array = this.mem.loadF32Array(addr, 3 * 2)
-                this.ctx.uniformMatrix3x2fv(this.uniforms[location], false, array)
-            },
-            UniformMatrix4x2fv: (location, addr) => {
-                this.assertWebGL2()
-                let array = this.mem.loadF32Array(addr, 4 * 2)
-                this.ctx.uniformMatrix4x2fv(this.uniforms[location], false, array)
-            },
-            UniformMatrix2x3fv: (location, addr) => {
-                this.assertWebGL2()
-                let array = this.mem.loadF32Array(addr, 2 * 3)
-                this.ctx.uniformMatrix2x3fv(this.uniforms[location], false, array)
-            },
-            UniformMatrix4x3fv: (location, addr) => {
-                this.assertWebGL2()
-                let array = this.mem.loadF32Array(addr, 4 * 3)
-                this.ctx.uniformMatrix4x3fv(this.uniforms[location], false, array)
-            },
-            UniformMatrix2x4fv: (location, addr) => {
-                this.assertWebGL2()
-                let array = this.mem.loadF32Array(addr, 2 * 4)
-                this.ctx.uniformMatrix2x4fv(this.uniforms[location], false, array)
-            },
-            UniformMatrix3x4fv: (location, addr) => {
-                this.assertWebGL2()
-                let array = this.mem.loadF32Array(addr, 3 * 4)
-                this.ctx.uniformMatrix3x4fv(this.uniforms[location], false, array)
-            },
+		/* Sync objects */
+		FenceSync: (condition, flags) => {
+			webgl.assertWebGL2()
+			let sync = webgl.ctx.fenceSync(condition, flags)
+			let id = getNewId(webgl, webgl.syncs)
+			sync.name = id
+			webgl.syncs[id] = sync
+			return id
+		},
+		IsSync: sync => {
+			webgl.assertWebGL2()
+			return webgl.ctx.isSync(webgl.syncs[sync])
+		},
+		DeleteSync: id => {
+			webgl.assertWebGL2()
+			let obj = webgl.syncs[id]
+			if (obj && id != 0) {
+				webgl.ctx.deleteSampler(obj)
+				webgl.syncs[id] = null
+			}
+		},
+		ClientWaitSync: (sync, flags, timeout) => {
+			webgl.assertWebGL2()
+			return webgl.ctx.clientWaitSync(webgl.syncs[sync], flags, timeout)
+		},
+		WaitSync: (sync, flags, timeout) => {
+			webgl.assertWebGL2()
+			webgl.ctx.waitSync(webgl.syncs[sync], flags, timeout)
+		},
 
-            /* Vertex attribs */
-            VertexAttribI4i: (index, x, y, z, w) => {
-                this.assertWebGL2()
-                this.ctx.vertexAttribI4i(index, x, y, z, w)
-            },
-            VertexAttribI4ui: (index, x, y, z, w) => {
-                this.assertWebGL2()
-                this.ctx.vertexAttribI4ui(index, x, y, z, w)
-            },
-            VertexAttribIPointer: (index, size, type, stride, offset) => {
-                this.assertWebGL2()
-                this.ctx.vertexAttribIPointer(index, size, type, stride, offset)
-            },
+		/* Transform Feedback */
+		CreateTransformFeedback: () => {
+			webgl.assertWebGL2()
+			let transformFeedback = webgl.ctx.createtransformFeedback()
+			let id = getNewId(webgl, webgl.transformFeedbacks)
+			transformFeedback.name = id
+			webgl.transformFeedbacks[id] = transformFeedback
+			return id
+		},
+		DeleteTransformFeedback: id => {
+			webgl.assertWebGL2()
+			let obj = webgl.transformFeedbacks[id]
+			if (obj && id != 0) {
+				webgl.ctx.deleteTransformFeedback(obj)
+				webgl.transformFeedbacks[id] = null
+			}
+		},
+		IsTransformFeedback: tf => {
+			webgl.assertWebGL2()
+			return webgl.ctx.isTransformFeedback(webgl.transformFeedbacks[tf])
+		},
+		BindTransformFeedback: (target, tf) => {
+			webgl.assertWebGL2()
+			webgl.ctx.bindTransformFeedback(target, webgl.transformFeedbacks[tf])
+		},
+		BeginTransformFeedback: primitiveMode => {
+			webgl.assertWebGL2()
+			webgl.ctx.beginTransformFeedback(primitiveMode)
+		},
+		EndTransformFeedback: () => {
+			webgl.assertWebGL2()
+			webgl.ctx.endTransformFeedback()
+		},
+		TransformFeedbackVaryings: (program, varyings_ptr, varyings_len, bufferMode) => {
+			webgl.assertWebGL2()
+			let varyings = []
+			for (let i = 0; i < varyings_len; i++) {
+				let ptr = webgl.mem.loadPtr(varyings_ptr + i * STRING_SIZE + 0 * 4)
+				let len = webgl.mem.loadPtr(varyings_ptr + i * STRING_SIZE + 1 * 4)
+				varyings.push(webgl.mem.loadString(ptr, len))
+			}
+			webgl.ctx.transformFeedbackVaryings(webgl.programs[program], varyings, bufferMode)
+		},
+		PauseTransformFeedback: () => {
+			webgl.assertWebGL2()
+			webgl.ctx.pauseTransformFeedback()
+		},
+		ResumeTransformFeedback: () => {
+			webgl.assertWebGL2()
+			webgl.ctx.resumeTransformFeedback()
+		},
 
-            /* Writing to the drawing buffer */
-            VertexAttribDivisor: (index, divisor) => {
-                this.assertWebGL2()
-                this.ctx.vertexAttribDivisor(index, divisor)
-            },
-            DrawArraysInstanced: (mode, first, count, instanceCount) => {
-                this.assertWebGL2()
-                this.ctx.drawArraysInstanced(mode, first, count, instanceCount)
-            },
-            DrawElementsInstanced: (mode, count, type, offset, instanceCount) => {
-                this.assertWebGL2()
-                this.ctx.drawElementsInstanced(mode, count, type, offset, instanceCount)
-            },
-            DrawRangeElements: (mode, start, end, count, type, offset) => {
-                this.assertWebGL2()
-                this.ctx.drawRangeElements(mode, start, end, count, type, offset)
-            },
+		/* Uniform Buffer Objects and Transform Feedback Buffers */
+		BindBufferBase: (target, index, buffer) => {
+			webgl.assertWebGL2()
+			webgl.ctx.bindBufferBase(target, index, webgl.buffers[buffer])
+		},
+		BindBufferRange: (target, index, buffer, offset, size) => {
+			webgl.assertWebGL2()
+			webgl.ctx.bindBufferRange(target, index, webgl.buffers[buffer], offset, size)
+		},
+		GetUniformBlockIndex: (program, uniformBlockName_ptr, uniformBlockName_len) => {
+			webgl.assertWebGL2()
+			return webgl.ctx.getUniformBlockIndex(
+				webgl.programs[program],
+				webgl.mem.loadString(uniformBlockName_ptr, uniformBlockName_len),
+			)
+		},
+		// any getActiveUniformBlockParameter(WebGLProgram program, GLuint uniformBlockIndex, GLenum pname);
+		GetActiveUniformBlockName: (program, uniformBlockIndex, buf_ptr, buf_len, length_ptr) => {
+			webgl.assertWebGL2()
+			let name = webgl.ctx.getActiveUniformBlockName(
+				webgl.programs[program],
+				uniformBlockIndex,
+			)
 
-            /* Multiple Render Targets */
-            DrawBuffers: (buffers_ptr, buffers_len) => {
-                this.assertWebGL2()
-                let array = this.mem.loadU32Array(buffers_ptr, buffers_len)
-                this.ctx.drawBuffers(array)
-            },
-            ClearBufferfv: (buffer, drawbuffer, values_ptr, values_len) => {
-                this.assertWebGL2()
-                let array = this.mem.loadF32Array(values_ptr, values_len)
-                this.ctx.clearBufferfv(buffer, drawbuffer, array)
-            },
-            ClearBufferiv: (buffer, drawbuffer, values_ptr, values_len) => {
-                this.assertWebGL2()
-                let array = this.mem.loadI32Array(values_ptr, values_len)
-                this.ctx.clearBufferiv(buffer, drawbuffer, array)
-            },
-            ClearBufferuiv: (buffer, drawbuffer, values_ptr, values_len) => {
-                this.assertWebGL2()
-                let array = this.mem.loadU32Array(values_ptr, values_len)
-                this.ctx.clearBufferuiv(buffer, drawbuffer, array)
-            },
-            ClearBufferfi: (buffer, drawbuffer, depth, stencil) => {
-                this.assertWebGL2()
-                this.ctx.clearBufferfi(buffer, drawbuffer, depth, stencil)
-            },
+			let n = Math.min(buf_len, name.length)
+			name = name.substring(0, n)
+			webgl.mem.loadBytes(buf_ptr, buf_len).set(new TextEncoder().encode(name))
+			webgl.mem.storeInt(length_ptr, n)
+		},
+		UniformBlockBinding: (program, uniformBlockIndex, uniformBlockBinding) => {
+			webgl.assertWebGL2()
+			webgl.ctx.uniformBlockBinding(
+				webgl.programs[program],
+				uniformBlockIndex,
+				uniformBlockBinding,
+			)
+		},
 
-            /* Query Objects */
-            CreateQuery: () => {
-                this.assertWebGL2()
-                let query = this.ctx.createQuery()
-                let id = this.getNewId(this.queries)
-                query.name = id
-                this.queries[id] = query
-                return id
-            },
-            DeleteQuery: id => {
-                this.assertWebGL2()
-                let obj = this.querys[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteQuery(obj)
-                    this.querys[id] = null
-                }
-            },
-            IsQuery: query => {
-                this.assertWebGL2()
-                return this.ctx.isQuery(this.queries[query])
-            },
-            BeginQuery: (target, query) => {
-                this.assertWebGL2()
-                this.ctx.beginQuery(target, this.queries[query])
-            },
-            EndQuery: target => {
-                this.assertWebGL2()
-                this.ctx.endQuery(target)
-            },
-            GetQuery: (target, pname) => {
-                this.assertWebGL2()
-                let query = this.ctx.getQuery(target, pname)
-                if (!query) {
-                    return 0
-                }
-                if (this.queries.indexOf(query) !== -1) {
-                    return query.name
-                }
-                let id = this.getNewId(this.queries)
-                query.name = id
-                this.queries[id] = query
-                return id
-            },
-
-            /* Sampler Objects */
-            CreateSampler: () => {
-                this.assertWebGL2()
-                let sampler = this.ctx.createSampler()
-                let id = this.getNewId(this.samplers)
-                sampler.name = id
-                this.samplers[id] = sampler
-                return id
-            },
-            DeleteSampler: id => {
-                this.assertWebGL2()
-                let obj = this.samplers[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteSampler(obj)
-                    this.samplers[id] = null
-                }
-            },
-            IsSampler: sampler => {
-                this.assertWebGL2()
-                return this.ctx.isSampler(this.samplers[sampler])
-            },
-            BindSampler: (unit, sampler) => {
-                this.assertWebGL2()
-                this.ctx.bindSampler(unit, this.samplers[Sampler])
-            },
-            SamplerParameteri: (sampler, pname, param) => {
-                this.assertWebGL2()
-                this.ctx.samplerParameteri(this.samplers[sampler], pname, param)
-            },
-            SamplerParameterf: (sampler, pname, param) => {
-                this.assertWebGL2()
-                this.ctx.samplerParameterf(this.samplers[sampler], pname, param)
-            },
-
-            /* Sync objects */
-            FenceSync: (condition, flags) => {
-                this.assertWebGL2()
-                let sync = this.ctx.fenceSync(condition, flags)
-                let id = this.getNewId(this.syncs)
-                sync.name = id
-                this.syncs[id] = sync
-                return id
-            },
-            IsSync: sync => {
-                this.assertWebGL2()
-                return this.ctx.isSync(this.syncs[sync])
-            },
-            DeleteSync: id => {
-                this.assertWebGL2()
-                let obj = this.syncs[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteSampler(obj)
-                    this.syncs[id] = null
-                }
-            },
-            ClientWaitSync: (sync, flags, timeout) => {
-                this.assertWebGL2()
-                return this.ctx.clientWaitSync(this.syncs[sync], flags, timeout)
-            },
-            WaitSync: (sync, flags, timeout) => {
-                this.assertWebGL2()
-                this.ctx.waitSync(this.syncs[sync], flags, timeout)
-            },
-
-            /* Transform Feedback */
-            CreateTransformFeedback: () => {
-                this.assertWebGL2()
-                let transformFeedback = this.ctx.createtransformFeedback()
-                let id = this.getNewId(this.transformFeedbacks)
-                transformFeedback.name = id
-                this.transformFeedbacks[id] = transformFeedback
-                return id
-            },
-            DeleteTransformFeedback: id => {
-                this.assertWebGL2()
-                let obj = this.transformFeedbacks[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteTransformFeedback(obj)
-                    this.transformFeedbacks[id] = null
-                }
-            },
-            IsTransformFeedback: tf => {
-                this.assertWebGL2()
-                return this.ctx.isTransformFeedback(this.transformFeedbacks[tf])
-            },
-            BindTransformFeedback: (target, tf) => {
-                this.assertWebGL2()
-                this.ctx.bindTransformFeedback(target, this.transformFeedbacks[tf])
-            },
-            BeginTransformFeedback: primitiveMode => {
-                this.assertWebGL2()
-                this.ctx.beginTransformFeedback(primitiveMode)
-            },
-            EndTransformFeedback: () => {
-                this.assertWebGL2()
-                this.ctx.endTransformFeedback()
-            },
-            TransformFeedbackVaryings: (program, varyings_ptr, varyings_len, bufferMode) => {
-                this.assertWebGL2()
-                let varyings = []
-                for (let i = 0; i < varyings_len; i++) {
-                    let ptr = this.mem.loadPtr(varyings_ptr + i * STRING_SIZE + 0 * 4)
-                    let len = this.mem.loadPtr(varyings_ptr + i * STRING_SIZE + 1 * 4)
-                    varyings.push(this.mem.loadString(ptr, len))
-                }
-                this.ctx.transformFeedbackVaryings(this.programs[program], varyings, bufferMode)
-            },
-            PauseTransformFeedback: () => {
-                this.assertWebGL2()
-                this.ctx.pauseTransformFeedback()
-            },
-            ResumeTransformFeedback: () => {
-                this.assertWebGL2()
-                this.ctx.resumeTransformFeedback()
-            },
-
-            /* Uniform Buffer Objects and Transform Feedback Buffers */
-            BindBufferBase: (target, index, buffer) => {
-                this.assertWebGL2()
-                this.ctx.bindBufferBase(target, index, this.buffers[buffer])
-            },
-            BindBufferRange: (target, index, buffer, offset, size) => {
-                this.assertWebGL2()
-                this.ctx.bindBufferRange(target, index, this.buffers[buffer], offset, size)
-            },
-            GetUniformBlockIndex: (program, uniformBlockName_ptr, uniformBlockName_len) => {
-                this.assertWebGL2()
-                return this.ctx.getUniformBlockIndex(
-                    this.programs[program],
-                    this.mem.loadString(uniformBlockName_ptr, uniformBlockName_len),
-                )
-            },
-            // any getActiveUniformBlockParameter(WebGLProgram program, GLuint uniformBlockIndex, GLenum pname);
-            GetActiveUniformBlockName: (
-                program,
-                uniformBlockIndex,
-                buf_ptr,
-                buf_len,
-                length_ptr,
-            ) => {
-                this.assertWebGL2()
-                let name = this.ctx.getActiveUniformBlockName(
-                    this.programs[program],
-                    uniformBlockIndex,
-                )
-
-                let n = Math.min(buf_len, name.length)
-                name = name.substring(0, n)
-                this.mem.loadBytes(buf_ptr, buf_len).set(new TextEncoder().encode(name))
-                this.mem.storeInt(length_ptr, n)
-            },
-            UniformBlockBinding: (program, uniformBlockIndex, uniformBlockBinding) => {
-                this.assertWebGL2()
-                this.ctx.uniformBlockBinding(
-                    this.programs[program],
-                    uniformBlockIndex,
-                    uniformBlockBinding,
-                )
-            },
-
-            /* Vertex Array Objects */
-            CreateVertexArray: () => {
-                this.assertWebGL2()
-                let vao = this.ctx.createVertexArray()
-                let id = this.getNewId(this.vaos)
-                vao.name = id
-                this.vaos[id] = vao
-                return id
-            },
-            DeleteVertexArray: id => {
-                this.assertWebGL2()
-                let obj = this.vaos[id]
-                if (obj && id != 0) {
-                    this.ctx.deleteVertexArray(obj)
-                    this.vaos[id] = null
-                }
-            },
-            IsVertexArray: vertexArray => {
-                this.assertWebGL2()
-                return this.ctx.isVertexArray(this.vaos[vertexArray])
-            },
-            BindVertexArray: vertexArray => {
-                this.assertWebGL2()
-                this.ctx.bindVertexArray(this.vaos[vertexArray])
-            },
-        }
-    }
+		/* Vertex Array Objects */
+		CreateVertexArray: () => {
+			webgl.assertWebGL2()
+			let vao = webgl.ctx.createVertexArray()
+			let id = getNewId(webgl, webgl.vaos)
+			vao.name = id
+			webgl.vaos[id] = vao
+			return id
+		},
+		DeleteVertexArray: id => {
+			webgl.assertWebGL2()
+			let obj = webgl.vaos[id]
+			if (obj && id != 0) {
+				webgl.ctx.deleteVertexArray(obj)
+				webgl.vaos[id] = null
+			}
+		},
+		IsVertexArray: vertexArray => {
+			webgl.assertWebGL2()
+			return webgl.ctx.isVertexArray(webgl.vaos[vertexArray])
+		},
+		BindVertexArray: vertexArray => {
+			webgl.assertWebGL2()
+			webgl.ctx.bindVertexArray(webgl.vaos[vertexArray])
+		},
+	}
 }

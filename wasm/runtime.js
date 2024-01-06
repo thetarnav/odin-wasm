@@ -13,6 +13,16 @@ export * as ls from "./ls/local_storage.js"
 export * from "./types.js"
 
 /**
+ * @returns {import('./types.js').WasmInstance}
+ */
+export function zeroWasmInstance() {
+	return {
+		exports: /**@type {*}*/ (null),
+		memory: /**@type {*}*/ (null),
+	}
+}
+
+/**
  * Init a wasm instance with exports and memory from instanciated wasm module exports
  * @param {import('./types.js').WasmInstance} instance
  * @param {WebAssembly.Exports} exports

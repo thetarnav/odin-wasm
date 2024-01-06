@@ -4,16 +4,6 @@ if (import.meta.env.DEV) {
 	wasm.env.enableConsole()
 }
 
-const wasm_path = "dist/lib.wasm"
-
-/**
- * @type {wasm.WasmInstance}
- */
-const instance = {
-	exports: /**@type {*}*/ (null),
-	memory: /**@type {*}*/ (null),
-}
-
 const div = document.createElement("div")
 div.innerText = "Loading..."
 div.id = "lol"
@@ -23,6 +13,9 @@ div.addEventListener("lol", () => {
 })
 
 document.body.style.minHeight = "200vh"
+
+const wasm_path = "dist/lib.wasm"
+const instance = wasm.zeroWasmInstance()
 
 const response = await fetch(wasm_path)
 const file = await response.arrayBuffer()
@@ -39,3 +32,10 @@ console.log("Memory", instance.memory)
 
 instance.exports._start()
 instance.exports._end()
+
+const canvas = document.createElement("canvas")
+canvas.width = 640
+canvas.height = 480
+const ctx = canvas.getContext("webgl")
+if (!ctx) throw new Error("Could not get WebGL context")
+document.body.appendChild(canvas)
