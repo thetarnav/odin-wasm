@@ -22,10 +22,10 @@ const KEYBOARD_MAX_KEY_SIZE = 16
 const KEYBOARD_MAX_CODE_SIZE = 16
 
 /**
- * @param {import('../types.js').WasmInstance} wasm
+ * @param {import('../types.js').WasmInstance} _wasm
  */
-export function makeOdinDOM(wasm) {
-	const exports = /**@type {import("./types.js").OdinDOMExports}*/ (wasm.exports)
+export function makeOdinDOM(_wasm) {
+	const wasm = /**@type {import("./types.js").OdinDOMInstance}*/ (_wasm)
 
 	let temp_id_ptr = 0
 	let temp_id_len = 0
@@ -196,7 +196,7 @@ export function makeOdinDOM(wasm) {
 				temp_id_len = id_len
 				temp_event = e
 				temp_name_code = name_code
-				exports.odin_dom_do_event_callback(data_ptr, callback, odin_ctx)
+				wasm.exports.odin_dom_do_event_callback(data_ptr, callback, odin_ctx)
 			}
 
 			// TODO banchmark if this is faster than using a map in js
@@ -227,7 +227,7 @@ export function makeOdinDOM(wasm) {
 				temp_id_len = 0
 				temp_event = e
 				temp_name_code = name_code
-				exports.odin_dom_do_event_callback(data_ptr, callback, odin_ctx)
+				wasm.exports.odin_dom_do_event_callback(data_ptr, callback, odin_ctx)
 			}
 
 			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)

@@ -14,6 +14,16 @@ const instance = {
 	memory: /**@type {*}*/ (null),
 }
 
+const div = document.createElement("div")
+div.innerText = "Loading..."
+div.id = "lol"
+void document.body.appendChild(div)
+div.addEventListener("lol", () => {
+	console.log("lol")
+})
+
+document.body.style.minHeight = "200vh"
+
 const response = await fetch(wasm_path)
 const file = await response.arrayBuffer()
 const source_instance = await WebAssembly.instantiate(file, {
@@ -22,14 +32,10 @@ const source_instance = await WebAssembly.instantiate(file, {
 	odin_ls: wasm.ls.makeOdinLS(instance),
 	odin_dom: wasm.dom.makeOdinDOM(instance),
 })
-
-instance.exports = /**@type {wasm.OdinExports}*/ (source_instance.instance.exports)
-instance.memory = instance.exports.memory
+wasm.initWasmInstance(instance, source_instance.instance.exports)
 
 console.log("Exports", instance.exports)
 console.log("Memory", instance.memory)
 
 instance.exports._start()
 instance.exports._end()
-
-document.body.style.minHeight = "200vh"

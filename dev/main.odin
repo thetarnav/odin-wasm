@@ -5,12 +5,18 @@ import "../wasm"
 import "../wasm/dom"
 import "core:fmt"
 import "core:mem"
+import "core:strings"
 
 main :: proc() {
-	test_buf, err := wasm.page_alloc(1)
+	test_buf, err := wasm.page_alloc(2)
 	context.allocator = mem.arena_allocator(&{data = test_buf})
 
-	fmt.println("Hello, WebAssembly!")
+	div := dom.dispatch_custom_event("lol", "lol")
+
+	// str := fmt.aprint("Hello, WebAssembly!\n")
+	// wasm.alert(str)
+
+	fmt.print("Hello, WebAssembly!\n")
 
 	dom.add_window_event_listener(.Scroll, {}, proc(e: dom.Event) {
 		fmt.println("Scroll event!", e.data.scroll.delta)
