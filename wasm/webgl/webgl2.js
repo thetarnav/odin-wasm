@@ -737,12 +737,8 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			/** @type {number} */ varyings_len,
 			/** @type {number} */ buffer_mode,
 		) => {
-			const varyings = []
-			for (let i = 0; i < varyings_len; i++) {
-				const ptr = webgl.mem.loadPtr(varyings_ptr + i * STRING_SIZE + 0 * 4)
-				const len = webgl.mem.loadPtr(varyings_ptr + i * STRING_SIZE + 1 * 4)
-				varyings.push(webgl.mem.loadString(ptr, len))
-			}
+			const data = new DataView(wasm.memory.buffer)
+			const varyings = mem.load_strings(data, varyings_ptr, varyings_len)
 			webgl.ctx.transformFeedbackVaryings(webgl.programs[program], varyings, buffer_mode)
 		},
 		/** @returns {void} */

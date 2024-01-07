@@ -126,10 +126,9 @@ export function populateUniformTable(webgl, program_id) {
  */
 export function getSource(buffer, strings_ptr, strings_length) {
 	const data = new DataView(buffer)
-	const STRING_SIZE = 2 * 4
 	let source = ""
 	for (let i = 0; i < strings_length; i++) {
-		source += mem.load_string(data, strings_ptr + i * STRING_SIZE)
+		source += mem.load_string(data, strings_ptr + i * mem.STRING_SIZE)
 	}
 	return source
 }

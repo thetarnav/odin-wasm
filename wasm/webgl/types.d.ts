@@ -1,7 +1,6 @@
 /*
-indices will be set to `0` when the buffer is deleted
+indices will be set to `null` when the buffer is deleted
 */
-
 export type ArrayRecord<T> = Array<null | T>
 
 export interface ProgramInfo {
