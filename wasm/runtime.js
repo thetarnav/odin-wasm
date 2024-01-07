@@ -9,25 +9,25 @@ export * as env from "./env.js"
 export * as mem from "./memory.js"
 export * as dom from "./dom/dom.js"
 export * as ls from "./ls/local_storage.js"
+export * as webgl from "./webgl/index.js"
 
 export * from "./types.js"
 
-/**
- * @returns {import('./types.js').WasmInstance}
- */
+/** @returns {import("./types.js").WasmInstance} */
 export function zeroWasmInstance() {
 	return {
-		exports: /**@type {*}*/ (null),
-		memory: /**@type {*}*/ (null),
+		exports: /** @type {any} */ (null),
+		memory: /** @type {any} */ (null),
 	}
 }
 
 /**
  * Init a wasm instance with exports and memory from instanciated wasm module exports
- * @param {import('./types.js').WasmInstance} instance
+ *
+ * @param {import("./types.js").WasmInstance} instance
  * @param {WebAssembly.Exports} exports
  */
 export function initWasmInstance(instance, exports) {
-	instance.exports = /**@type {import('./types.js').OdinExports}*/ (exports)
+	instance.exports = /** @type {import("./types.js").OdinExports} */ (exports)
 	instance.memory = instance.exports.memory
 }

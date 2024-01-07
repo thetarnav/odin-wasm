@@ -36,6 +36,10 @@ instance.exports._end()
 const canvas = document.createElement("canvas")
 canvas.width = 640
 canvas.height = 480
-const ctx = canvas.getContext("webgl")
+const ctx = canvas.getContext("webgl2")
 if (!ctx) throw new Error("Could not get WebGL context")
 document.body.appendChild(canvas)
+
+console.log(ctx.PIXEL_PACK_BUFFER_BINDING)
+console.log((ctx.currentPixelPackBufferBinding = 2))
+console.log(ctx.PIXEL_PACK_BUFFER_BINDING)
