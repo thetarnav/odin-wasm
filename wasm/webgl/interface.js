@@ -34,9 +34,9 @@ export const INVALID_VALUE = 0x0501
 export const INVALID_OPERATION = 0x0502
 
 /**
- * @param {t.WebGLInterface} webgl
- * @param {?} element
- * @param {WebGLContextAttributes | undefined} context_settings
+ * @param   {t.WebGLInterface}                   webgl
+ * @param   {?}                                  element
+ * @param   {WebGLContextAttributes | undefined} context_settings
  * @returns {boolean}
  */
 export function setCurrentContext(webgl, element, context_settings) {
@@ -56,15 +56,15 @@ export function setCurrentContext(webgl, element, context_settings) {
 }
 
 /**
- * @param {t.WebGLInterface} webgl
+ * @param   {t.WebGLInterface} webgl
  * @returns {number}
  */
 export function newId(webgl) {
 	return webgl.id_counter++
 }
 /**
- * @param {t.WebGLInterface} webgl
- * @param {number} error_code
+ * @param   {t.WebGLInterface} webgl
+ * @param   {number}           error_code
  * @returns {void}
  */
 export function recordError(webgl, error_code) {
@@ -73,8 +73,8 @@ export function recordError(webgl, error_code) {
 	}
 }
 /**
- * @param {t.WebGLInterface} webgl
- * @param {number} program_id
+ * @param   {t.WebGLInterface} webgl
+ * @param   {number}           program_id
  * @returns {void}
  */
 export function populateUniformTable(webgl, program_id) {
@@ -119,9 +119,9 @@ export function populateUniformTable(webgl, program_id) {
 	}
 }
 /**
- * @param {ArrayBufferLike} buffer
- * @param {number} strings_ptr
- * @param {number} strings_length
+ * @param   {ArrayBufferLike} buffer
+ * @param   {number}          strings_ptr
+ * @param   {number}          strings_length
  * @returns {string}
  */
 export function getSource(buffer, strings_ptr, strings_length) {

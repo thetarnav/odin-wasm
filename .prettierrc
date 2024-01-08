@@ -9,6 +9,9 @@
 	"bracketSpacing": false,
 	"endOfLine": "lf",
 	"plugins": ["prettier-plugin-jsdoc"],
+	"jsdocVerticalAlignment": true,
+	"jsdocPreferCodeFences": true,
+	"tsdoc": true,
 	"overrides": [
 		{
 			"files": ["*.yml", "*.yaml"],

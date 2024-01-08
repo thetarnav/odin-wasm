@@ -5,12 +5,11 @@ import * as t from "./types.js"
 
 import {EMPTY_U8_ARRAY, INVALID_OPERATION, newId, recordError} from "./interface.js"
 
-/**
- * @param {t.WebGLInterface} _webgl
- * @param {import("../types.js").WasmInstance} wasm
- * @returns WebGL 2 bindings for Odin
- */
-export function makeOdinWegGL2(_webgl, wasm) {
+/** @returns WebGL 2 bindings for Odin */
+export function makeOdinWegGL2(
+	/** @type {t.WebGLInterface} */ _webgl,
+	/** @type {import("../types.js").WasmInstance} */ wasm,
+) {
 	const webgl = /** @type {t.WebGL2Interface} */ (_webgl)
 
 	return {
@@ -18,17 +17,17 @@ export function makeOdinWegGL2(_webgl, wasm) {
 		Buffer objects
 		*/
 
-		/**
-		 * @param {number} read_target
-		 * @param {number} write_target
-		 * @param {number} read_offset
-		 * @param {number} write_offset
-		 * @param {number} size
-		 * @returns {void}
-		 */
-		CopyBufferSubData: (read_target, write_target, read_offset, write_offset, size) => {
+		/** @returns {void} */
+		CopyBufferSubData: (
+			/** @type {number} */ read_target,
+			/** @type {number} */ write_target,
+			/** @type {number} */ read_offset,
+			/** @type {number} */ write_offset,
+			/** @type {number} */ size,
+		) => {
 			webgl.ctx.copyBufferSubData(read_target, write_target, read_offset, write_offset, size)
 		},
+		/** @returns {void} */
 		GetBufferSubData: (
 			/** @type {number} */ target,
 			/** @type {number} */ src_byte_offset,
@@ -288,46 +287,46 @@ export function makeOdinWegGL2(_webgl, wasm) {
 
 		/* Uniforms */
 		/**
-		 * @param {number} location
-		 * @param {number} x
+		 * @param   {number} location
+		 * @param   {number} x
 		 * @returns {void}
 		 */
 		Uniform1ui: (location, x) => {
 			webgl.ctx.uniform1ui(webgl.uniforms[location], x)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
-		 * @param {number} y
+		 * @param   {number} location
+		 * @param   {number} x
+		 * @param   {number} y
 		 * @returns {void}
 		 */
 		Uniform2ui: (location, x, y) => {
 			webgl.ctx.uniform2ui(webgl.uniforms[location], x, y)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} z
+		 * @param   {number} location
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} z
 		 * @returns {void}
 		 */
 		Uniform3ui: (location, x, y, z) => {
 			webgl.ctx.uniform3ui(webgl.uniforms[location], x, y, z)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} z
-		 * @param {number} w
+		 * @param   {number} location
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} z
+		 * @param   {number} w
 		 * @returns {void}
 		 */
 		Uniform4ui: (location, x, y, z, w) => {
 			webgl.ctx.uniform4ui(webgl.uniforms[location], x, y, z, w)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} addr
+		 * @param   {number} location
+		 * @param   {number} addr
 		 * @returns {void}
 		 */
 		UniformMatrix3x2fv: (location, addr) => {
@@ -338,8 +337,8 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} addr
+		 * @param   {number} location
+		 * @param   {number} addr
 		 * @returns {void}
 		 */
 		UniformMatrix4x2fv: (location, addr) => {
@@ -350,8 +349,8 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} addr
+		 * @param   {number} location
+		 * @param   {number} addr
 		 * @returns {void}
 		 */
 		UniformMatrix2x3fv: (location, addr) => {
@@ -362,8 +361,8 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} addr
+		 * @param   {number} location
+		 * @param   {number} addr
 		 * @returns {void}
 		 */
 		UniformMatrix4x3fv: (location, addr) => {
@@ -374,8 +373,8 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} addr
+		 * @param   {number} location
+		 * @param   {number} addr
 		 * @returns {void}
 		 */
 		UniformMatrix2x4fv: (location, addr) => {
@@ -386,8 +385,8 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} addr
+		 * @param   {number} location
+		 * @param   {number} addr
 		 * @returns {void}
 		 */
 		UniformMatrix3x4fv: (location, addr) => {
@@ -537,7 +536,7 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} query
+		 * @param   {number}  query
 		 * @returns {boolean}
 		 */
 		IsQuery: query => {
@@ -555,8 +554,8 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			webgl.ctx.endQuery(target)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} pname
+		 * @param   {number} target
+		 * @param   {number} pname
 		 * @returns {number}
 		 */
 		GetQuery: (target, pname) => {
@@ -599,33 +598,33 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} sampler
+		 * @param   {number}  sampler
 		 * @returns {boolean}
 		 */
 		IsSampler: sampler => {
 			return webgl.ctx.isSampler(webgl.samplers[sampler])
 		},
 		/**
-		 * @param {number} unit
-		 * @param {number} sampler
+		 * @param   {number} unit
+		 * @param   {number} sampler
 		 * @returns {void}
 		 */
 		BindSampler: (unit, sampler) => {
 			webgl.ctx.bindSampler(unit, webgl.samplers[sampler])
 		},
 		/**
-		 * @param {number} sampler
-		 * @param {number} pname
-		 * @param {number} param
+		 * @param   {number} sampler
+		 * @param   {number} pname
+		 * @param   {number} param
 		 * @returns {void}
 		 */
 		SamplerParameteri: (sampler, pname, param) => {
 			webgl.ctx.samplerParameteri(webgl.samplers[sampler], pname, param)
 		},
 		/**
-		 * @param {number} sampler
-		 * @param {number} pname
-		 * @param {number} param
+		 * @param   {number} sampler
+		 * @param   {number} pname
+		 * @param   {number} param
 		 * @returns {void}
 		 */
 		SamplerParameterf: (sampler, pname, param) => {
@@ -637,8 +636,8 @@ export function makeOdinWegGL2(_webgl, wasm) {
 		*/
 
 		/**
-		 * @param {number} condition
-		 * @param {number} flags
+		 * @param   {number} condition
+		 * @param   {number} flags
 		 * @returns {number}
 		 */
 		FenceSync: (condition, flags) => {
@@ -651,14 +650,14 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			return id
 		},
 		/**
-		 * @param {number} sync
+		 * @param   {number}  sync
 		 * @returns {boolean}
 		 */
 		IsSync: sync => {
 			return webgl.ctx.isSync(webgl.syncs[sync])
 		},
 		/**
-		 * @param {number} id
+		 * @param   {number} id
 		 * @returns {void}
 		 */
 		DeleteSync: id => {
@@ -669,18 +668,18 @@ export function makeOdinWegGL2(_webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} sync
-		 * @param {number} flags
-		 * @param {number} timeout
+		 * @param   {number} sync
+		 * @param   {number} flags
+		 * @param   {number} timeout
 		 * @returns {number}
 		 */
 		ClientWaitSync: (sync, flags, timeout) => {
 			return webgl.ctx.clientWaitSync(webgl.syncs[sync], flags, timeout)
 		},
 		/**
-		 * @param {number} sync
-		 * @param {number} flags
-		 * @param {number} timeout
+		 * @param   {number} sync
+		 * @param   {number} flags
+		 * @param   {number} timeout
 		 * @returns {void}
 		 */
 		WaitSync: (sync, flags, timeout) => {

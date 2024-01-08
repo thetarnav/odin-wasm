@@ -14,18 +14,18 @@ import {
 	INVALID_OPERATION,
 } from "./interface.js"
 
-/** @typedef {import("../types.js").WasmInstance} WasmInstance */
+/** @typedef{import("../types.js").WasmInstance}WasmInstance */
 
 /**
- * @param {t.WebGLInterface} webgl
- * @param {WasmInstance} wasm
- * @returns WebGL bindings for Odin
+ * @param   {t.WebGLInterface} webgl
+ * @param   {WasmInstance}     wasm
+ * @returns       WebGL bindings for Odin.
  */
 export function makeOdinWebGL(webgl, wasm) {
 	return {
 		/**
-		 * @param {number} name_ptr
-		 * @param {number} name_len
+		 * @param   {number}  name_ptr
+		 * @param   {number}  name_len
 		 * @returns {boolean}
 		 */
 		SetCurrentContextById: (name_ptr, name_len) => {
@@ -40,9 +40,9 @@ export function makeOdinWebGL(webgl, wasm) {
 			})
 		},
 		/**
-		 * @param {number} name_ptr Element id
-		 * @param {number} name_len
-		 * @param {number} attrs Bitset
+		 * @param   {number}  name_ptr ElementId
+		 * @param   {number}  name_len
+		 * @param   {number}  attrs    Bitset
 		 * @returns {boolean}
 		 */
 		CreateCurrentContextById: (name_ptr, name_len, attrs) => {
@@ -91,8 +91,8 @@ export function makeOdinWebGL(webgl, wasm) {
 		/** @returns {number} */
 		DrawingBufferHeight: () => webgl.ctx.drawingBufferHeight,
 		/**
-		 * @param {number} name_ptr Extension name
-		 * @param {number} name_len
+		 * @param   {number}  name_ptr ExtensionName
+		 * @param   {number}  name_len
 		 * @returns {boolean}
 		 */
 		IsExtensionSupported(name_ptr, name_len) {
@@ -110,8 +110,8 @@ export function makeOdinWebGL(webgl, wasm) {
 			return webgl.ctx.getError()
 		},
 		/**
-		 * @param {number} major_ptr
-		 * @param {number} minor_ptr
+		 * @param   {number} major_ptr
+		 * @param   {number} minor_ptr
 		 * @returns {void}
 		 */
 		GetWebGLVersion(major_ptr, minor_ptr) {
@@ -120,45 +120,41 @@ export function makeOdinWebGL(webgl, wasm) {
 			mem.store_i32(data, minor_ptr, 0)
 		},
 		/**
-		 * @param {number} major_ptr
-		 * @param {number} minor_ptr
+		 * @param   {number} major_ptr
+		 * @param   {number} minor_ptr
 		 * @returns {void}
 		 */
 		GetESVersion(major_ptr, minor_ptr) {
-			const major = webgl.ctx.getParameter(0x1f02).indexOf("OpenGL ES 3.0") !== -1 ? 3 : 2
+			const major =
+				webgl.ctx.getParameter(0x1f02 /*VERSION*/).indexOf("OpenGL ES 3.0") !== -1 ? 3 : 2
 			const data = new DataView(wasm.memory.buffer)
 			mem.store_i32(data, major_ptr, major)
 			mem.store_i32(data, minor_ptr, 0)
 		},
 		/**
-		 * @param {number} texture
+		 * @param   {number} texture
 		 * @returns {void}
 		 */
 		ActiveTexture(texture) {
 			webgl.ctx.activeTexture(texture)
 		},
-		/**
-		 * @param {number} program
-		 * @param {number} shader
-		 * @returns {void}
-		 */
-		AttachShader(program, shader) {
+		/** @returns {void} */
+		AttachShader(/** @type {number} */ program, /** @type {number} */ shader) {
 			webgl.ctx.attachShader(webgl.programs[program], webgl.shaders[shader])
 		},
-		/**
-		 * @param {number} program
-		 * @param {number} index
-		 * @param {number} name_ptr
-		 * @param {number} name_len
-		 * @returns {void}
-		 */
-		BindAttribLocation(program, index, name_ptr, name_len) {
+		/** @returns {void} */
+		BindAttribLocation(
+			/** @type {number} */ program,
+			/** @type {number} */ index,
+			/** @type {number} */ name_ptr,
+			/** @type {number} */ name_len,
+		) {
 			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
 			webgl.ctx.bindAttribLocation(webgl.programs[program], index, name)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} buffer
+		 * @param   {number} target
+		 * @param   {number} buffer
 		 * @returns {void}
 		 */
 		BindBuffer(target, buffer) {
@@ -190,61 +186,61 @@ export function makeOdinWebGL(webgl, wasm) {
 			webgl.ctx.bindBuffer(target, buffer ? webgl.buffers[buffer] : null)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} framebuffer
+		 * @param   {number} target
+		 * @param   {number} framebuffer
 		 * @returns {void}
 		 */
 		BindFramebuffer(target, framebuffer) {
 			webgl.ctx.bindFramebuffer(target, framebuffer ? webgl.framebuffers[framebuffer] : null)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} texture
+		 * @param   {number} target
+		 * @param   {number} texture
 		 * @returns {void}
 		 */
 		BindTexture(target, texture) {
 			webgl.ctx.bindTexture(target, texture ? webgl.textures[texture] : null)
 		},
 		/**
-		 * @param {number} r
-		 * @param {number} g
-		 * @param {number} b
-		 * @param {number} a
+		 * @param   {number} r
+		 * @param   {number} g
+		 * @param   {number} b
+		 * @param   {number} a
 		 * @returns {void}
 		 */
 		BlendColor(r, g, b, a) {
 			webgl.ctx.blendColor(r, g, b, a)
 		},
 		/**
-		 * @param {number} mode
+		 * @param   {number} mode
 		 * @returns {void}
 		 */
 		BlendEquation(mode) {
 			webgl.ctx.blendEquation(mode)
 		},
 		/**
-		 * @param {number} sfactor
-		 * @param {number} dfactor
+		 * @param   {number} sfactor
+		 * @param   {number} dfactor
 		 * @returns {void}
 		 */
 		BlendFunc(sfactor, dfactor) {
 			webgl.ctx.blendFunc(sfactor, dfactor)
 		},
 		/**
-		 * @param {number} srcRGB
-		 * @param {number} dstRGB
-		 * @param {number} srcAlpha
-		 * @param {number} dstAlpha
+		 * @param   {number} srcRGB
+		 * @param   {number} dstRGB
+		 * @param   {number} srcAlpha
+		 * @param   {number} dstAlpha
 		 * @returns {void}
 		 */
 		BlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha) {
 			webgl.ctx.blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} size
-		 * @param {number} data
-		 * @param {number} usage
+		 * @param   {number} target
+		 * @param   {number} size
+		 * @param   {number} data
+		 * @param   {number} usage
 		 * @returns {void}
 		 */
 		BufferData: (target, size, data, usage) => {
@@ -255,10 +251,10 @@ export function makeOdinWebGL(webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} offset
-		 * @param {number} size
-		 * @param {number} data
+		 * @param   {number} target
+		 * @param   {number} offset
+		 * @param   {number} size
+		 * @param   {number} data
 		 * @returns {void}
 		 */
 		BufferSubData: (target, offset, size, data) => {
@@ -269,48 +265,48 @@ export function makeOdinWebGL(webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} mask
+		 * @param   {number} mask
 		 * @returns {void}
 		 */
 		Clear: mask => {
 			webgl.ctx.clear(mask)
 		},
 		/**
-		 * @param {number} r
-		 * @param {number} g
-		 * @param {number} b
-		 * @param {number} a
+		 * @param   {number} r
+		 * @param   {number} g
+		 * @param   {number} b
+		 * @param   {number} a
 		 * @returns {void}
 		 */
 		ClearColor: (r, g, b, a) => {
 			webgl.ctx.clearColor(r, g, b, a)
 		},
 		/**
-		 * @param {number} depth
+		 * @param   {number} depth
 		 * @returns {void}
 		 */
 		ClearDepth: depth => {
 			webgl.ctx.clearDepth(depth)
 		},
 		/**
-		 * @param {number} s
+		 * @param   {number} s
 		 * @returns {void}
 		 */
 		ClearStencil: s => {
 			webgl.ctx.clearStencil(s)
 		},
 		/**
-		 * @param {number} r
-		 * @param {number} g
-		 * @param {number} b
-		 * @param {number} a
+		 * @param   {number} r
+		 * @param   {number} g
+		 * @param   {number} b
+		 * @param   {number} a
 		 * @returns {void}
 		 */
 		ColorMask: (r, g, b, a) => {
 			webgl.ctx.colorMask(!!r, !!g, !!b, !!a)
 		},
 		/**
-		 * @param {number} shader
+		 * @param   {number} shader
 		 * @returns {void}
 		 */
 		CompileShader: shader => {
@@ -431,7 +427,7 @@ export function makeOdinWebGL(webgl, wasm) {
 			return id
 		},
 		/**
-		 * @param {number} shaderType
+		 * @param   {number} shaderType
 		 * @returns {number}
 		 */
 		CreateShader: shaderType => {
@@ -458,14 +454,14 @@ export function makeOdinWebGL(webgl, wasm) {
 			return id
 		},
 		/**
-		 * @param {number} mode
+		 * @param   {number} mode
 		 * @returns {void}
 		 */
 		CullFace: mode => {
 			webgl.ctx.cullFace(mode)
 		},
 		/**
-		 * @param {number} id
+		 * @param   {number} id
 		 * @returns {void}
 		 */
 		DeleteBuffer: id => {
@@ -478,7 +474,7 @@ export function makeOdinWebGL(webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} id
+		 * @param   {number} id
 		 * @returns {void}
 		 */
 		DeleteFramebuffer: id => {
@@ -491,7 +487,7 @@ export function makeOdinWebGL(webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} id
+		 * @param   {number} id
 		 * @returns {void}
 		 */
 		DeleteProgram: id => {
@@ -504,7 +500,7 @@ export function makeOdinWebGL(webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} id
+		 * @param   {number} id
 		 * @returns {void}
 		 */
 		DeleteRenderbuffer: id => {
@@ -517,7 +513,7 @@ export function makeOdinWebGL(webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} id
+		 * @param   {number} id
 		 * @returns {void}
 		 */
 		DeleteShader: id => {
@@ -530,7 +526,7 @@ export function makeOdinWebGL(webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} id
+		 * @param   {number} id
 		 * @returns {void}
 		 */
 		DeleteTexture: id => {
@@ -543,77 +539,75 @@ export function makeOdinWebGL(webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} func
+		 * @param   {number} func
 		 * @returns {void}
 		 */
 		DepthFunc: func => {
 			webgl.ctx.depthFunc(func)
 		},
 		/**
-		 * @param {boolean} flag
+		 * @param   {boolean} flag
 		 * @returns {void}
 		 */
 		DepthMask: flag => {
 			webgl.ctx.depthMask(flag)
 		},
 		/**
-		 * @param {number} zNear
-		 * @param {number} zFar
+		 * @param   {number} zNear
+		 * @param   {number} zFar
 		 * @returns {void}
 		 */
 		DepthRange: (zNear, zFar) => {
 			webgl.ctx.depthRange(zNear, zFar)
 		},
 		/**
-		 * @param {number} program
-		 * @param {number} shader
+		 * @param   {number} program
+		 * @param   {number} shader
 		 * @returns {void}
 		 */
 		DetachShader: (program, shader) => {
 			webgl.ctx.detachShader(webgl.programs[program], webgl.shaders[shader])
 		},
 		/**
-		 * @param {number} cap
+		 * @param   {number} cap
 		 * @returns {void}
 		 */
 		Disable: cap => {
 			webgl.ctx.disable(cap)
 		},
 		/**
-		 * @param {number} index
+		 * @param   {number} index
 		 * @returns {void}
 		 */
 		DisableVertexAttribArray: index => {
 			webgl.ctx.disableVertexAttribArray(index)
 		},
-		/**
-		 * @param {number} mode
-		 * @param {number} first
-		 * @param {number} count
-		 * @returns {void}
-		 */
-		DrawArrays: (mode, first, count) => {
+		/** @returns {void} */
+		DrawArrays: (
+			/** @type {number} */ mode,
+			/** @type {number} */ first,
+			/** @type {number} */ count,
+		) => {
 			webgl.ctx.drawArrays(mode, first, count)
 		},
-		/**
-		 * @param {number} mode
-		 * @param {number} count
-		 * @param {number} type
-		 * @param {number} indices
-		 * @returns {void}
-		 */
-		DrawElements: (mode, count, type, indices) => {
+		/** @returns {void} */
+		DrawElements: (
+			/** @type {number} */ mode,
+			/** @type {number} */ count,
+			/** @type {number} */ type,
+			/** @type {number} */ indices,
+		) => {
 			webgl.ctx.drawElements(mode, count, type, indices)
 		},
 		/**
-		 * @param {number} cap
+		 * @param   {number} cap
 		 * @returns {void}
 		 */
 		Enable: cap => {
 			webgl.ctx.enable(cap)
 		},
 		/**
-		 * @param {number} index
+		 * @param   {number} index
 		 * @returns {void}
 		 */
 		EnableVertexAttribArray: index => {
@@ -628,10 +622,10 @@ export function makeOdinWebGL(webgl, wasm) {
 			webgl.ctx.flush()
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} attachment
-		 * @param {number} renderbuffertarget
-		 * @param {number} renderbuffer
+		 * @param   {number} target
+		 * @param   {number} attachment
+		 * @param   {number} renderbuffertarget
+		 * @param   {number} renderbuffer
 		 * @returns {void}
 		 */
 		FramebufferRenderbuffer: (target, attachment, renderbuffertarget, renderbuffer) => {
@@ -643,11 +637,11 @@ export function makeOdinWebGL(webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} attachment
-		 * @param {number} textarget
-		 * @param {number} texture
-		 * @param {number} level
+		 * @param   {number} target
+		 * @param   {number} attachment
+		 * @param   {number} textarget
+		 * @param   {number} texture
+		 * @param   {number} level
 		 * @returns {void}
 		 */
 		FramebufferTexture2D: (target, attachment, textarget, texture, level) => {
@@ -660,23 +654,23 @@ export function makeOdinWebGL(webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} mode
+		 * @param   {number} mode
 		 * @returns {void}
 		 */
 		FrontFace: mode => {
 			webgl.ctx.frontFace(mode)
 		},
 		/**
-		 * @param {number} target
+		 * @param   {number} target
 		 * @returns {void}
 		 */
 		GenerateMipmap: target => {
 			webgl.ctx.generateMipmap(target)
 		},
 		/**
-		 * @param {number} program
-		 * @param {number} name_ptr
-		 * @param {number} name_len
+		 * @param   {number} program
+		 * @param   {number} name_ptr
+		 * @param   {number} name_len
 		 * @returns {number}
 		 */
 		GetAttribLocation: (program, name_ptr, name_len) => {
@@ -684,25 +678,25 @@ export function makeOdinWebGL(webgl, wasm) {
 			return webgl.ctx.getAttribLocation(webgl.programs[program], name)
 		},
 		/**
-		 * @param {number} pname
+		 * @param   {number} pname
 		 * @returns {number}
 		 */
 		GetParameter: pname => {
 			return webgl.ctx.getParameter(pname)
 		},
 		/**
-		 * @param {number} program
-		 * @param {number} pname
+		 * @param   {number} program
+		 * @param   {number} pname
 		 * @returns {number}
 		 */
 		GetProgramParameter: (program, pname) => {
 			return webgl.ctx.getProgramParameter(webgl.programs[program], pname)
 		},
 		/**
-		 * @param {number} program
-		 * @param {number} buf_ptr
-		 * @param {number} buf_len
-		 * @param {number} length_ptr
+		 * @param   {number} program
+		 * @param   {number} buf_ptr
+		 * @param   {number} buf_len
+		 * @param   {number} length_ptr
 		 * @returns {void}
 		 */
 		GetProgramInfoLog: (program, buf_ptr, buf_len, length_ptr) => {
@@ -713,10 +707,10 @@ export function makeOdinWebGL(webgl, wasm) {
 			mem.store_int(new DataView(wasm.memory.buffer), length_ptr, n)
 		},
 		/**
-		 * @param {number} shader
-		 * @param {number} buf_ptr
-		 * @param {number} buf_len
-		 * @param {number} length_ptr
+		 * @param   {number} shader
+		 * @param   {number} buf_ptr
+		 * @param   {number} buf_len
+		 * @param   {number} length_ptr
 		 * @returns {void}
 		 */
 		GetShaderInfoLog: (shader, buf_ptr, buf_len, length_ptr) => {
@@ -727,9 +721,9 @@ export function makeOdinWebGL(webgl, wasm) {
 			mem.store_int(new DataView(wasm.memory.buffer), length_ptr, n)
 		},
 		/**
-		 * @param {number} shader_id
-		 * @param {number} pname
-		 * @param {number} p
+		 * @param   {number} shader_id
+		 * @param   {number} pname
+		 * @param   {number} p
 		 * @returns {void}
 		 */
 		GetShaderiv: (shader_id, pname, p) => {
@@ -767,9 +761,9 @@ export function makeOdinWebGL(webgl, wasm) {
 			}
 		},
 		/**
-		 * @param {number} program
-		 * @param {number} name_ptr
-		 * @param {number} name_len
+		 * @param   {number} program
+		 * @param   {number} name_ptr
+		 * @param   {number} name_len
 		 * @returns {number}
 		 */
 		GetUniformLocation: (program, name_ptr, name_len) => {
@@ -796,62 +790,62 @@ export function makeOdinWebGL(webgl, wasm) {
 				: -1
 		},
 		/**
-		 * @param {number} index
-		 * @param {number} pname
+		 * @param   {number} index
+		 * @param   {number} pname
 		 * @returns {number}
 		 */
 		GetVertexAttribOffset: (index, pname) => {
 			return webgl.ctx.getVertexAttribOffset(index, pname)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} mode
+		 * @param   {number} target
+		 * @param   {number} mode
 		 * @returns {void}
 		 */
 		Hint: (target, mode) => {
 			webgl.ctx.hint(target, mode)
 		},
 		/**
-		 * @param {number} buffer
+		 * @param   {number}  buffer
 		 * @returns {boolean}
 		 */
 		IsBuffer: buffer => webgl.ctx.isBuffer(webgl.buffers[buffer]),
 		/**
-		 * @param {number} cap
+		 * @param   {number}  cap
 		 * @returns {boolean}
 		 */
 		IsEnabled: cap => webgl.ctx.isEnabled(cap),
 		/**
-		 * @param {number} framebuffer
+		 * @param   {number}  framebuffer
 		 * @returns {boolean}
 		 */
 		IsFramebuffer: framebuffer => webgl.ctx.isFramebuffer(webgl.framebuffers[framebuffer]),
 		/**
-		 * @param {number} program
+		 * @param   {number}  program
 		 * @returns {boolean}
 		 */
 		IsProgram: program => webgl.ctx.isProgram(webgl.programs[program]),
 		/**
-		 * @param {number} renderbuffer
+		 * @param   {number}  renderbuffer
 		 * @returns {boolean}
 		 */
 		IsRenderbuffer: renderbuffer => webgl.ctx.isRenderbuffer(webgl.renderbuffers[renderbuffer]),
 		/**
-		 * @param {number} shader
+		 * @param   {number}  shader
 		 * @returns {boolean}
 		 */
 		IsShader: shader => webgl.ctx.isShader(webgl.shaders[shader]),
 		/**
-		 * @param {number} texture
+		 * @param   {number}  texture
 		 * @returns {boolean}
 		 */
 		IsTexture: texture => webgl.ctx.isTexture(webgl.textures[texture]),
-		/** @param {number} width */
+		/** @param{number}width */
 		LineWidth: width => {
 			webgl.ctx.lineWidth(width)
 		},
 		/**
-		 * @param {number} program
+		 * @param   {number} program
 		 * @returns {void}
 		 */
 		LinkProgram: program => {
@@ -860,30 +854,30 @@ export function makeOdinWebGL(webgl, wasm) {
 			populateUniformTable(webgl, program)
 		},
 		/**
-		 * @param {number} pname
-		 * @param {number} param
+		 * @param   {number} pname
+		 * @param   {number} param
 		 * @returns {void}
 		 */
 		PixelStorei: (pname, param) => {
 			webgl.ctx.pixelStorei(pname, param)
 		},
 		/**
-		 * @param {number} factor
-		 * @param {number} units
+		 * @param   {number} factor
+		 * @param   {number} units
 		 * @returns {void}
 		 */
 		PolygonOffset: (factor, units) => {
 			webgl.ctx.polygonOffset(factor, units)
 		},
 		/**
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} width
-		 * @param {number} height
-		 * @param {number} format
-		 * @param {number} type
-		 * @param {number} data_len
-		 * @param {number} data_ptr
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} width
+		 * @param   {number} height
+		 * @param   {number} format
+		 * @param   {number} type
+		 * @param   {number} data_len
+		 * @param   {number} data_ptr
 		 * @returns {void}
 		 */
 		ReadnPixels: (x, y, width, height, format, type, data_len, data_ptr) => {
@@ -898,37 +892,37 @@ export function makeOdinWebGL(webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} internalformat
-		 * @param {number} width
-		 * @param {number} height
+		 * @param   {number} target
+		 * @param   {number} internalformat
+		 * @param   {number} width
+		 * @param   {number} height
 		 * @returns {void}
 		 */
 		RenderbufferStorage: (target, internalformat, width, height) => {
 			webgl.ctx.renderbufferStorage(target, internalformat, width, height)
 		},
 		/**
-		 * @param {number} value
-		 * @param {boolean} invert
+		 * @param   {number}  value
+		 * @param   {boolean} invert
 		 * @returns {void}
 		 */
 		SampleCoverage: (value, invert) => {
 			webgl.ctx.sampleCoverage(value, invert)
 		},
 		/**
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} width
-		 * @param {number} height
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} width
+		 * @param   {number} height
 		 * @returns {void}
 		 */
 		Scissor: (x, y, width, height) => {
 			webgl.ctx.scissor(x, y, width, height)
 		},
 		/**
-		 * @param {number} shader
-		 * @param {number} strings_ptr
-		 * @param {number} strings_length
+		 * @param   {number} shader
+		 * @param   {number} strings_ptr
+		 * @param   {number} strings_length
 		 * @returns {void}
 		 */
 		ShaderSource: (shader, strings_ptr, strings_length) => {
@@ -936,53 +930,53 @@ export function makeOdinWebGL(webgl, wasm) {
 			webgl.ctx.shaderSource(webgl.shaders[shader], source)
 		},
 		/**
-		 * @param {number} func
-		 * @param {number} ref
-		 * @param {number} mask
+		 * @param   {number} func
+		 * @param   {number} ref
+		 * @param   {number} mask
 		 * @returns {void}
 		 */
 		StencilFunc: (func, ref, mask) => {
 			webgl.ctx.stencilFunc(func, ref, mask)
 		},
 		/**
-		 * @param {number} face
-		 * @param {number} func
-		 * @param {number} ref
-		 * @param {number} mask
+		 * @param   {number} face
+		 * @param   {number} func
+		 * @param   {number} ref
+		 * @param   {number} mask
 		 * @returns {void}
 		 */
 		StencilFuncSeparate: (face, func, ref, mask) => {
 			webgl.ctx.stencilFuncSeparate(face, func, ref, mask)
 		},
 		/**
-		 * @param {number} mask
+		 * @param   {number} mask
 		 * @returns {void}
 		 */
 		StencilMask: mask => {
 			webgl.ctx.stencilMask(mask)
 		},
 		/**
-		 * @param {number} face
-		 * @param {number} mask
+		 * @param   {number} face
+		 * @param   {number} mask
 		 * @returns {void}
 		 */
 		StencilMaskSeparate: (face, mask) => {
 			webgl.ctx.stencilMaskSeparate(face, mask)
 		},
 		/**
-		 * @param {number} fail
-		 * @param {number} zfail
-		 * @param {number} zpass
+		 * @param   {number} fail
+		 * @param   {number} zfail
+		 * @param   {number} zpass
 		 * @returns {void}
 		 */
 		StencilOp: (fail, zfail, zpass) => {
 			webgl.ctx.stencilOp(fail, zfail, zpass)
 		},
 		/**
-		 * @param {number} face
-		 * @param {number} fail
-		 * @param {number} zfail
-		 * @param {number} zpass
+		 * @param   {number} face
+		 * @param   {number} fail
+		 * @param   {number} zfail
+		 * @param   {number} zpass
 		 * @returns {void}
 		 */
 		StencilOpSeparate: (face, fail, zfail, zpass) => {
@@ -1013,18 +1007,18 @@ export function makeOdinWebGL(webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} pname
-		 * @param {number} param
+		 * @param   {number} target
+		 * @param   {number} pname
+		 * @param   {number} param
 		 * @returns {void}
 		 */
 		TexParameterf: (target, pname, param) => {
 			webgl.ctx.texParameterf(target, pname, param)
 		},
 		/**
-		 * @param {number} target
-		 * @param {number} pname
-		 * @param {number} param
+		 * @param   {number} target
+		 * @param   {number} pname
+		 * @param   {number} param
 		 * @returns {void}
 		 */
 		TexParameteri: (target, pname, param) => {
@@ -1055,84 +1049,84 @@ export function makeOdinWebGL(webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
+		 * @param   {number} location
+		 * @param   {number} x
 		 * @returns {void}
 		 */
 		Uniform1f: (location, x) => {
 			webgl.ctx.uniform1f(webgl.uniforms[location], x)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
-		 * @param {number} y
+		 * @param   {number} location
+		 * @param   {number} x
+		 * @param   {number} y
 		 * @returns {void}
 		 */
 		Uniform2f: (location, x, y) => {
 			webgl.ctx.uniform2f(webgl.uniforms[location], x, y)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} z
+		 * @param   {number} location
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} z
 		 * @returns {void}
 		 */
 		Uniform3f: (location, x, y, z) => {
 			webgl.ctx.uniform3f(webgl.uniforms[location], x, y, z)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} z
-		 * @param {number} w
+		 * @param   {number} location
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} z
+		 * @param   {number} w
 		 * @returns {void}
 		 */
 		Uniform4f: (location, x, y, z, w) => {
 			webgl.ctx.uniform4f(webgl.uniforms[location], x, y, z, w)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
+		 * @param   {number} location
+		 * @param   {number} x
 		 * @returns {void}
 		 */
 		Uniform1i: (location, x) => {
 			webgl.ctx.uniform1i(webgl.uniforms[location], x)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
-		 * @param {number} y
+		 * @param   {number} location
+		 * @param   {number} x
+		 * @param   {number} y
 		 * @returns {void}
 		 */
 		Uniform2i: (location, x, y) => {
 			webgl.ctx.uniform2i(webgl.uniforms[location], x, y)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} z
+		 * @param   {number} location
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} z
 		 * @returns {void}
 		 */
 		Uniform3i: (location, x, y, z) => {
 			webgl.ctx.uniform3i(webgl.uniforms[location], x, y, z)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} z
-		 * @param {number} w
+		 * @param   {number} location
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} z
+		 * @param   {number} w
 		 * @returns {void}
 		 */
 		Uniform4i: (location, x, y, z, w) => {
 			webgl.ctx.uniform4i(webgl.uniforms[location], x, y, z, w)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} addr
+		 * @param   {number} location
+		 * @param   {number} addr
 		 * @returns {void}
 		 */
 		UniformMatrix2fv: (location, addr) => {
@@ -1143,8 +1137,8 @@ export function makeOdinWebGL(webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} addr
+		 * @param   {number} location
+		 * @param   {number} addr
 		 * @returns {void}
 		 */
 		UniformMatrix3fv: (location, addr) => {
@@ -1155,8 +1149,8 @@ export function makeOdinWebGL(webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} location
-		 * @param {number} addr
+		 * @param   {number} location
+		 * @param   {number} addr
 		 * @returns {void}
 		 */
 		UniformMatrix4fv: (location, addr) => {
@@ -1167,74 +1161,74 @@ export function makeOdinWebGL(webgl, wasm) {
 			)
 		},
 		/**
-		 * @param {number} program
+		 * @param   {number} program
 		 * @returns {void}
 		 */
 		UseProgram: program => {
 			webgl.ctx.useProgram(webgl.programs[program])
 		},
 		/**
-		 * @param {number} program
+		 * @param   {number} program
 		 * @returns {void}
 		 */
 		ValidateProgram: program => {
 			webgl.ctx.validateProgram(webgl.programs[program])
 		},
 		/**
-		 * @param {number} index
-		 * @param {number} x
+		 * @param   {number} index
+		 * @param   {number} x
 		 * @returns {void}
 		 */
 		VertexAttrib1f: (index, x) => {
 			webgl.ctx.vertexAttrib1f(index, x)
 		},
 		/**
-		 * @param {number} index
-		 * @param {number} x
-		 * @param {number} y
+		 * @param   {number} index
+		 * @param   {number} x
+		 * @param   {number} y
 		 * @returns {void}
 		 */
 		VertexAttrib2f: (index, x, y) => {
 			webgl.ctx.vertexAttrib2f(index, x, y)
 		},
 		/**
-		 * @param {number} index
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} z
+		 * @param   {number} index
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} z
 		 * @returns {void}
 		 */
 		VertexAttrib3f: (index, x, y, z) => {
 			webgl.ctx.vertexAttrib3f(index, x, y, z)
 		},
 		/**
-		 * @param {number} index
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} z
-		 * @param {number} w
+		 * @param   {number} index
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} z
+		 * @param   {number} w
 		 * @returns {void}
 		 */
 		VertexAttrib4f: (index, x, y, z, w) => {
 			webgl.ctx.vertexAttrib4f(index, x, y, z, w)
 		},
 		/**
-		 * @param {number} index
-		 * @param {number} size
-		 * @param {number} type
-		 * @param {boolean} normalized
-		 * @param {number} stride
-		 * @param {number} ptr
+		 * @param   {number}  index
+		 * @param   {number}  size
+		 * @param   {number}  type
+		 * @param   {boolean} normalized
+		 * @param   {number}  stride
+		 * @param   {number}  ptr
 		 * @returns {void}
 		 */
 		VertexAttribPointer: (index, size, type, normalized, stride, ptr) => {
 			webgl.ctx.vertexAttribPointer(index, size, type, !!normalized, stride, ptr)
 		},
 		/**
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {number} w
-		 * @param {number} h
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} w
+		 * @param   {number} h
 		 * @returns {void}
 		 */
 		Viewport: (x, y, w, h) => {
