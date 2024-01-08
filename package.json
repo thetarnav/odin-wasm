@@ -5,9 +5,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "cd dev && pnpm run dev",
-		"build": "tsc && vite build",
-		"preview": "vite preview",
+		"dev": "node dev.js",
+		"build": "echo 'No build step configured yet'",
+		"preview": "echo 'No preview step configured yet'",
 		"format": "prettier --cache -w .'",
 		"lint": "eslint --ignore-path .gitignore --max-warnings 0 '**/*.{js,jsx,ts,tsx}' '!**/*.test.*' && eslint --ignore-path .gitignore '**/*.test.{js,jsx,ts,tsx}' --quiet --rule \"no-only-tests/no-only-tests: error\"",
 		"test": "vitest"

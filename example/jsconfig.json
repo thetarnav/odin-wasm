@@ -1,8 +1,7 @@
 {
 	"extends": "../jsconfig.base.json",
 	"compilerOptions": {
-		"lib": ["ESNext", "DOM"],
-		"types": ["node"]
+		"lib": ["ESNext", "DOM"]
 	},
-	"include": ["."]
+	"include": [".", "../constants.js"]
 }

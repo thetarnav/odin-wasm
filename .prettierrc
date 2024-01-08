@@ -11,6 +11,7 @@
 	"plugins": ["prettier-plugin-jsdoc"],
 	"jsdocVerticalAlignment": true,
 	"jsdocPreferCodeFences": true,
+	"jsdocCapitalizeDescription": false,
 	"tsdoc": true,
 	"overrides": [
 		{
