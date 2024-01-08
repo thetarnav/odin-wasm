@@ -1,0 +1,38 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"lib": ["ESNext"],
+		"newLine": "LF",
+		"types": [],
+		/*
+		referenced configs cannot have "noEmit": true
+		which conflicts with allowing js files
+		*/
+		"outDir": "dist",
+
+		// "module": "NodeNext",
+		// "lib": ["ESNext", "DOM"],
+		// "types": [],
+
+		/* JS */
+		"allowJs": true,
+		"checkJs": true,
+		"skipLibCheck": false,
+		"maxNodeModuleJsDepth": 1,
+
+		/* Linting */
+		"strict": true,
+		"isolatedModules": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noUncheckedIndexedAccess": true,
+		"noFallthroughCasesInSwitch": true,
+		"verbatimModuleSyntax": true,
+		"useDefineForClassFields": true
+	},
+	"exclude": ["node_modules", "dist"]
+}

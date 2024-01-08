@@ -3,6 +3,7 @@ package main
 
 import "../wasm"
 import "../wasm/dom"
+import "../wasm/webgl"
 import "core:fmt"
 import "core:mem"
 import "core:strings"
@@ -13,25 +14,13 @@ main :: proc() {
 
 	div := dom.dispatch_custom_event("lol", "lol")
 
-	// str := fmt.aprint("Hello, WebAssembly!\n")
-	// wasm.alert(str)
-
-	fmt.printf("Hello, WebAssembly!\n\tdispatched event: %v\n", div)
-
 	fmt.print("Hello, WebAssembly!\n")
-	fmt.println("123")
 	fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
 
-	list: [dynamic]int
-	append(&list, 1)
-	append(&list, 2)
-	append(&list, 3)
-
-	fmt.println("list:", list)
-	fmt.println("list[0]:", list[0])
-	fmt.println("list[1]:", list[1])
-	fmt.println("list[2]:", list[2])
-	fmt.println("list[3]:", list[3])
+	// Make sure that this matches the id of your canvas.
+	webgl.SetCurrentContextById("canvas")
+	webgl.ClearColor(1, 0, 0, 1)
+	webgl.Clear(webgl.COLOR_BUFFER_BIT)
 
 
 	dom.add_window_event_listener(.Scroll, {}, proc(e: dom.Event) {

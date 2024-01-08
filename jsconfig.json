@@ -1,25 +1,7 @@
 {
+	"extends": "./jsconfig.base.json",
 	"compilerOptions": {
-		"target": "ESNext",
-		"useDefineForClassFields": true,
-		"module": "NodeNext",
-		"lib": ["ESNext", "DOM"],
-		"types": [],
-
-		/* Bundler mode */
-		"moduleResolution": "NodeNext",
-		"resolveJsonModule": true,
-
-		/* Linting */
-		"isolatedModules": true,
-		"allowJs": true,
-		"checkJs": true,
-		"strict": true,
-		"skipLibCheck": false,
-		"noFallthroughCasesInSwitch": true,
-		"forceConsistentCasingInFileNames": true,
-		"noPropertyAccessFromIndexSignature": true,
-		"verbatimModuleSyntax": true
+		"lib": ["ESNext", "DOM"]
 	},
 	"include": ["wasm"]
 }
