@@ -17,23 +17,25 @@ document.body.addEventListener("lol", () => {
 /* To test scroll events */
 document.body.style.minHeight = "200vh"
 
-const instance = wasm.zeroWasmInstance()
+const wasm_instance = wasm.zeroWasmInstance()
+const webgl_state = wasm.webgl.makeWebGLInterface()
 
 const response = await fetch(WASM_PATH)
 const file = await response.arrayBuffer()
 const source_instance = await WebAssembly.instantiate(file, {
 	env: {}, // TODO
-	odin_env: wasm.env.makeOdinEnv(instance),
-	odin_ls: wasm.ls.makeOdinLS(instance),
-	odin_dom: wasm.dom.makeOdinDOM(instance),
+	odin_env: wasm.env.makeOdinEnv(wasm_instance),
+	odin_ls: wasm.ls.makeOdinLS(wasm_instance),
+	odin_dom: wasm.dom.makeOdinDOM(wasm_instance),
+	webgl: wasm.webgl.makeOdinWebGL(webgl_state, wasm_instance),
 })
-wasm.initWasmInstance(instance, source_instance.instance.exports)
+wasm.initWasmInstance(wasm_instance, source_instance.instance.exports)
 
-console.log("Exports", instance.exports)
-console.log("Memory", instance.memory)
+console.log("Exports", wasm_instance.exports)
+console.log("Memory", wasm_instance.memory)
 
-instance.exports._start()
-instance.exports._end()
+wasm_instance.exports._start()
+wasm_instance.exports._end()
 
 const socket = new WebSocket("ws://localhost:" + WEB_SOCKET_PORT)
 
