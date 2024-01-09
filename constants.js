@@ -6,6 +6,6 @@ export const DIST_DIRNAME = "dist"
 export const PACKAGE_DIRNAME = "wasm"
 
 export const WASM_FILENAME = "main.wasm"
-export const WASM_PATH = "/" + DIST_DIRNAME + "/" + WASM_FILENAME
+export const WASM_PATH = PLAYGROUND_DIRNAME + "/" + WASM_FILENAME
 
 export const MESSAGE_RELOAD = "reload"

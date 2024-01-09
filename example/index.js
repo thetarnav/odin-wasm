@@ -20,7 +20,7 @@ document.body.style.minHeight = "200vh"
 const wasm_instance = wasm.zeroWasmInstance()
 const webgl_state = wasm.webgl.makeWebGLInterface()
 
-const response = await fetch(WASM_PATH)
+const response = await fetch("/" + WASM_PATH)
 const file = await response.arrayBuffer()
 const source_instance = await WebAssembly.instantiate(file, {
 	env: {}, // TODO

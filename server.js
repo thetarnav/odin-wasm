@@ -13,7 +13,6 @@ import {
 	MESSAGE_RELOAD,
 	PACKAGE_DIRNAME,
 	PLAYGROUND_DIRNAME,
-	WASM_FILENAME,
 	WASM_PATH,
 	WEB_SOCKET_PORT,
 } from "./constants.js"
@@ -82,7 +81,7 @@ async function requestListener(
 		return
 	}
 
-	if (req.url === WASM_PATH) {
+	if (req.url === "/" + WASM_PATH) {
 		await wasm_build_promise
 	} else if (req.url === "/" || req.url === "/index.html") {
 		req.url = "/" + PLAYGROUND_DIRNAME + "/index.html"
@@ -125,7 +124,7 @@ function sendToAllClients(/** @type {BufferLike} */ data) {
 
 /** @returns {Promise<number>} */
 async function buildWASM() {
-	const build_cmd = `odin build ${playground_path} -out:${DIST_DIRNAME}/${WASM_FILENAME} -target:js_wasm32`
+	const build_cmd = `odin build ${playground_path} -out:${WASM_PATH} -target:js_wasm32`
 	const child = await child_process.exec(build_cmd, {cwd: dirname})
 	return childProcessToPromise(child)
 }
