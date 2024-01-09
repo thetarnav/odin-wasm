@@ -1049,37 +1049,17 @@ export const store_string_bytes = (buffer, addr, length, value) => {
 	}
 	return length
 }
-/**
- * @param   {ArrayBufferLike} buffer
- * @param   {number}          addr
- * @param   {number}          length
- * @param   {string}          value
- * @returns {number}
- */
-export const store_string_raw = (buffer, addr, length, value) => {
+/** @returns {number} */
+export const store_string_raw = (
+	/** @type {ArrayBufferLike} */ buffer,
+	/** @type {number} */ addr,
+	/** @type {number} */ length,
+	/** @type {string} */ value,
+) => {
 	length = Math.min(length, value.length)
 	const bytes = load_bytes(buffer, addr, length)
 	void new TextEncoder().encodeInto(value, bytes)
 	return length
-}
-/** @returns {void} */
-export const store_string = (
-	/** @type {DataView} */ mem,
-	/** @type {number} */ ptr,
-	/** @type {string} */ value,
-) => {
-	warn("store_string not implemented")
-	store_u32(mem, ptr, 0)
-	store_u32(mem, ptr + 4, 0)
-}
-/**
- * @param   {DataView}   mem
- * @param   {ByteOffset} offset
- * @param   {string}     value
- * @returns {void}
- */
-export const store_offset_string = (mem, offset, value) => {
-	store_string(mem, off(offset, 8), value)
 }
 /** @returns {void} */
 export const store_cstring_raw = (
@@ -1089,24 +1069,6 @@ export const store_cstring_raw = (
 ) => {
 	void store_string_raw(mem.buffer, ptr, value.length, value)
 	mem.setUint8(ptr + value.length, 0)
-}
-/** @returns {void} */
-export const store_cstring = (
-	/** @type {DataView} */ mem,
-	/** @type {number} */ ptr,
-	/** @type {string} */ value,
-) => {
-	warn("store_cstring not implemented")
-	store_u32(mem, ptr, 0)
-}
-/**
- * @param   {DataView}   mem
- * @param   {ByteOffset} offset
- * @param   {string}     value
- * @returns {void}
- */
-export const store_offset_cstring = (mem, offset, value) => {
-	store_cstring(mem, off(offset, 4), value)
 }
 /** @returns {void} */
 export const store_rune = (
@@ -1125,6 +1087,53 @@ export const store_rune = (
 export const store_offset_rune = (mem, offset, value) => {
 	store_rune(mem, off(offset, 4), value)
 }
+
+/*
+Not sure how to implement storing multi pointers (strings, cstrings, slices, etc.)
+as they just point to some memory of unknown size
+and js doesn't know where it can allocate it
+
+That memory has to be allocated on the WASM side
+and then [ptr:len] to it can be returned to js
+*/
+
+// /** @returns {void} */
+// export const store_string = (
+// 	/** @type {DataView} */ mem,
+// 	/** @type {number} */ ptr,
+// 	/** @type {string} */ value,
+// ) => {
+// 	warn("store_string not implemented")
+// 	store_u32(mem, ptr, 0)
+// 	store_u32(mem, ptr + 4, 0)
+// }
+// /**
+//  * @param   {DataView}   mem
+//  * @param   {ByteOffset} offset
+//  * @param   {string}     value
+//  * @returns {void}
+//  */
+// export const store_offset_string = (mem, offset, value) => {
+// 	store_string(mem, off(offset, 8), value)
+// }
+// /** @returns {void} */
+// export const store_cstring = (
+// 	/** @type {DataView} */ mem,
+// 	/** @type {number} */ ptr,
+// 	/** @type {string} */ value,
+// ) => {
+// 	warn("store_cstring not implemented")
+// 	store_u32(mem, ptr, 0)
+// }
+// /**
+//  * @param   {DataView}   mem
+//  * @param   {ByteOffset} offset
+//  * @param   {string}     value
+//  * @returns {void}
+//  */
+// export const store_offset_cstring = (mem, offset, value) => {
+// 	store_cstring(mem, off(offset, 4), value)
+// }
 
 /**
  * @param   {ArrayBufferLike} buffer
