@@ -4,6 +4,8 @@ import {WEB_SOCKET_PORT, WASM_PATH, MESSAGE_RELOAD} from "../constants.js"
 
 import "./test.js"
 
+console.log("Hello from index.js", {...import.meta.env})
+
 // if (import.meta.env.DEV) {
 wasm.env.enableConsole()
 // }
