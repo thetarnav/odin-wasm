@@ -21,12 +21,12 @@ import {
 const dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const playground_path = path.join(dirname, PLAYGROUND_DIRNAME)
 const dist_path = path.join(dirname, DIST_DIRNAME)
-const package_path = path.join(dirname, PACKAGE_DIRNAME)
+const _package_path = path.join(dirname, PACKAGE_DIRNAME)
 
 /* Make sure the dist dir exists */
 void fs.mkdirSync(dist_path, {recursive: true})
 
-const server = http.createServer(requestListener).listen(HTTP_PORT)
+const _server = http.createServer(requestListener).listen(HTTP_PORT)
 const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
 
 // eslint-disable-next-line no-console
@@ -35,22 +35,39 @@ Server running at http://127.0.0.1:${HTTP_PORT}
 WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 `)
 
+/** @type {Promise<number>} */
+let wasm_build_promise = buildWASM()
+
 const watcher = chokidar.watch(
-	[
-		`./${PLAYGROUND_DIRNAME}/**/*.{js,html,odin}`,
-		`./${PACKAGE_DIRNAME}/**/*.{js,odin}`,
-		"./*.js",
-	],
+	[`./${PLAYGROUND_DIRNAME}/**/*.{js,html,odin}`, `./${PACKAGE_DIRNAME}/**/*.{js,odin}`],
 	{
 		// ignore dotfiles and tests (.test.js)
 		ignored: [/(^|[\/\\])\../, /\.test\.js$/],
 		ignoreInitial: true,
 	},
 )
-void watcher.on("change", handleFileChange)
+void watcher.on("change", filepath => {
+	// Rebuild the WASM
+	if (filepath.endsWith(".odin")) {
+		// eslint-disable-next-line no-console
+		console.log("Rebuilding WASM...")
+		wasm_build_promise = buildWASM()
+		sendToAllClients(MESSAGE_RELOAD)
+	}
+	// Reload the page
+	else {
+		// eslint-disable-next-line no-console
+		console.log("Reloading page...")
+		sendToAllClients(MESSAGE_RELOAD)
+	}
+})
 
-/** @type {Promise<number>} */
-let wasm_build_promise = buildWASM()
+void process.on("SIGINT", () => {
+	void _server.close()
+	void wss.close()
+	void watcher.close()
+	void process.exit(0)
+})
 
 /** @returns {Promise<void>} */
 async function requestListener(
@@ -103,33 +120,6 @@ async function requestListener(
 function sendToAllClients(/** @type {BufferLike} */ data) {
 	for (const client of wss.clients) {
 		client.send(data)
-	}
-}
-
-/** @returns {void} */
-function handleFileChange(/** @type {string} */ filepath) {
-	// Rebuild the WASM
-	if (filepath.endsWith(".odin")) {
-		// eslint-disable-next-line no-console
-		console.log("Rebuilding WASM...")
-		wasm_build_promise = buildWASM()
-		sendToAllClients(MESSAGE_RELOAD)
-	}
-	// Reload the page
-	else if (filepath.startsWith(PLAYGROUND_DIRNAME) || filepath.startsWith(PACKAGE_DIRNAME)) {
-		// eslint-disable-next-line no-console
-		console.log("Reloading page...")
-		sendToAllClients(MESSAGE_RELOAD)
-	}
-	// Restart the server
-	else {
-		// eslint-disable-next-line no-console
-		console.log("Restarting server...")
-		sendToAllClients(MESSAGE_RELOAD)
-		void server.close()
-		wss.close()
-		void process.exit(0)
-		return
 	}
 }
 

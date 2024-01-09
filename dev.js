@@ -1,19 +1,31 @@
 import * as child_process from "node:child_process"
+import * as chokidar from "chokidar"
 
 /** @type {child_process.ChildProcess} */
-let child
+let child = makeChildServer()
 
-startServer()
+const watcher = chokidar.watch(["./*.js"], {
+	// ignore dotfiles
+	ignored: /(^|[\/\\])\../,
+	ignoreInitial: true,
+})
+void watcher.on("change", restartServer)
 
-function startServer() {
-	child = child_process.spawn("node", ["server.js"], {
-		stdio: "inherit",
-		shell: true,
-	})
+/** @returns {child_process.ChildProcess} */
+function makeChildServer() {
+	return child_process.spawn("node", ["server.js"], {stdio: "inherit"})
+}
 
-	void child.on("close", code => {
-		if (code === 0) {
-			startServer()
-		}
-	})
+/** @returns {void} */
+function restartServer() {
+	// eslint-disable-next-line no-console
+	console.log("Stopping server...")
+	const ok = child.kill("SIGINT")
+	if (!ok) {
+		// eslint-disable-next-line no-console
+		console.log("Failed to kill server")
+		return
+	}
+
+	child = makeChildServer()
 }
