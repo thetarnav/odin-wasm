@@ -1,14 +1,20 @@
 import * as wasm from "../wasm/runtime.js"
 
-import {WEB_SOCKET_PORT, WASM_PATH, MESSAGE_RELOAD} from "../constants.js"
+import {IS_DEV, WEB_SOCKET_PORT, WASM_PATH, MESSAGE_RELOAD} from "../config.js"
 
 import "./test.js"
 
-console.log("Hello from index.js", {...import.meta.env})
+if (IS_DEV) {
+	wasm.env.enableConsole()
 
-// if (import.meta.env.DEV) {
-wasm.env.enableConsole()
-// }
+	const socket = new WebSocket("ws://localhost:" + WEB_SOCKET_PORT)
+
+	socket.addEventListener("message", event => {
+		if (event.data === MESSAGE_RELOAD) {
+			location.reload()
+		}
+	})
+}
 
 /* To test dispatching custom events */
 document.body.addEventListener("lol", () => {
@@ -38,11 +44,3 @@ console.log("Memory", wasm_instance.memory)
 
 wasm_instance.exports._start()
 wasm_instance.exports._end()
-
-const socket = new WebSocket("ws://localhost:" + WEB_SOCKET_PORT)
-
-socket.addEventListener("message", event => {
-	if (event.data === MESSAGE_RELOAD) {
-		location.reload()
-	}
-})

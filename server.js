@@ -9,23 +9,24 @@ import * as ws from "ws"
 
 import {
 	DIST_DIRNAME,
+	CONFIG_FILENAME,
 	HTTP_PORT,
 	MESSAGE_RELOAD,
 	PACKAGE_DIRNAME,
 	PLAYGROUND_DIRNAME,
 	WASM_PATH,
 	WEB_SOCKET_PORT,
-} from "./constants.js"
+} from "./config.js"
 
 const dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const playground_path = path.join(dirname, PLAYGROUND_DIRNAME)
 const dist_path = path.join(dirname, DIST_DIRNAME)
-const _package_path = path.join(dirname, PACKAGE_DIRNAME)
+const env_path = path.join(dirname, CONFIG_FILENAME)
 
 /* Make sure the dist dir exists */
 void fs.mkdirSync(dist_path, {recursive: true})
 
-const _server = http.createServer(requestListener).listen(HTTP_PORT)
+const server = http.createServer(requestListener).listen(HTTP_PORT)
 const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
 
 // eslint-disable-next-line no-console
@@ -36,6 +37,7 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 
 /** @type {Promise<number>} */
 let wasm_build_promise = buildWASM()
+const env_promise = fsp.readFile(env_path, "utf8").then(correctEnvMode)
 
 const watcher = chokidar.watch(
 	[`./${PLAYGROUND_DIRNAME}/**/*.{js,html,odin}`, `./${PACKAGE_DIRNAME}/**/*.{js,odin}`],
@@ -62,9 +64,10 @@ void watcher.on("change", filepath => {
 })
 
 void process.on("SIGINT", () => {
-	void _server.close()
+	void server.close()
 	void wss.close()
 	void watcher.close()
+	sendToAllClients(MESSAGE_RELOAD)
 	void process.exit(0)
 })
 
@@ -81,7 +84,14 @@ async function requestListener(
 		return
 	}
 
-	if (req.url === "/" + WASM_PATH) {
+	if (req.url === "/" + CONFIG_FILENAME) {
+		const str = await env_promise
+		void res.writeHead(200, {"Content-Type": "application/javascript"})
+		void res.end(str)
+		// eslint-disable-next-line no-console
+		console.log(`${req.method} ${req.url} 200`)
+		return
+	} else if (req.url === "/" + WASM_PATH) {
 		await wasm_build_promise
 	} else if (req.url === "/" || req.url === "/index.html") {
 		req.url = "/" + PLAYGROUND_DIRNAME + "/index.html"
@@ -127,6 +137,17 @@ async function buildWASM() {
 	const build_cmd = `odin build ${playground_path} -out:${WASM_PATH} -target:js_wasm32`
 	const child = await child_process.exec(build_cmd, {cwd: dirname})
 	return childProcessToPromise(child)
+}
+
+/** @returns {string} */
+function correctEnvMode(/** @type {string} */ env) {
+	let lines_to_shift = 2
+	while (lines_to_shift > 0) {
+		env = env.substring(env.indexOf("\n") + 1)
+		lines_to_shift--
+	}
+
+	return "export const IS_DEV = /** @type {boolean} */ (false)\n" + env
 }
 
 /** @returns {string} */
