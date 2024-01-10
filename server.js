@@ -48,19 +48,14 @@ const watcher = chokidar.watch(
 	},
 )
 void watcher.on("change", filepath => {
-	// Rebuild the WASM
 	if (filepath.endsWith(".odin")) {
 		// eslint-disable-next-line no-console
 		console.log("Rebuilding WASM...")
 		wasm_build_promise = buildWASM()
-		sendToAllClients(MESSAGE_RELOAD)
 	}
-	// Reload the page
-	else {
-		// eslint-disable-next-line no-console
-		console.log("Reloading page...")
-		sendToAllClients(MESSAGE_RELOAD)
-	}
+	// eslint-disable-next-line no-console
+	console.log("Reloading page...")
+	sendToAllClients(MESSAGE_RELOAD)
 })
 
 void process.on("SIGINT", () => {
@@ -141,13 +136,7 @@ async function buildWASM() {
 
 /** @returns {string} */
 function correctEnvMode(/** @type {string} */ env) {
-	let lines_to_shift = 2
-	while (lines_to_shift > 0) {
-		env = env.substring(env.indexOf("\n") + 1)
-		lines_to_shift--
-	}
-
-	return "export const IS_DEV = /** @type {boolean} */ (false)\n" + env
+	return "export const IS_DEV = /** @type {boolean} */ (false)\n" + shiftLines(env, 1)
 }
 
 /** @returns {string} */
@@ -211,4 +200,14 @@ function fileExists(/** @type {string} */ filepath) {
 /** @returns {string} */
 function toExt(/** @type {string} */ filepath) {
 	return path.extname(filepath).substring(1).toLowerCase()
+}
+
+/** @returns {string} */
+function shiftLines(/** @type {string} */ str, /** @type {number} */ lines) {
+	while (lines > 0) {
+		str = str.substring(str.indexOf("\n") + 1)
+		lines--
+	}
+
+	return str
 }
