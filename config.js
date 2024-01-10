@@ -13,6 +13,8 @@ export const PLAYGROUND_DIRNAME = "example"
 export const DIST_DIRNAME = "dist"
 export const PACKAGE_DIRNAME = "wasm"
 
+export const SCRIPT_FILENAME = "main.js"
+
 export const CONFIG_FILENAME = "config.js"
 export const CONFIG_OUT_FILENAME = "_" + CONFIG_FILENAME
 

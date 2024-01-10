@@ -5,7 +5,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "node dev.js",
+		"dev": "node main.js dev",
+		"server": "node main.js server",
 		"build": "echo 'No build step configured yet'",
 		"preview": "echo 'No preview step configured yet'",
 		"format": "prettier --cache -w .'",

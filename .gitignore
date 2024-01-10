@@ -8,3 +8,4 @@ dist
 # generated files
 _*
 *.wasm
+*.o

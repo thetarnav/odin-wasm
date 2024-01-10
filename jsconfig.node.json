@@ -1,5 +1,5 @@
 {
-	"extends": "./jsconfig_base.json",
+	"extends": "./jsconfig.base.json",
 	"compilerOptions": {
 		"composite": true,
 		"lib": ["ESNext", "DOM"]

@@ -4,7 +4,7 @@
 	"plugins": ["@typescript-eslint", "no-only-tests", "eslint-comments", "@nothing-but"],
 	"ignorePatterns": ["node_modules", "dist"],
 	"parserOptions": {
-		"project": ["./jsconfig.json", "./jsconfig_node.json", "./example/jsconfig.json"],
+		"project": ["./jsconfig.json", "./jsconfig.node.json", "./example/jsconfig.json"],
 		"tsconfigRootDir": ".",
 		"sourceType": "module"
 	},
@@ -16,6 +16,7 @@
 		"no-debugger": "warn",
 		"prefer-const": "warn",
 		"require-await": "warn",
+		"@typescript-eslint/await-thenable": "warn",
 		"@typescript-eslint/no-unused-vars": [
 			"warn",
 			{
