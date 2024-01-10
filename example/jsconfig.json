@@ -3,5 +3,5 @@
 	"compilerOptions": {
 		"lib": ["ESNext", "DOM"]
 	},
-	"include": [".", "../config.js"]
+	"include": ["."]
 }

@@ -16,12 +16,14 @@ import {
 	PLAYGROUND_DIRNAME,
 	WASM_PATH,
 	WEB_SOCKET_PORT,
+	CONFIG_OUT_FILENAME,
 } from "./config.js"
 
 const dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const playground_path = path.join(dirname, PLAYGROUND_DIRNAME)
 const dist_path = path.join(dirname, DIST_DIRNAME)
-const env_path = path.join(dirname, CONFIG_FILENAME)
+const config_path = path.join(dirname, CONFIG_FILENAME)
+const config_out_path = path.join(playground_path, CONFIG_OUT_FILENAME)
 
 /* Make sure the dist dir exists */
 void fs.mkdirSync(dist_path, {recursive: true})
@@ -37,7 +39,18 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 
 /** @type {Promise<number>} */
 let wasm_build_promise = buildWASM()
-const env_promise = fsp.readFile(env_path, "utf8").then(correctEnvMode)
+
+/*
+Copy the config file to the playground source dir,
+with a correct env mode.
+*/
+/** @type {Promise<void>} */
+const env_promise = fsp
+	.readFile(config_path, "utf8")
+	.then(correctConfigMode)
+	// TODO fix the eslint rule, it shouldn't complain about this
+	// eslint-disable-next-line @nothing-but/no-return-to-void
+	.then(str => fsp.writeFile(config_out_path, str))
 
 const watcher = chokidar.watch(
 	[`./${PLAYGROUND_DIRNAME}/**/*.{js,html,odin}`, `./${PACKAGE_DIRNAME}/**/*.{js,odin}`],
@@ -80,12 +93,7 @@ async function requestListener(
 	}
 
 	if (req.url === "/" + CONFIG_FILENAME) {
-		const str = await env_promise
-		void res.writeHead(200, {"Content-Type": "application/javascript"})
-		void res.end(str)
-		// eslint-disable-next-line no-console
-		console.log(`${req.method} ${req.url} 200`)
-		return
+		await env_promise
 	} else if (req.url === "/" + WASM_PATH) {
 		await wasm_build_promise
 	} else if (req.url === "/" || req.url === "/index.html") {
@@ -135,8 +143,8 @@ async function buildWASM() {
 }
 
 /** @returns {string} */
-function correctEnvMode(/** @type {string} */ env) {
-	return "export const IS_DEV = /** @type {boolean} */ (false)\n" + shiftLines(env, 1)
+function correctConfigMode(/** @type {string} */ env) {
+	return "export const IS_DEV = /** @type {boolean} */ (true)\n" + shiftLines(env, 1)
 }
 
 /** @returns {string} */

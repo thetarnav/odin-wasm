@@ -1,5 +1,10 @@
 node_modules
 dist
+
 .env
+
 /ols.json
-**/*.wasm
+
+# generated files
+_*
+*.wasm
