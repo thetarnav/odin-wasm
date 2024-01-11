@@ -12,6 +12,7 @@ export const WEB_SOCKET_PORT = 8080
 export const PLAYGROUND_DIRNAME = "example"
 export const DIST_DIRNAME = "dist"
 export const PACKAGE_DIRNAME = "wasm"
+export const PUBLIC_DIRNAME = "public"
 
 export const SCRIPT_FILENAME = "main.js"
 
@@ -19,6 +20,6 @@ export const CONFIG_FILENAME = "config.js"
 export const CONFIG_OUT_FILENAME = "_" + CONFIG_FILENAME
 
 export const WASM_FILENAME = "_main.wasm"
-export const WASM_PATH = PLAYGROUND_DIRNAME + "/" + WASM_FILENAME
+export const WASM_PATH = PLAYGROUND_DIRNAME + "/" + PUBLIC_DIRNAME + "/" + WASM_FILENAME
 
 export const MESSAGE_RELOAD = "reload"

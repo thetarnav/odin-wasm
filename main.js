@@ -21,13 +21,15 @@ import {
 	CONFIG_OUT_FILENAME,
 	SCRIPT_FILENAME,
 	WASM_FILENAME,
+	PUBLIC_DIRNAME,
 } from "./config.js"
 
 const dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const playground_path = path.join(dirname, PLAYGROUND_DIRNAME)
 const dist_path = path.join(dirname, DIST_DIRNAME)
 const config_path = path.join(dirname, CONFIG_FILENAME)
-const config_out_path = path.join(playground_path, CONFIG_OUT_FILENAME)
+const config_path_out = path.join(playground_path, CONFIG_OUT_FILENAME)
+const public_path = path.join(playground_path, PUBLIC_DIRNAME)
 
 /** @enum {string} */
 const Command = {
@@ -39,7 +41,6 @@ const Command = {
 /** @type {Record<Command, (args: string[]) => void>} */
 const command_handlers = {
 	[Command.Dev]() {
-		/** @type {child_process.ChildProcess} */
 		let child = makeChildServer()
 
 		const watcher = chokidar.watch(["./*.js"], {
@@ -69,7 +70,7 @@ Server running at http://127.0.0.1:${HTTP_PORT}
 WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 `)
 
-		let wasm_build_promise = buildWASM(WASM_PATH)
+		let wasm_build_promise = buildWASM()
 		const config_promise = buildConfig(true)
 
 		const watcher = chokidar.watch(
@@ -83,7 +84,7 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 			if (filepath.endsWith(".odin")) {
 				// eslint-disable-next-line no-console
 				console.log("Rebuilding WASM...")
-				wasm_build_promise = buildWASM(WASM_PATH)
+				wasm_build_promise = buildWASM()
 			}
 			// eslint-disable-next-line no-console
 			console.log("Reloading page...")
@@ -103,13 +104,13 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 			/** @type {http.IncomingMessage} */ req,
 			/** @type {http.ServerResponse} */ res,
 		) {
-			if (!req.url || req.method !== "GET") return end404()
+			if (!req.url || req.method !== "GET") return end404(req, res)
 
 			if (req.url === "/" + CONFIG_FILENAME) {
 				await config_promise
 			} else if (req.url === "/" + WASM_FILENAME) {
 				const code = await wasm_build_promise
-				if (code !== 0) return end404()
+				if (code !== 0) return end404(req, res)
 			} else if (req.url === "/" || req.url === "/index.html") {
 				req.url = "/" + PLAYGROUND_DIRNAME + "/index.html"
 			}
@@ -119,7 +120,7 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 			const filepath = path.join(dirname, relative_filepath)
 
 			const exists = await fileExists(filepath)
-			if (!exists) return end404()
+			if (!exists) return end404(req, res)
 
 			const ext = toExt(filepath)
 			const mime_type = mimeType(ext)
@@ -132,10 +133,12 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 			console.log(`${req.method} ${req.url} 200`)
 		}
 
-		function end404(
-			/** @type {http.IncomingMessage} */ req,
-			/** @type {http.ServerResponse} */ res,
-		) {
+		/**
+		 * @param   {http.IncomingMessage} req
+		 * @param   {http.ServerResponse}  res
+		 * @returns {void}
+		 */
+		function end404(req, res) {
 			void res.writeHead(404)
 			void res.end()
 			// eslint-disable-next-line no-console
@@ -143,67 +146,73 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 		}
 	},
 	async [Command.Build]() {
-		const wasm_promise = buildWASM(DIST_DIRNAME + "/" + WASM_FILENAME)
-		const config_promise = buildConfig(false)
+		/* Clean dist dir */
+		await ensureEmptyDir(dist_path)
 
-		const [wasm_res] = await Promise.all([wasm_promise, config_promise])
+		const wasm_promise = buildWASM()
+		await buildConfig(false)
 
-		// eslint-disable-next-line @nothing-but/no-ignored-return
-		if (wasm_res != 0) panic("Failed to build WASM, code:", wasm_res)
-
-		const bundle_res = await safeRollupBundle({
-			input: path.join(playground_path, "index.js"),
-		})
+		const bundle_res = await unsafePromiseToError(
+			rollup.rollup({input: path.join(playground_path, "index.js")}),
+		)
 		// eslint-disable-next-line @nothing-but/no-ignored-return
 		if (bundle_res instanceof Error) panic("Failed to bundle, error:", bundle_res)
 
-		const generate_res = await safeRollupGenerate(bundle_res, {})
+		const generate_res = await unsafePromiseToError(bundle_res.generate({}))
 		// eslint-disable-next-line @nothing-but/no-ignored-return
 		if (generate_res instanceof Error) panic("Failed to generate, error:", generate_res)
 
-		/** @type {rollup.OutputAsset[]} */
-		const assets = []
-		/** @type {rollup.OutputChunk[]} */
-		const chunks = []
+		let errors_count = 0
 
-		for (const output of generate_res.output) {
-			if (output.type === "asset") assets.push(output)
-			else chunks.push(output)
-		}
-
-		/** @type {Promise<void>[]} */
-		const promises = []
-
-		for (const asset of assets) {
-			const filepath = path.join(dist_path, asset.fileName)
-			promises.push(fsp.writeFile(filepath, asset.source))
-		}
-
-		const should_minify = /** @type {boolean} */ (true)
-		if (should_minify) {
-			for (const chunk of chunks) {
-				const filepath = path.join(dist_path, chunk.fileName)
-				const minified = terser.minify(chunk.code, {module: true})
-				promises.push(
-					// eslint-disable-next-line @nothing-but/no-return-to-void
-					minified.then(output =>
-						output.code ? fsp.writeFile(filepath, output.code) : void 0,
-					),
-				)
+		const promises = generate_res.output.map(async chunk => {
+			if (chunk.type === "asset") {
+				// eslint-disable-next-line no-console
+				console.error("Unexpected asset:", chunk.fileName)
+				errors_count += 1
+				return
 			}
-		} else {
-			for (const chunk of chunks) {
-				const filepath = path.join(dist_path, chunk.fileName)
-				promises.push(fsp.writeFile(filepath, chunk.code))
-			}
-		}
 
-		await Promise.all(promises) // TODO error handling
+			const minified = await unsafePromiseToError(terser.minify(chunk.code, {module: true}))
+
+			if (minified instanceof Error) {
+				// eslint-disable-next-line no-console
+				console.error("Failed to minify " + chunk.fileName + ":", minified)
+				errors_count += 1
+				return
+			}
+
+			if (typeof minified.code !== "string") {
+				// eslint-disable-next-line no-console
+				console.error("No code for minified chunk:", chunk.fileName)
+				errors_count += 1
+				return
+			}
+
+			return fsp.writeFile(path.join(dist_path, chunk.fileName), minified.code)
+		})
+
+		await Promise.all(promises)
 
 		void bundle_res.close()
 
+		errors_count
+			? // eslint-disable-next-line no-console
+				console.error("JS Build failed, errors:", errors_count)
+			: // eslint-disable-next-line no-console
+				console.log("JS Build complete")
+
+		const wasm_exit_code = await wasm_promise
+		// eslint-disable-next-line @nothing-but/no-ignored-return
+		if (wasm_exit_code != 0) panic("Failed to build WASM, code:", wasm_exit_code)
+
+		/* Copy public dir */
+		await copyDirContents(public_path, dist_path)
+
 		// eslint-disable-next-line no-console
 		console.log("Build complete")
+
+		// eslint-disable-next-line @nothing-but/no-ignored-return
+		process.exit(0)
 	},
 }
 
@@ -225,14 +234,11 @@ function makeChildServer() {
 	})
 }
 
-/**
- * @param   {string}          dist_path
- * @returns {Promise<number>}           exit code
- */
-function buildWASM(dist_path) {
+/** @returns {Promise<number>} exit code */
+function buildWASM() {
 	const child = child_process.execFile(
 		"odin",
-		["build", playground_path, "-out:" + dist_path, "-target:js_wasm32"],
+		["build", playground_path, "-out:" + WASM_PATH, "-target:js_wasm32"],
 		{cwd: dirname},
 	)
 	child.stderr?.on("data", data => {
@@ -252,31 +258,7 @@ async function buildConfig(is_dev) {
 	const content = await fsp.readFile(config_path, "utf8")
 	const corrected =
 		"export const IS_DEV = /** @type {boolean} */ (" + is_dev + ")\n" + shiftLines(content, 1)
-	await fsp.writeFile(config_out_path, corrected)
-}
-
-/** @returns {Promise<rollup.RollupBuild | Error>} */
-function safeRollupBundle(/** @type {rollup.RollupOptions} */ options) {
-	return rollup.rollup(options).then(
-		// eslint-disable-next-line @nothing-but/no-return-to-void
-		build => build,
-		// eslint-disable-next-line @nothing-but/no-return-to-void
-		error => error,
-	)
-}
-
-/**
- * @param   {rollup.RollupBuild}                   build
- * @param   {rollup.OutputOptions}                 options
- * @returns {Promise<rollup.RollupOutput | Error>}
- */
-function safeRollupGenerate(build, options) {
-	return build.generate(options).then(
-		// eslint-disable-next-line @nothing-but/no-return-to-void
-		output => output,
-		// eslint-disable-next-line @nothing-but/no-return-to-void
-		error => error,
-	)
+	await fsp.writeFile(config_path_out, corrected)
 }
 
 /** @returns {never} */
@@ -332,6 +314,20 @@ function falseFn() {
 	return false
 }
 
+/**
+ * @template T
+ * @param   {Promise<T>}         promise
+ * @returns {Promise<T | Error>}
+ */
+function unsafePromiseToError(promise) {
+	return promise.then(
+		// eslint-disable-next-line @nothing-but/no-return-to-void
+		result => result,
+		// eslint-disable-next-line @nothing-but/no-return-to-void
+		error => error,
+	)
+}
+
 /** @returns {Promise<boolean>} */
 function unsafePromiseToBool(/** @type {Promise<any>} */ promise) {
 	return promise.then(trueFn, falseFn)
@@ -352,6 +348,45 @@ function toWebFilepath(/** @type {string} */ path) {
 /** @returns {Promise<boolean>} */
 function fileExists(/** @type {string} */ filepath) {
 	return unsafePromiseToBool(fsp.access(filepath))
+}
+
+/**
+ * @param   {fs.PathLike}   dirpath
+ * @returns {Promise<void>}
+ */
+function ensureEmptyDir(dirpath) {
+	// eslint-disable-next-line @nothing-but/no-return-to-void
+	return fsp.rm(dirpath, {recursive: true, force: true}).then(() => fsp.mkdir(dirpath))
+}
+
+/**
+ * @param   {string}        src
+ * @param   {string}        dest
+ * @returns {Promise<void>}
+ */
+async function copyDirContents(src, dest) {
+	const files = await fsp.readdir(src)
+	const promises = files.map(async file => {
+		const srcFile = path.join(src, file)
+		const destFile = path.join(dest, file)
+		const stats = await fsp.stat(srcFile)
+		if (stats.isDirectory()) {
+			await copyDir(srcFile, destFile)
+		} else {
+			await fsp.copyFile(srcFile, destFile)
+		}
+	})
+	await Promise.all(promises)
+}
+
+/**
+ * @param   {string}        src
+ * @param   {string}        dest
+ * @returns {Promise<void>}
+ */
+function copyDir(src, dest) {
+	// eslint-disable-next-line @nothing-but/no-return-to-void
+	return fsp.mkdir(dest).then(() => copyDirContents(src, dest))
 }
 
 /** @returns {string} */
