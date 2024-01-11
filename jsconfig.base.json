@@ -12,10 +12,6 @@
 		*/
 		"outDir": "dist",
 
-		// "module": "NodeNext",
-		// "lib": ["ESNext", "DOM"],
-		// "types": [],
-
 		/* JS */
 		"allowJs": true,
 		"checkJs": true,

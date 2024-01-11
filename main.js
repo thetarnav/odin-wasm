@@ -26,16 +26,16 @@ const dist_path = path.join(dirname, DIST_DIRNAME)
 const config_path = path.join(dirname, CONFIG_FILENAME)
 const config_out_path = path.join(playground_path, CONFIG_OUT_FILENAME)
 
-const args = process.argv.slice(2)
-
 /** @enum {string} */
 const Command = {
 	Dev: "dev",
 	Server: "server",
+	Build: "build",
 }
 
-switch (args[0]) {
-	case Command.Dev: {
+/** @type {Record<Command, (args: string[]) => void>} */
+const command_handlers = {
+	[Command.Dev]() {
 		/** @type {child_process.ChildProcess} */
 		let child = makeChildServer()
 
@@ -52,10 +52,8 @@ switch (args[0]) {
 
 			child = makeChildServer()
 		})
-
-		break
-	}
-	case Command.Server: {
+	},
+	[Command.Server]() {
 		/* Make sure the dist dir exists */
 		void fs.mkdirSync(dist_path, {recursive: true})
 
@@ -140,14 +138,33 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 			// eslint-disable-next-line no-console
 			console.log(`${req.method} ${req.url} 404`)
 		}
+	},
+	async [Command.Build]() {
+		const wasm_promise = buildWASM()
+		const config_promise = buildConfig()
 
-		break
-	}
-	default: {
-		// eslint-disable-next-line no-console
-		console.error("Unknown command", args[0])
-	}
+		await Promise.all([wasm_promise, config_promise])
+	},
 }
+
+const args = process.argv.slice(2)
+const command = args[0]
+if (!command) {
+	// eslint-disable-next-line no-console
+	console.error("Command not specified")
+	// eslint-disable-next-line @nothing-but/no-ignored-return
+	process.exit(1)
+}
+
+const command_handler = command_handlers[command]
+if (!command_handler) {
+	// eslint-disable-next-line no-console
+	console.error("Unknown command", command)
+	// eslint-disable-next-line @nothing-but/no-ignored-return
+	process.exit(1)
+}
+
+command_handler(args.slice(1))
 
 /** @returns {child_process.ChildProcess} */
 function makeChildServer() {
