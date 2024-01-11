@@ -1,4 +1,4 @@
-import {assert, warn} from "./env.js"
+import {assert} from "./console.js"
 
 /** Register size in bytes. */
 export const REG_SIZE = 4 // 32-bit

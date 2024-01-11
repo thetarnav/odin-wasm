@@ -1,11 +1,11 @@
 import * as wasm from "../wasm/runtime.js"
 
-import {IS_DEV, WEB_SOCKET_PORT, WASM_PATH, MESSAGE_RELOAD} from "./_config.js"
+import {IS_DEV, WEB_SOCKET_PORT, MESSAGE_RELOAD, WASM_FILENAME} from "./_config.js"
 
 import "./test.js" // TODO get rid of this
 
 if (IS_DEV) {
-	wasm.env.enableConsole()
+	wasm.enableConsole()
 
 	const socket = new WebSocket("ws://localhost:" + WEB_SOCKET_PORT)
 
@@ -28,7 +28,7 @@ document.body.style.minHeight = "200vh"
 const wasm_instance = wasm.zeroWasmInstance()
 const webgl_state = wasm.webgl.makeWebGLInterface()
 
-const response = await fetch("/" + WASM_PATH)
+const response = await fetch("/" + WASM_FILENAME)
 const file = await response.arrayBuffer()
 const source_instance = await WebAssembly.instantiate(file, {
 	env: {}, // TODO

@@ -6,6 +6,8 @@ import * as http from "node:http"
 import * as child_process from "node:child_process"
 import * as chokidar from "chokidar"
 import * as ws from "ws"
+import * as rollup from "rollup"
+import * as terser from "terser"
 
 import {
 	DIST_DIRNAME,
@@ -18,6 +20,7 @@ import {
 	WEB_SOCKET_PORT,
 	CONFIG_OUT_FILENAME,
 	SCRIPT_FILENAME,
+	WASM_FILENAME,
 } from "./config.js"
 
 const dirname = path.dirname(url.fileURLToPath(import.meta.url))
@@ -66,8 +69,8 @@ Server running at http://127.0.0.1:${HTTP_PORT}
 WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 `)
 
-		let wasm_build_promise = buildWASM()
-		const config_promise = buildConfig()
+		let wasm_build_promise = buildWASM(WASM_PATH)
+		const config_promise = buildConfig(true)
 
 		const watcher = chokidar.watch(
 			[`./${PLAYGROUND_DIRNAME}/**/*.{js,html,odin}`, `./${PACKAGE_DIRNAME}/**/*.{js,odin}`],
@@ -80,7 +83,7 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 			if (filepath.endsWith(".odin")) {
 				// eslint-disable-next-line no-console
 				console.log("Rebuilding WASM...")
-				wasm_build_promise = buildWASM()
+				wasm_build_promise = buildWASM(WASM_PATH)
 			}
 			// eslint-disable-next-line no-console
 			console.log("Reloading page...")
@@ -104,7 +107,7 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 
 			if (req.url === "/" + CONFIG_FILENAME) {
 				await config_promise
-			} else if (req.url === "/" + WASM_PATH) {
+			} else if (req.url === "/" + WASM_FILENAME) {
 				const code = await wasm_build_promise
 				if (code !== 0) return end404()
 			} else if (req.url === "/" || req.url === "/index.html") {
@@ -140,29 +143,78 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 		}
 	},
 	async [Command.Build]() {
-		const wasm_promise = buildWASM()
-		const config_promise = buildConfig()
+		const wasm_promise = buildWASM(DIST_DIRNAME + "/" + WASM_FILENAME)
+		const config_promise = buildConfig(false)
 
-		await Promise.all([wasm_promise, config_promise])
+		const [wasm_res] = await Promise.all([wasm_promise, config_promise])
+
+		// eslint-disable-next-line @nothing-but/no-ignored-return
+		if (wasm_res != 0) panic("Failed to build WASM, code:", wasm_res)
+
+		const bundle_res = await safeRollupBundle({
+			input: path.join(playground_path, "index.js"),
+		})
+		// eslint-disable-next-line @nothing-but/no-ignored-return
+		if (bundle_res instanceof Error) panic("Failed to bundle, error:", bundle_res)
+
+		const generate_res = await safeRollupGenerate(bundle_res, {})
+		// eslint-disable-next-line @nothing-but/no-ignored-return
+		if (generate_res instanceof Error) panic("Failed to generate, error:", generate_res)
+
+		/** @type {rollup.OutputAsset[]} */
+		const assets = []
+		/** @type {rollup.OutputChunk[]} */
+		const chunks = []
+
+		for (const output of generate_res.output) {
+			if (output.type === "asset") assets.push(output)
+			else chunks.push(output)
+		}
+
+		/** @type {Promise<void>[]} */
+		const promises = []
+
+		for (const asset of assets) {
+			const filepath = path.join(dist_path, asset.fileName)
+			promises.push(fsp.writeFile(filepath, asset.source))
+		}
+
+		const should_minify = /** @type {boolean} */ (true)
+		if (should_minify) {
+			for (const chunk of chunks) {
+				const filepath = path.join(dist_path, chunk.fileName)
+				const minified = terser.minify(chunk.code, {module: true})
+				promises.push(
+					// eslint-disable-next-line @nothing-but/no-return-to-void
+					minified.then(output =>
+						output.code ? fsp.writeFile(filepath, output.code) : void 0,
+					),
+				)
+			}
+		} else {
+			for (const chunk of chunks) {
+				const filepath = path.join(dist_path, chunk.fileName)
+				promises.push(fsp.writeFile(filepath, chunk.code))
+			}
+		}
+
+		await Promise.all(promises) // TODO error handling
+
+		void bundle_res.close()
+
+		// eslint-disable-next-line no-console
+		console.log("Build complete")
 	},
 }
 
 const args = process.argv.slice(2)
 const command = args[0]
-if (!command) {
-	// eslint-disable-next-line no-console
-	console.error("Command not specified")
-	// eslint-disable-next-line @nothing-but/no-ignored-return
-	process.exit(1)
-}
+// eslint-disable-next-line @nothing-but/no-ignored-return
+if (!command) panic("Command not specified")
 
 const command_handler = command_handlers[command]
-if (!command_handler) {
-	// eslint-disable-next-line no-console
-	console.error("Unknown command", command)
-	// eslint-disable-next-line @nothing-but/no-ignored-return
-	process.exit(1)
-}
+// eslint-disable-next-line @nothing-but/no-ignored-return
+if (!command_handler) panic("Unknown command", command)
 
 command_handler(args.slice(1))
 
@@ -173,11 +225,14 @@ function makeChildServer() {
 	})
 }
 
-/** @returns {Promise<number>} exit code */
-function buildWASM() {
+/**
+ * @param   {string}          dist_path
+ * @returns {Promise<number>}           exit code
+ */
+function buildWASM(dist_path) {
 	const child = child_process.execFile(
 		"odin",
-		["build", playground_path, "-out:" + WASM_PATH, "-target:js_wasm32"],
+		["build", playground_path, "-out:" + dist_path, "-target:js_wasm32"],
 		{cwd: dirname},
 	)
 	child.stderr?.on("data", data => {
@@ -190,17 +245,46 @@ function buildWASM() {
 /**
  * Copy the config file to the playground source dir, with a correct env mode.
  *
+ * @param   {boolean}       is_dev
  * @returns {Promise<void>}
  */
-async function buildConfig() {
+async function buildConfig(is_dev) {
 	const content = await fsp.readFile(config_path, "utf8")
-	const corrected = correctConfigMode(content)
+	const corrected =
+		"export const IS_DEV = /** @type {boolean} */ (" + is_dev + ")\n" + shiftLines(content, 1)
 	await fsp.writeFile(config_out_path, corrected)
 }
 
-/** @returns {string} */
-function correctConfigMode(/** @type {string} */ env) {
-	return "export const IS_DEV = /** @type {boolean} */ (true)\n" + shiftLines(env, 1)
+/** @returns {Promise<rollup.RollupBuild | Error>} */
+function safeRollupBundle(/** @type {rollup.RollupOptions} */ options) {
+	return rollup.rollup(options).then(
+		// eslint-disable-next-line @nothing-but/no-return-to-void
+		build => build,
+		// eslint-disable-next-line @nothing-but/no-return-to-void
+		error => error,
+	)
+}
+
+/**
+ * @param   {rollup.RollupBuild}                   build
+ * @param   {rollup.OutputOptions}                 options
+ * @returns {Promise<rollup.RollupOutput | Error>}
+ */
+function safeRollupGenerate(build, options) {
+	return build.generate(options).then(
+		// eslint-disable-next-line @nothing-but/no-return-to-void
+		output => output,
+		// eslint-disable-next-line @nothing-but/no-return-to-void
+		error => error,
+	)
+}
+
+/** @returns {never} */
+function panic(/** @type {any[]} */ ...message) {
+	// eslint-disable-next-line no-console
+	console.error(...message)
+	// eslint-disable-next-line @nothing-but/no-ignored-return
+	process.exit(1)
 }
 
 /** @typedef {Parameters<ws.WebSocket["send"]>[0]} BufferLike */

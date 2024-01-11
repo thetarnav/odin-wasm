@@ -1,48 +1,5 @@
+import {CONSOLE_ENABLED, log} from "./console.js"
 import * as mem from "./memory.js"
-
-export let CONSOLE_ENABLED = false
-/** @returns {void} */
-export function enableConsole() {
-	CONSOLE_ENABLED = true
-}
-
-/**
- * @param   {boolean} [condition]
- * @param   {...any}  data
- * @returns {void}
- */
-export function assert(condition, ...data) {
-	if (!CONSOLE_ENABLED) return
-	// eslint-disable-next-line no-console
-	console.assert(condition, ...data)
-}
-/**
- * @param   {...any} data
- * @returns {void}
- */
-export function log(...data) {
-	if (!CONSOLE_ENABLED) return
-	// eslint-disable-next-line no-console
-	console.log(...data)
-}
-/**
- * @param   {...any} data
- * @returns {void}
- */
-export function warn(...data) {
-	if (!CONSOLE_ENABLED) return
-	// eslint-disable-next-line no-console
-	console.warn(...data)
-}
-/**
- * @param   {...any} data
- * @returns {void}
- */
-export function error(...data) {
-	if (!CONSOLE_ENABLED) return
-	// eslint-disable-next-line no-console
-	console.error(...data)
-}
 
 const ERROR_STYLE = "color: #eee; background-color: #d10; padding: 2px 4px"
 
