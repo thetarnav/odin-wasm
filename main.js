@@ -155,11 +155,9 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 		const bundle_res = await unsafePromiseToError(
 			rollup.rollup({input: path.join(playground_path, "index.js")}),
 		)
-		// eslint-disable-next-line @nothing-but/no-ignored-return
 		if (bundle_res instanceof Error) panic("Failed to bundle, error:", bundle_res)
 
 		const generate_res = await unsafePromiseToError(bundle_res.generate({}))
-		// eslint-disable-next-line @nothing-but/no-ignored-return
 		if (generate_res instanceof Error) panic("Failed to generate, error:", generate_res)
 
 		let errors_count = 0
@@ -202,7 +200,6 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 				console.log("JS Build complete")
 
 		const wasm_exit_code = await wasm_promise
-		// eslint-disable-next-line @nothing-but/no-ignored-return
 		if (wasm_exit_code != 0) panic("Failed to build WASM, code:", wasm_exit_code)
 
 		/* Copy public dir */
@@ -211,18 +208,15 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 		// eslint-disable-next-line no-console
 		console.log("Build complete")
 
-		// eslint-disable-next-line @nothing-but/no-ignored-return
 		process.exit(0)
 	},
 }
 
 const args = process.argv.slice(2)
 const command = args[0]
-// eslint-disable-next-line @nothing-but/no-ignored-return
 if (!command) panic("Command not specified")
 
 const command_handler = command_handlers[command]
-// eslint-disable-next-line @nothing-but/no-ignored-return
 if (!command_handler) panic("Unknown command", command)
 
 command_handler(args.slice(1))
@@ -265,7 +259,6 @@ async function buildConfig(is_dev) {
 function panic(/** @type {any[]} */ ...message) {
 	// eslint-disable-next-line no-console
 	console.error(...message)
-	// eslint-disable-next-line @nothing-but/no-ignored-return
 	process.exit(1)
 }
 

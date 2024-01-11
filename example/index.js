@@ -2,8 +2,6 @@ import * as wasm from "../wasm/runtime.js"
 
 import {IS_DEV, WEB_SOCKET_PORT, MESSAGE_RELOAD, WASM_FILENAME} from "./_config.js"
 
-import "./test.js" // TODO get rid of this
-
 if (IS_DEV) {
 	wasm.enableConsole()
 

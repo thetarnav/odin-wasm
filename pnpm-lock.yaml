@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@nothing-but/eslint-plugin':
-        specifier: ^0.1.3
-        version: 0.1.3(eslint@8.56.0)(typescript@5.3.3)
+        specifier: ^0.1.4
+        version: 0.1.4(eslint@8.56.0)(typescript@5.3.3)
       '@total-typescript/ts-reset':
         specifier: ^0.5.1
         version: 0.5.1
@@ -952,8 +952,8 @@ packages:
       fastq: 1.16.0
     dev: true
 
-  /@nothing-but/eslint-plugin@0.1.3(eslint@8.56.0)(typescript@5.3.3):
-    resolution: {integrity: sha512-AdJWLQbCOZCUJGzqY7Mp4N9MjMbtL6BLsaxnEH6+JvhATopyDa/+xHYMmNfrSkQS1hKM8L3nDQJ317D3eQyzKQ==}
+  /@nothing-but/eslint-plugin@0.1.4(eslint@8.56.0)(typescript@5.3.3):
+    resolution: {integrity: sha512-AJUDU0N4o93JEgA/JNrm+TPvl5uEUxjQCd61FTzuSHgYicTENllV/TIMnv8JtwuS3gvEI32yY20QJFH8Osnklg==}
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: ~5.2.0
