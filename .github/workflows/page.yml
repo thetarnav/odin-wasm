@@ -11,11 +11,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup LLVM and Odin
-        uses: laytan/setup-odin@v1
-        with:
-          llvm-version: 14
-          cache: true
+      # - name: Install LLVM and Clang
+      #   uses: KyleMayes/install-llvm-action@v1
+      #   with:
+      #     version: "14.0"
+
+      # - name: Setup LLVM and Odin
+      #   uses: laytan/setup-odin@v1
+      #   with:
+      #     llvm-version: 14
+      #     cache: true
+
+      - name: Add LLVM 14 to PATH
+        run: export PATH="/usr/lib/llvm-14/bin:$PATH"
+
+      - name: Setup Odin
+        run: |
+          git clone https://github.com/odin-lang/Odin.git /home/runner/odin --branch master --depth=1 --single-branch --no-tags
+          /home/runner/odin/build_odin.sh
 
       - uses: pnpm/action-setup@v2
         with:
