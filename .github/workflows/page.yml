@@ -1,0 +1,54 @@
+name: Deploy example page
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup LLVM and Odin
+        uses: laytan/setup-odin@v1
+        with:
+          llvm-version: 14
+          cache: true
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: pnpm
+
+      - run: |
+          pnpm install --no-frozen-lockfile
+          pnpm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v2
+          with:
+            path: dist/
+
+  deploy:
+  needs: build
+  runs-on: ubuntu-latest
+
+  # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+  permissions:
+    pages: write      # to deploy to Pages
+    id-token: write   # to verify the deployment originates from an appropriate source
+
+  environment:
+    name: github-pages
+    url: ${{ steps.deployment.outputs.page_url }}
+
+  steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
