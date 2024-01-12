@@ -32,6 +32,9 @@ jobs:
           ./build_odin.sh
           export PATH="/home/runner/odin:$PATH"
 
+      - name: Check Odin
+        run: odin version
+
       - uses: pnpm/action-setup@v2
         with:
           version: 8
