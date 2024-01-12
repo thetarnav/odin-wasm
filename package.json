@@ -10,8 +10,12 @@
 		"build": "node main.js build",
 		"preview": "node main.js preview",
 		"format": "prettier --cache -w .'",
-		"lint": "eslint --ignore-path .gitignore --max-warnings 0 '**/*.{js,jsx,ts,tsx}' '!**/*.test.*' && eslint --ignore-path .gitignore '**/*.test.{js,jsx,ts,tsx}' --quiet --rule \"no-only-tests/no-only-tests: error\"",
-		"test": "vitest"
+		"lint": "eslint --ignore-path .gitignore --max-warnings 0 --ignore-pattern '!**/*.test.*' '**/*.{js,jsx,ts,tsx}' && eslint --ignore-path .gitignore --quiet --rule 'no-only-tests/no-only-tests: error' '**/*.test.{js,jsx,ts,tsx}'",
+		"test": "vitest",
+		"typecheck:server": "tsc --noEmit -p ./jsconfig.node.json",
+		"typecheck:example": "tsc --noEmit -p ./example/jsconfig.json",
+		"typecheck:odin": "odin check example -target:js_wasm32",
+		"build-test": "pnpm run build && pnpm run typecheck:server && pnpm run typecheck:example && pnpm run lint && pnpm run test"
 	},
 	"devDependencies": {
 		"@nothing-but/eslint-plugin": "^0.1.4",

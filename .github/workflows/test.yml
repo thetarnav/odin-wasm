@@ -1,0 +1,32 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup LLVM and Odin
+        uses: laytan/setup-odin@v1
+        with:
+          llvm-version: 14
+          cache: true
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts
+          cache: pnpm
+
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm run build-test
