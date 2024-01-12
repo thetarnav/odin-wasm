@@ -66,14 +66,8 @@ const command_handlers = {
 		/* Make sure the dist dir exists */
 		void fs.mkdirSync(dist_path, {recursive: true})
 
-		const server = http.createServer(requestListener).listen(HTTP_PORT)
-		const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
-
-		// eslint-disable-next-line no-console
-		console.log(`
-Server running at http://127.0.0.1:${HTTP_PORT}
-WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
-`)
+		const server = makeHttpServer(requestListener)
+		const wss = makeWebSocketServer()
 
 		let wasm_build_promise = buildWASM()
 		const config_promise = buildConfig(true)
@@ -136,24 +130,11 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 
 			if (!exists) return end404(req, res)
 
-			const ext = toExt(filepath)
-			const mime_type = mimeType(ext)
-			void res.writeHead(200, {"Content-Type": mime_type})
-
-			const stream = fs.createReadStream(filepath)
-			void stream.pipe(res)
-
-			// eslint-disable-next-line no-console
-			console.log(`${req.method} ${req.url} 200`)
+			streamStatic(req, res, filepath)
 		}
 	},
 	[Command.Preview]() {
-		const server = http.createServer(requestListener).listen(HTTP_PORT)
-
-		// eslint-disable-next-line no-console
-		console.log(`
-Server running at http://127.0.0.1:${HTTP_PORT}
-`)
+		const server = makeHttpServer(requestListener)
 
 		/**
 		 * @param   {http.IncomingMessage} req
@@ -172,15 +153,7 @@ Server running at http://127.0.0.1:${HTTP_PORT}
 
 			if (!exists) return end404(req, res)
 
-			const ext = toExt(filepath)
-			const mime_type = mimeType(ext)
-			void res.writeHead(200, {"Content-Type": mime_type})
-
-			const stream = fs.createReadStream(filepath)
-			void stream.pipe(res)
-
-			// eslint-disable-next-line no-console
-			console.log(`${req.method} ${req.url} 200`)
+			streamStatic(req, res, filepath)
 		}
 
 		void process.on("SIGINT", () => {
@@ -299,6 +272,33 @@ async function buildConfig(is_dev) {
 }
 
 /**
+ * @param   {http.RequestListener} requestListener
+ * @returns {http.Server}
+ */
+function makeHttpServer(requestListener) {
+	const server = http.createServer(requestListener).listen(HTTP_PORT)
+
+	// eslint-disable-next-line no-console
+	console.log(`//
+// Server running at http://127.0.0.1:${HTTP_PORT}
+//`)
+
+	return server
+}
+
+/** @returns {ws.WebSocketServer} */
+function makeWebSocketServer() {
+	const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
+
+	// eslint-disable-next-line no-console
+	console.log(`//
+// WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
+//`)
+
+	return wss
+}
+
+/**
  * @param   {http.IncomingMessage} req
  * @param   {http.ServerResponse}  res
  * @returns {void}
@@ -308,6 +308,24 @@ function end404(req, res) {
 	void res.end()
 	// eslint-disable-next-line no-console
 	console.log(`${req.method} ${req.url} 404`)
+}
+
+/**
+ * @param   {http.IncomingMessage} req
+ * @param   {http.ServerResponse}  res
+ * @param   {string}               filepath
+ * @returns {void}
+ */
+function streamStatic(req, res, filepath) {
+	const ext = toExt(filepath)
+	const mime_type = mimeType(ext)
+	void res.writeHead(200, {"Content-Type": mime_type})
+
+	const stream = fs.createReadStream(filepath)
+	void stream.pipe(res)
+
+	// eslint-disable-next-line no-console
+	console.log(`${req.method} ${req.url} 200`)
 }
 
 /** @returns {never} */
