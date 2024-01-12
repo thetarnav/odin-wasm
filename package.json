@@ -8,7 +8,7 @@
 		"dev": "node main.js dev",
 		"server": "node main.js server",
 		"build": "node main.js build",
-		"preview": "echo 'No preview step configured yet'",
+		"preview": "node main.js preview",
 		"format": "prettier --cache -w .'",
 		"lint": "eslint --ignore-path .gitignore --max-warnings 0 '**/*.{js,jsx,ts,tsx}' '!**/*.test.*' && eslint --ignore-path .gitignore '**/*.test.{js,jsx,ts,tsx}' --quiet --rule \"no-only-tests/no-only-tests: error\"",
 		"test": "vitest"

@@ -33,8 +33,13 @@ const public_path = path.join(playground_path, PUBLIC_DIRNAME)
 
 /** @enum {string} */
 const Command = {
+	/* Start a dev server, with server hot reload */
 	Dev: "dev",
+	/* Start a dev server */
 	Server: "server",
+	/* Start a static server that serves the dist dir */
+	Preview: "preview",
+	/* Build the example page */
 	Build: "build",
 }
 
@@ -141,18 +146,47 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 			// eslint-disable-next-line no-console
 			console.log(`${req.method} ${req.url} 200`)
 		}
+	},
+	[Command.Preview]() {
+		const server = http.createServer(requestListener).listen(HTTP_PORT)
+
+		// eslint-disable-next-line no-console
+		console.log(`
+Server running at http://127.0.0.1:${HTTP_PORT}
+`)
 
 		/**
 		 * @param   {http.IncomingMessage} req
 		 * @param   {http.ServerResponse}  res
-		 * @returns {void}
+		 * @returns {Promise<void>}
 		 */
-		function end404(req, res) {
-			void res.writeHead(404)
-			void res.end()
+		async function requestListener(req, res) {
+			// /* Simulate delay */
+			// await sleep(300)
+
+			if (!req.url || req.method !== "GET") return end404(req, res)
+
+			const relative_filepath = toWebFilepath(req.url)
+			const filepath = path.join(dist_path, relative_filepath)
+			const exists = await fileExists(filepath)
+
+			if (!exists) return end404(req, res)
+
+			const ext = toExt(filepath)
+			const mime_type = mimeType(ext)
+			void res.writeHead(200, {"Content-Type": mime_type})
+
+			const stream = fs.createReadStream(filepath)
+			void stream.pipe(res)
+
 			// eslint-disable-next-line no-console
-			console.log(`${req.method} ${req.url} 404`)
+			console.log(`${req.method} ${req.url} 200`)
 		}
+
+		void process.on("SIGINT", () => {
+			void server.close()
+			void process.exit(0)
+		})
 	},
 	async [Command.Build]() {
 		/* Clean dist dir */
@@ -264,6 +298,18 @@ async function buildConfig(is_dev) {
 	await fsp.writeFile(config_path_out, corrected)
 }
 
+/**
+ * @param   {http.IncomingMessage} req
+ * @param   {http.ServerResponse}  res
+ * @returns {void}
+ */
+function end404(req, res) {
+	void res.writeHead(404)
+	void res.end()
+	// eslint-disable-next-line no-console
+	console.log(`${req.method} ${req.url} 404`)
+}
+
 /** @returns {never} */
 function panic(/** @type {any[]} */ ...message) {
 	// eslint-disable-next-line no-console
@@ -340,6 +386,14 @@ function childProcessToPromise(/** @type {child_process.ChildProcess} */ child) 
 	return new Promise(resolve => {
 		void child.on("close", resolve)
 	})
+}
+
+/**
+ * @param   {number}        ms
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 /** @returns {string} */
