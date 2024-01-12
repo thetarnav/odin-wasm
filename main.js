@@ -111,15 +111,24 @@ WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
 			} else if (req.url === "/" + WASM_FILENAME) {
 				const code = await wasm_build_promise
 				if (code !== 0) return end404(req, res)
-			} else if (req.url === "/" || req.url === "/index.html") {
-				req.url = "/" + PLAYGROUND_DIRNAME + "/index.html"
 			}
 
 			/* Static files */
 			const relative_filepath = toWebFilepath(req.url)
-			const filepath = path.join(dirname, relative_filepath)
 
-			const exists = await fileExists(filepath)
+			let filepath = path.join(public_path, relative_filepath)
+			let exists = await fileExists(filepath)
+
+			if (!exists) {
+				filepath = path.join(playground_path, relative_filepath)
+				exists = await fileExists(filepath)
+			}
+
+			if (!exists) {
+				filepath = path.join(dirname, relative_filepath)
+				exists = await fileExists(filepath)
+			}
+
 			if (!exists) return end404(req, res)
 
 			const ext = toExt(filepath)
