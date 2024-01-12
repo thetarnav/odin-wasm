@@ -28,7 +28,8 @@ jobs:
       - name: Setup Odin
         run: |
           git clone https://github.com/odin-lang/Odin.git /home/runner/odin --branch master --depth=1 --single-branch --no-tags
-          /home/runner/odin/build_odin.sh
+          cd /home/runner/odin
+          ./build_odin.sh
 
       - uses: pnpm/action-setup@v2
         with:
