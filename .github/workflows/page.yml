@@ -23,14 +23,14 @@ jobs:
       #     cache: true
 
       - name: Add LLVM 14 to PATH
-        run: export PATH="/usr/lib/llvm-14/bin:$PATH"
+        run: echo "/usr/lib/llvm-14/bin" >> $GITHUB_PATH
 
       - name: Setup Odin
         run: |
           git clone https://github.com/odin-lang/Odin.git /home/runner/odin --branch master --depth=1 --single-branch --no-tags
           cd /home/runner/odin
           ./build_odin.sh
-          export PATH="/home/runner/odin:$PATH"
+          echo "/home/runner/odin" >> $GITHUB_PATH
 
       - name: Check Odin
         run: odin version
