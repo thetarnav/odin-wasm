@@ -11,17 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # - name: Install LLVM and Clang
-      #   uses: KyleMayes/install-llvm-action@v1
-      #   with:
-      #     version: "14.0"
-
-      # - name: Setup LLVM and Odin
-      #   uses: laytan/setup-odin@v1
-      #   with:
-      #     llvm-version: 14
-      #     cache: true
-
       - name: Add LLVM 14 to PATH
         run: echo "/usr/lib/llvm-14/bin" >> $GITHUB_PATH
 
