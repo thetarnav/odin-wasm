@@ -1,6 +1,6 @@
-# tsodin
+# Odin WASM
 
-For using Odin, wasm and typescript.
+For using Odin and WASM together.
 
 ## Development
 

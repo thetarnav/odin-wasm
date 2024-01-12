@@ -1,3 +1,10 @@
+/*
+
+Copied from the Odin/vendor/wasm
+https://github.com/odin-lang/Odin/tree/master/vendor/wasm
+
+*/
+
 package webgl
 
 READ_BUFFER                                   :: Enum(0x0C02)

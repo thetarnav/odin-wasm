@@ -1,4 +1,3 @@
-//+build js
 package main
 
 import "../wasm"

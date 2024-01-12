@@ -1,3 +1,10 @@
+/*
+
+Copied from the Odin/vendor/wasm
+https://github.com/odin-lang/Odin/tree/master/vendor/wasm
+
+*/
+
 //+build js wasm32, js wasm64p32
 package wasm
 
