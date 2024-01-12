@@ -9,7 +9,7 @@
 		"server": "node main.js server",
 		"build": "node main.js build",
 		"preview": "node main.js preview",
-		"format": "prettier --cache -w .'",
+		"format": "prettier --cache -w .",
 		"lint": "eslint --ignore-path .gitignore --max-warnings 0 --ignore-pattern '!**/*.test.*' '**/*.{js,jsx,ts,tsx}' && eslint --ignore-path .gitignore --quiet --rule 'no-only-tests/no-only-tests: error' '**/*.test.{js,jsx,ts,tsx}'",
 		"test": "vitest",
 		"typecheck:server": "tsc --noEmit -p ./jsconfig.node.json",

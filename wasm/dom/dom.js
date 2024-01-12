@@ -4,7 +4,8 @@ export * from "../types.js"
 
 /**
  * target to Event_Target_Kind
- * @param {EventTarget | null} target
+ *
+ * @param   {EventTarget | null} target
  * @returns {number}
  */
 function targetToKind(target) {
@@ -21,11 +22,9 @@ function targetToKind(target) {
 const KEYBOARD_MAX_KEY_SIZE = 16
 const KEYBOARD_MAX_CODE_SIZE = 16
 
-/**
- * @param {import('../types.js').WasmInstance} _wasm
- */
+/** @param {import("../types.js").WasmInstance} _wasm */
 export function makeOdinDOM(_wasm) {
-	const wasm = /**@type {import("./types.js").OdinDOMInstance}*/ (_wasm)
+	const wasm = /** @type {import("./types.js").OdinDOMInstance} */ (_wasm)
 
 	let temp_id_ptr = 0
 	let temp_id_len = 0
@@ -34,6 +33,7 @@ export function makeOdinDOM(_wasm) {
 
 	/**
 	 * callback ptr to EventListener
+	 *
 	 * @type {Map<number, EventListener>}
 	 */
 	const listener_map = new Map()
@@ -41,7 +41,8 @@ export function makeOdinDOM(_wasm) {
 	return {
 		/**
 		 * Store latest event data into wasm memory
-		 * @param {number} event_ptr Event
+		 *
+		 * @param   {number} event_ptr Event
 		 * @returns {void}
 		 */
 		init_event_raw(event_ptr) {
@@ -85,7 +86,7 @@ export function makeOdinDOM(_wasm) {
 			}
 			mem.store_offset_u8(data, offset, options)
 
-			mem.store_offset_bool(data, offset, !!(/**@type {InputEvent}*/ (e).isComposing))
+			mem.store_offset_bool(data, offset, !!(/** @type {InputEvent} */ (e).isComposing))
 			mem.store_offset_bool(data, offset, !!e.isTrusted)
 
 			void mem.off(offset, 0, 8) // padding
@@ -161,14 +162,14 @@ export function makeOdinDOM(_wasm) {
 			}
 		},
 		/**
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
-		 * @param {number} name_ptr event name string (from event_kind_string enum array)
-		 * @param {number} name_len
-		 * @param {number} name_code event name code (from Event_Kind enum)
-		 * @param {number} data_ptr user data pointer
-		 * @param {number} callback callback function pointer
-		 * @param {boolean} use_capture use capture flag
+		 * @param   {number}  id_ptr      element id string
+		 * @param   {number}  id_len
+		 * @param   {number}  name_ptr    event name string (from event_kind_string enum array)
+		 * @param   {number}  name_len
+		 * @param   {number}  name_code   event name code (from Event_Kind enum)
+		 * @param   {number}  data_ptr    user data pointer
+		 * @param   {number}  callback    callback function pointer
+		 * @param   {boolean} use_capture use capture flag
 		 * @returns {boolean}
 		 */
 		add_event_listener(
@@ -187,7 +188,7 @@ export function makeOdinDOM(_wasm) {
 			if (!element) return false
 
 			/**
-			 * @param {Event} e
+			 * @param   {Event} e
 			 * @returns {void}
 			 */
 			function listener(e) {
@@ -208,17 +209,17 @@ export function makeOdinDOM(_wasm) {
 			return true
 		},
 		/**
-		 * @param {number} name_ptr event name string (from event_kind_string enum array)
-		 * @param {number} name_len
-		 * @param {number} name_code event name code (from Event_Kind enum)
-		 * @param {number} data_ptr user data pointer
-		 * @param {number} callback callback function pointer
-		 * @param {boolean} use_capture use capture flag
+		 * @param   {number}  name_ptr    event name string (from event_kind_string enum array)
+		 * @param   {number}  name_len
+		 * @param   {number}  name_code   event name code (from Event_Kind enum)
+		 * @param   {number}  data_ptr    user data pointer
+		 * @param   {number}  callback    callback function pointer
+		 * @param   {boolean} use_capture use capture flag
 		 * @returns {boolean}
 		 */
 		add_window_event_listener(name_ptr, name_len, name_code, data_ptr, callback, use_capture) {
 			/**
-			 * @param {Event} e
+			 * @param   {Event} e
 			 * @returns {void}
 			 */
 			function listener(e) {
@@ -237,12 +238,12 @@ export function makeOdinDOM(_wasm) {
 			return true
 		},
 		/**
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
-		 * @param {number} name_ptr event name string (from event_kind_string enum array)
-		 * @param {number} name_len
-		 * @param {number} data_ptr user data pointer
-		 * @param {number} callback callback function pointer
+		 * @param   {number}  id_ptr   element id string
+		 * @param   {number}  id_len
+		 * @param   {number}  name_ptr event name string (from event_kind_string enum array)
+		 * @param   {number}  name_len
+		 * @param   {number}  data_ptr user data pointer
+		 * @param   {number}  callback callback function pointer
 		 * @returns {boolean}
 		 */
 		remove_event_listener(id_ptr, id_len, name_ptr, name_len, data_ptr, callback) {
@@ -262,10 +263,10 @@ export function makeOdinDOM(_wasm) {
 			return true
 		},
 		/**
-		 * @param {number} name_ptr event name string (from event_kind_string enum array)
-		 * @param {number} name_len
-		 * @param {number} data_ptr user data pointer
-		 * @param {number} callback callback function pointer
+		 * @param   {number}  name_ptr event name string (from event_kind_string enum array)
+		 * @param   {number}  name_len
+		 * @param   {number}  data_ptr user data pointer
+		 * @param   {number}  callback callback function pointer
 		 * @returns {boolean}
 		 */
 		remove_window_event_listener(name_ptr, name_len, data_ptr, callback) {
@@ -281,6 +282,7 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Stop event propagation of the latest event
+		 *
 		 * @returns {void}
 		 */
 		event_stop_propagation() {
@@ -288,6 +290,7 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Stop immediate event propagation of the latest event
+		 *
 		 * @returns {void}
 		 */
 		event_stop_immediate_propagation() {
@@ -295,17 +298,18 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Prevent default action of the latest event
+		 *
 		 * @returns {void}
 		 */
 		event_prevent_default() {
 			temp_event.preventDefault()
 		},
 		/**
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
-		 * @param {number} name_ptr event name string (from event_kind_string enum array)
-		 * @param {number} name_len
-		 * @param {number} options_bits Event_Options bitset
+		 * @param   {number}  id_ptr       element id string
+		 * @param   {number}  id_len
+		 * @param   {number}  name_ptr     event name string (from event_kind_string enum array)
+		 * @param   {number}  name_len
+		 * @param   {number}  options_bits Event_Options bitset
 		 * @returns {boolean}
 		 */
 		dispatch_custom_event(id_ptr, id_len, name_ptr, name_len, options_bits) {
@@ -325,9 +329,10 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Get input element value as f64
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
-		 * @returns {number} input element value as f64
+		 *
+		 * @param   {number} id_ptr element id string
+		 * @param   {number} id_len
+		 * @returns {number}        input element value as f64
 		 */
 		get_element_value_f64(id_ptr, id_len) {
 			const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
@@ -336,11 +341,12 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Get input element value as string
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
-		 * @param {number} buf_ptr string buffer
-		 * @param {number} buf_len
-		 * @returns {number} written string length
+		 *
+		 * @param   {number} id_ptr  element id string
+		 * @param   {number} id_len
+		 * @param   {number} buf_ptr string buffer
+		 * @param   {number} buf_len
+		 * @returns {number}         written string length
 		 */
 		get_element_value_string(id_ptr, id_len, buf_ptr, buf_len) {
 			const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
@@ -359,9 +365,10 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Get length of input element value
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
-		 * @returns {number} input element value length
+		 *
+		 * @param   {number} id_ptr element id string
+		 * @param   {number} id_len
+		 * @returns {number}        input element value length
 		 */
 		get_element_value_string_length(id_ptr, id_len) {
 			const id = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
@@ -370,9 +377,10 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Get range input element min and max values
-		 * @param {number} ptr_array2_f64 array of 2 f64 values
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
+		 *
+		 * @param   {number} ptr_array2_f64 array of 2 f64 values
+		 * @param   {number} id_ptr         element id string
+		 * @param   {number} id_len
 		 * @returns {void}
 		 */
 		get_element_min_max(ptr_array2_f64, id_ptr, id_len) {
@@ -388,9 +396,10 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Set number input element value
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
-		 * @param {number} value f64 value
+		 *
+		 * @param   {number} id_ptr element id string
+		 * @param   {number} id_len
+		 * @param   {number} value  f64 value
 		 * @returns {void}
 		 */
 		set_element_value_f64(id_ptr, id_len, value) {
@@ -403,10 +412,11 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Set string input element value
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
-		 * @param {number} value_ptr string buffer
-		 * @param {number} value_len
+		 *
+		 * @param   {number} id_ptr    element id string
+		 * @param   {number} id_len
+		 * @param   {number} value_ptr string buffer
+		 * @param   {number} value_len
 		 * @returns {void}
 		 */
 		set_element_value_string(id_ptr, id_len, value_ptr, value_len) {
@@ -419,9 +429,10 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Get elements bounding rect ({@link DOMRect})
-		 * @param {number} rect_ptr pointer to Rect
-		 * @param {number} id_ptr element id string
-		 * @param {number} id_len
+		 *
+		 * @param   {number} rect_ptr pointer to Rect
+		 * @param   {number} id_ptr   element id string
+		 * @param   {number} id_len
 		 * @returns {void}
 		 */
 		get_bounding_client_rect(rect_ptr, id_ptr, id_len) {
@@ -439,7 +450,8 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Get window rect
-		 * @param {number} rect_ptr pointer to Rect
+		 *
+		 * @param   {number} rect_ptr pointer to Rect
 		 * @returns {void}
 		 */
 		window_get_rect(rect_ptr) {
@@ -452,7 +464,8 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Get window scroll
-		 * @param {number} pos_ptr pointer to [2]f64
+		 *
+		 * @param   {number} pos_ptr pointer to [2]f64
 		 * @returns {void}
 		 */
 		window_get_scroll(pos_ptr) {
@@ -463,8 +476,9 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Set window scroll
-		 * @param {number} x scroll x
-		 * @param {number} y scroll y
+		 *
+		 * @param   {number} x scroll x
+		 * @param   {number} y scroll y
 		 * @returns {void}
 		 */
 		window_set_scroll(x, y) {
@@ -472,6 +486,7 @@ export function makeOdinDOM(_wasm) {
 		},
 		/**
 		 * Get window device pixel ratio
+		 *
 		 * @returns {number} device pixel ratio
 		 */
 		device_pixel_ratio() {

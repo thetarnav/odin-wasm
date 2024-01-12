@@ -5,9 +5,7 @@ export interface OdinExports extends WebAssembly.Exports {
 	default_context_ptr: () => number
 }
 
-/**
- * The Odin WebAssembly instance.
- */
+/** The Odin WebAssembly instance. */
 export interface WasmInstance {
 	exports: OdinExports
 	memory: WebAssembly.Memory
