@@ -1,3 +1,5 @@
+# Script to setup Odin and LLVM 14 on GitHub Actions
+
 ODIN_RELEASE_ID=dev-2024-01
 
 echo "Setting up LLVM 14 and Odin ${ODIN_RELEASE_ID}..."
