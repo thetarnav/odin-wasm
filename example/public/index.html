@@ -11,10 +11,19 @@
 			type="application/wasm"
 			crossorigin="anonymous"
 		/>
+		<link rel="stylesheet" href="styles.css" />
 		<title>Odin WASM</title>
 	</head>
 	<body id="body">
-		<canvas id="canvas" width="640" height="480"></canvas>
+		<div class="canvas-container">
+			<canvas id="canvas" width="640" height="480"></canvas>
+		</div>
+		<a class="github-link" href="https://github.com/thetarnav/odin-wasm" target="_blank">
+			<img
+				src="https://img.shields.io/badge/GitHub-thetarnav%2Fodin--wasm-blue?style=for-the-badge&logo=github"
+				alt="GitHub"
+			/>
+		</a>
 		<script type="module" src="index.js"></script>
 	</body>
 </html>
