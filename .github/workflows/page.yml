@@ -11,15 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Odin
-        run: |
-          wget -O odin.zip https://github.com/odin-lang/Odin/releases/download/dev-2024-01/odin-ubuntu-amd64-dev-2024-01.zip
-          unzip odin.zip -d /home/runner/odin
-          chmod +x /home/runner/odin/odin
-          echo "/home/runner/odin" >> $GITHUB_PATH
-
-      - name: Check Odin
-        run: odin version
+      - name: Setup LLVM and Odin
+        run: setup_odin.sh
 
       - uses: pnpm/action-setup@v2
         with:
