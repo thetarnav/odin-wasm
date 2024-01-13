@@ -14,10 +14,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Setup LLVM and Odin
-        uses: laytan/setup-odin@v1
-        with:
-          llvm-version: 14
-          cache: true
+        run: ./setup_odin.sh
 
       - uses: pnpm/action-setup@v2
         with:

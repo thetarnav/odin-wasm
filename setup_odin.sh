@@ -8,6 +8,8 @@ chmod +x /home/runner/odin/odin
 
 echo "/home/runner/odin" >>$GITHUB_PATH
 echo "/usr/lib/llvm-14/bin" >>$GITHUB_PATH
+export PATH="/home/runner/odin:$PATH"
+export PATH="/usr/lib/llvm-14/bin:$PATH"
 
 echo "Done!"
 echo "llvm: $(llvm-config --version)"
