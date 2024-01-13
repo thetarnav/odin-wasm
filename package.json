@@ -4,6 +4,22 @@
 	"license": "MIT",
 	"private": true,
 	"type": "module",
+	"files": [
+		"types",
+		"wasm",
+		"!**/*.test.*"
+	],
+	"exports": {
+		"./package.json": "./package.json",
+		".": {
+			"types": "./types/runtime.d.ts",
+			"import": "./wasm/runtime.js"
+		},
+		"./*": {
+			"types": "./types/*.d.ts",
+			"import": "./wasm/*.js"
+		}
+	},
 	"scripts": {
 		"dev": "node main.js dev",
 		"server": "node main.js server",

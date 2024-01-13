@@ -1,0 +1,12 @@
+{
+	"extends": "./jsconfig.base.json",
+	"compilerOptions": {
+		"lib": ["ESNext", "DOM"],
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"declarationMap": true,
+		"noEmitOnError": false
+	},
+	"include": ["wasm"],
+	"exclude": ["node_modules", "dist", "/types", "**/*.test.*"]
+}
