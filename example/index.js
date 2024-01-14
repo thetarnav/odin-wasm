@@ -2,15 +2,15 @@ import * as wasm from "../wasm/runtime.js"
 
 import {IS_DEV, WEB_SOCKET_PORT, MESSAGE_RELOAD, WASM_FILENAME} from "./_config.js"
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import * as t from "./types.js"
+
 if (IS_DEV) {
 	wasm.enableConsole()
 
-	const socket = new WebSocket("ws://localhost:" + WEB_SOCKET_PORT)
-
-	socket.addEventListener("message", event => {
-		if (event.data === MESSAGE_RELOAD) {
-			location.reload()
-		}
+	/* Hot Reload */
+	new WebSocket("ws://localhost:" + WEB_SOCKET_PORT).addEventListener("message", event => {
+		event.data === MESSAGE_RELOAD && location.reload()
 	})
 }
 
@@ -20,25 +20,33 @@ document.body.addEventListener("lol", () => {
 	console.log("lol event has been received")
 })
 
-/* To test scroll events */
-document.body.style.minHeight = "200vh"
+const wasm_state = wasm.makeWasmState()
+const webgl_state = wasm.webgl.makeWebGLState()
 
-const wasm_instance = wasm.zeroWasmInstance()
-const webgl_state = wasm.webgl.makeWebGLInterface()
-
-const response = await fetch(WASM_FILENAME)
-const file = await response.arrayBuffer()
-const source_instance = await WebAssembly.instantiate(file, {
+const wasm_file = await fetch(WASM_FILENAME).then(r => r.arrayBuffer())
+const src_instance = await WebAssembly.instantiate(wasm_file, {
 	env: {}, // TODO
-	odin_env: wasm.env.makeOdinEnv(wasm_instance),
-	odin_ls: wasm.ls.makeOdinLS(wasm_instance),
-	odin_dom: wasm.dom.makeOdinDOM(wasm_instance),
-	webgl: wasm.webgl.makeOdinWebGL(webgl_state, wasm_instance),
+	odin_env: wasm.env.makeOdinEnv(wasm_state),
+	odin_ls: wasm.ls.makeOdinLS(wasm_state),
+	odin_dom: wasm.dom.makeOdinDOM(wasm_state),
+	webgl: wasm.webgl.makeOdinWebGL(webgl_state, wasm_state),
 })
-wasm.initWasmInstance(wasm_instance, source_instance.instance.exports)
 
-console.log("Exports", wasm_instance.exports)
-console.log("Memory", wasm_instance.memory)
+wasm.initWasmState(wasm_state, src_instance)
+const exports = /** @type {t.WasmExports} */ (wasm_state.exports)
 
-wasm_instance.exports._start()
-wasm_instance.exports._end()
+exports._start()
+const odin_ctx = exports.default_context_ptr()
+exports._end()
+
+void requestAnimationFrame(prev_time => {
+	/** @type {FrameRequestCallback} */
+	const frame = time => {
+		const delta = (time - prev_time) * 0.001
+		prev_time = time
+		exports.frame(delta, odin_ctx)
+		void requestAnimationFrame(frame)
+	}
+
+	void requestAnimationFrame(frame)
+})

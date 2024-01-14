@@ -11,7 +11,7 @@ export interface ProgramInfo {
 }
 
 // prettier-ignore
-export interface WebGLInterface {
+export interface WebGLState {
     element             : HTMLCanvasElement | null,
     ctx                 : WebGLRenderingContext | WebGL2RenderingContext,
     version             : 1 | 2,
@@ -34,7 +34,7 @@ export interface WebGLInterface {
     transform_feedbacks : ArrayRecord<WebGLTransformFeedback>,
     syncs               : ArrayRecord<WebGLSync>
 }
-export interface WebGL2Interface extends WebGLInterface {
+export interface WebGL2State extends WebGLState {
 	ctx: WebGL2RenderingContext
 	version: 2
 }

@@ -9,7 +9,13 @@ package webgl
 
 import "core:fmt"
 
-CreateProgramFromStrings :: proc(vs_sources, fs_sources: []string) -> (program: Program, ok: bool) {
+@(require_results)
+CreateProgramFromStrings :: proc(
+	vs_sources, fs_sources: []string,
+) -> (
+	program: Program,
+	ok: bool,
+) #optional_ok {
 	ok = true
 	log: [1024]byte
 

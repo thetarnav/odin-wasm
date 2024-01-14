@@ -387,9 +387,7 @@ function falseFn() {
  */
 function unsafePromiseToError(promise) {
 	return promise.then(
-		// eslint-disable-next-line @nothing-but/no-return-to-void
 		result => result,
-		// eslint-disable-next-line @nothing-but/no-return-to-void
 		error => error,
 	)
 }
@@ -406,13 +404,13 @@ function childProcessToPromise(/** @type {child_process.ChildProcess} */ child) 
 	})
 }
 
-/**
- * @param   {number}        ms
- * @returns {Promise<void>}
- */
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms))
-}
+// /**
+//  * @param   {number}        ms
+//  * @returns {Promise<void>}
+//  */
+// function sleep(ms) {
+// 	return new Promise(resolve => setTimeout(resolve, ms))
+// }
 
 /** @returns {string} */
 function toWebFilepath(/** @type {string} */ path) {
@@ -429,7 +427,6 @@ function fileExists(/** @type {string} */ filepath) {
  * @returns {Promise<void>}
  */
 function ensureEmptyDir(dirpath) {
-	// eslint-disable-next-line @nothing-but/no-return-to-void
 	return fsp.rm(dirpath, {recursive: true, force: true}).then(() => fsp.mkdir(dirpath))
 }
 
@@ -459,7 +456,6 @@ async function copyDirContents(src, dest) {
  * @returns {Promise<void>}
  */
 function copyDir(src, dest) {
-	// eslint-disable-next-line @nothing-but/no-return-to-void
 	return fsp.mkdir(dest).then(() => copyDirContents(src, dest))
 }
 

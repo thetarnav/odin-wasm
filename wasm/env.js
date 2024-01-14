@@ -46,7 +46,7 @@ function writeToConsole(fd, str) {
 	}
 }
 
-/** @param {import("./types.js").WasmInstance} wasm */
+/** @param {import("./types.js").WasmState} wasm */
 export function makeOdinEnv(wasm) {
 	return {
 		/**

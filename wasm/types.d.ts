@@ -6,7 +6,7 @@ export interface OdinExports extends WebAssembly.Exports {
 }
 
 /** The Odin WebAssembly instance. */
-export interface WasmInstance {
+export interface WasmState {
 	exports: OdinExports
 	memory: WebAssembly.Memory
 }

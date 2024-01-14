@@ -3,8 +3,8 @@ import * as mem from "../memory.js"
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as t from "./types.js"
 
-/** @returns {t.WebGLInterface} */
-export function makeWebGLInterface() {
+/** @returns {t.WebGLState} */
+export function makeWebGLState() {
 	return {
 		element: null,
 		/* will be set later, most of the time we want to assert that it's not null */
@@ -34,8 +34,8 @@ export const INVALID_VALUE = 0x0501
 export const INVALID_OPERATION = 0x0502
 
 /**
- * @param   {t.WebGLInterface}                   webgl
- * @param   {?}                                  element
+ * @param   {t.WebGLState}                       webgl
+ * @param   {HTMLElement | null}                 element
  * @param   {WebGLContextAttributes | undefined} context_settings
  * @returns {boolean}
  */
@@ -56,15 +56,15 @@ export function setCurrentContext(webgl, element, context_settings) {
 }
 
 /**
- * @param   {t.WebGLInterface} webgl
+ * @param   {t.WebGLState} webgl
  * @returns {number}
  */
 export function newId(webgl) {
 	return webgl.id_counter++
 }
 /**
- * @param   {t.WebGLInterface} webgl
- * @param   {number}           error_code
+ * @param   {t.WebGLState} webgl
+ * @param   {number}       error_code
  * @returns {void}
  */
 export function recordError(webgl, error_code) {
@@ -73,8 +73,8 @@ export function recordError(webgl, error_code) {
 	}
 }
 /**
- * @param   {t.WebGLInterface} webgl
- * @param   {number}           program_id
+ * @param   {t.WebGLState} webgl
+ * @param   {number}       program_id
  * @returns {void}
  */
 export function populateUniformTable(webgl, program_id) {
@@ -132,3 +132,67 @@ export function getSource(buffer, strings_ptr, strings_length) {
 	}
 	return source
 }
+
+// /**
+//  * @param   {WebGL2RenderingContext} gl
+//  * @param   {number}                 type
+//  * @param   {string}                 source
+//  * @returns {WebGLShader | Error}
+//  */
+// export function makeShader(gl, type, source) {
+// 	const shader = gl.createShader(type)
+// 	if (!shader) return new Error("failed to create gl shader")
+
+// 	gl.shaderSource(shader, source)
+// 	gl.compileShader(shader)
+
+// 	const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
+// 	if (!success) {
+// 		const log = gl.getShaderInfoLog(shader)
+// 		gl.deleteShader(shader)
+// 		return new Error(log || "failed to compile shader")
+// 	}
+
+// 	return shader
+// }
+
+// /**
+//  * @param   {WebGL2RenderingContext} gl
+//  * @param   {string}                 source
+//  * @returns {WebGLShader | Error}
+//  */
+// export function makeVertexShader(gl, source) {
+// 	return makeShader(gl, gl.VERTEX_SHADER, source)
+// }
+// /**
+//  * @param   {WebGL2RenderingContext} gl
+//  * @param   {string}                 source
+//  * @returns {WebGLShader | Error}
+//  */
+// export function makeFragmentShader(gl, source) {
+// 	return makeShader(gl, gl.FRAGMENT_SHADER, source)
+// }
+
+// /**
+//  * @param   {WebGL2RenderingContext} gl
+//  * @param   {WebGLShader[]}          shaders
+//  * @returns {WebGLProgram | Error}
+//  */
+// export function makeProgram(gl, shaders) {
+// 	const program = gl.createProgram()
+// 	if (!program) return new Error("failed to create gl program")
+
+// 	for (const shader of shaders) {
+// 		gl.attachShader(program, shader)
+// 	}
+// 	gl.linkProgram(program)
+
+// 	const success = gl.getProgramParameter(program, gl.LINK_STATUS)
+// 	if (!success) {
+// 		const log = gl.getProgramInfoLog(program)
+// 		gl.deleteProgram(program)
+// 		return new Error(log || "failed to link program")
+// 	}
+
+// 	return program
+// }

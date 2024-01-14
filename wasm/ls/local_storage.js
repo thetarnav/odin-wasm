@@ -1,6 +1,6 @@
 import * as mem from "../memory.js"
 
-/** @param {import("../types.js").WasmInstance} wasm */
+/** @param {import("../types.js").WasmState} wasm */
 export function makeOdinLS(wasm) {
 	return {
 		/**

@@ -34,7 +34,7 @@
 		"build-test": "pnpm run build && pnpm run typecheck:server && pnpm run typecheck:example && pnpm run lint && pnpm run test"
 	},
 	"devDependencies": {
-		"@nothing-but/eslint-plugin": "^0.1.4",
+		"@nothing-but/eslint-plugin": "^0.1.5",
 		"@total-typescript/ts-reset": "^0.5.1",
 		"@types/node": "^20.10.7",
 		"@types/ws": "^8.5.10",

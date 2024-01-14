@@ -14,8 +14,8 @@ export * as webgl from "./webgl/index.js"
 export * from "./types.js"
 export * from "./console.js"
 
-/** @returns {import("./types.js").WasmInstance} */
-export function zeroWasmInstance() {
+/** @returns {import("./types.js").WasmState} */
+export function makeWasmState() {
 	return {
 		exports: /** @type {any} */ (null),
 		memory: /** @type {any} */ (null),
@@ -25,10 +25,10 @@ export function zeroWasmInstance() {
 /**
  * Init a wasm instance with exports and memory from instanciated wasm module exports
  *
- * @param {import("./types.js").WasmInstance} instance
- * @param {WebAssembly.Exports}               exports
+ * @param {import("./types.js").WasmState}            state
+ * @param {WebAssembly.WebAssemblyInstantiatedSource} src_instance
  */
-export function initWasmInstance(instance, exports) {
-	instance.exports = /** @type {import("./types.js").OdinExports} */ (exports)
-	instance.memory = instance.exports.memory
+export function initWasmState(state, src_instance) {
+	state.exports = /** @type {import("./types.js").OdinExports} */ (src_instance.instance.exports)
+	state.memory = state.exports.memory
 }

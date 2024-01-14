@@ -22,7 +22,7 @@ function targetToKind(target) {
 const KEYBOARD_MAX_KEY_SIZE = 16
 const KEYBOARD_MAX_CODE_SIZE = 16
 
-/** @param {import("../types.js").WasmInstance} _wasm */
+/** @param {import("../types.js").WasmState} _wasm */
 export function makeOdinDOM(_wasm) {
 	const wasm = /** @type {import("./types.js").OdinDOMInstance} */ (_wasm)
 

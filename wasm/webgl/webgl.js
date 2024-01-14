@@ -14,11 +14,11 @@ import {
 	INVALID_OPERATION,
 } from "./interface.js"
 
-/** @typedef{import("../types.js").WasmInstance}WasmInstance */
+/** @typedef{import("../types.js").WasmState}WasmInstance */
 
 /**
- * @param   {t.WebGLInterface} webgl
- * @param   {WasmInstance}     wasm
+ * @param   {t.WebGLState} webgl
+ * @param   {WasmInstance} wasm
  * @returns       WebGL bindings for Odin.
  */
 export function makeOdinWebGL(webgl, wasm) {
@@ -95,13 +95,13 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number}  name_len
 		 * @returns {boolean}
 		 */
-		IsExtensionSupported(name_ptr, name_len) {
+		IsExtensionSupported: (name_ptr, name_len) => {
 			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
 			const extensions = webgl.ctx.getSupportedExtensions()
 			return extensions ? extensions.indexOf(name) !== -1 : false
 		},
 		/** @returns {number} */
-		GetError() {
+		GetError: () => {
 			if (webgl.last_error) {
 				const err = webgl.last_error
 				webgl.last_error = 0
@@ -114,7 +114,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number} minor_ptr
 		 * @returns {void}
 		 */
-		GetWebGLVersion(major_ptr, minor_ptr) {
+		GetWebGLVersion: (major_ptr, minor_ptr) => {
 			const data = new DataView(wasm.memory.buffer)
 			mem.store_i32(data, major_ptr, webgl.version)
 			mem.store_i32(data, minor_ptr, 0)
@@ -124,7 +124,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number} minor_ptr
 		 * @returns {void}
 		 */
-		GetESVersion(major_ptr, minor_ptr) {
+		GetESVersion: (major_ptr, minor_ptr) => {
 			const major =
 				webgl.ctx.getParameter(0x1f02 /*VERSION*/).indexOf("OpenGL ES 3.0") !== -1 ? 3 : 2
 			const data = new DataView(wasm.memory.buffer)
@@ -135,20 +135,21 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number} texture
 		 * @returns {void}
 		 */
-		ActiveTexture(texture) {
+		ActiveTexture: texture => {
 			webgl.ctx.activeTexture(texture)
 		},
 		/** @returns {void} */
-		AttachShader(/** @type {number} */ program, /** @type {number} */ shader) {
+		AttachShader: (/** @type {number} */ program, /** @type {number} */ shader) => {
 			webgl.ctx.attachShader(webgl.programs[program], webgl.shaders[shader])
 		},
-		/** @returns {void} */
-		BindAttribLocation(
-			/** @type {number} */ program,
-			/** @type {number} */ index,
-			/** @type {number} */ name_ptr,
-			/** @type {number} */ name_len,
-		) {
+		/**
+		 * @param   {number} program
+		 * @param   {number} index
+		 * @param   {number} name_ptr
+		 * @param   {number} name_len
+		 * @returns {void}
+		 */
+		BindAttribLocation: (program, index, name_ptr, name_len) => {
 			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
 			webgl.ctx.bindAttribLocation(webgl.programs[program], index, name)
 		},
@@ -157,7 +158,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number} buffer
 		 * @returns {void}
 		 */
-		BindBuffer(target, buffer) {
+		BindBuffer: (target, buffer) => {
 			/*
 			https://gist.github.com/floooh/ae2250dce2dfd700eb959b802d7d247a#file-clear-emsc-js-L985
 			*/
@@ -190,7 +191,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number} framebuffer
 		 * @returns {void}
 		 */
-		BindFramebuffer(target, framebuffer) {
+		BindFramebuffer: (target, framebuffer) => {
 			webgl.ctx.bindFramebuffer(target, framebuffer ? webgl.framebuffers[framebuffer] : null)
 		},
 		/**
@@ -198,7 +199,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number} texture
 		 * @returns {void}
 		 */
-		BindTexture(target, texture) {
+		BindTexture: (target, texture) => {
 			webgl.ctx.bindTexture(target, texture ? webgl.textures[texture] : null)
 		},
 		/**
@@ -208,14 +209,14 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number} a
 		 * @returns {void}
 		 */
-		BlendColor(r, g, b, a) {
+		BlendColor: (r, g, b, a) => {
 			webgl.ctx.blendColor(r, g, b, a)
 		},
 		/**
 		 * @param   {number} mode
 		 * @returns {void}
 		 */
-		BlendEquation(mode) {
+		BlendEquation: mode => {
 			webgl.ctx.blendEquation(mode)
 		},
 		/**
@@ -223,7 +224,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number} dfactor
 		 * @returns {void}
 		 */
-		BlendFunc(sfactor, dfactor) {
+		BlendFunc: (sfactor, dfactor) => {
 			webgl.ctx.blendFunc(sfactor, dfactor)
 		},
 		/**
@@ -233,7 +234,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @param   {number} dstAlpha
 		 * @returns {void}
 		 */
-		BlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha) {
+		BlendFuncSeparate: (srcRGB, dstRGB, srcAlpha, dstAlpha) => {
 			webgl.ctx.blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
 		},
 		/**
