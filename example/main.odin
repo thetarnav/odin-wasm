@@ -3,7 +3,6 @@ package main
 import "core:fmt"
 import "core:mem"
 import "core:runtime"
-import "core:strings"
 
 import "../wasm"
 import "../wasm/dom"
@@ -12,12 +11,40 @@ import "../wasm/webgl"
 shader_fragment := #load("shader_fragment.glsl", string)
 shader_vertex := #load("shader_vertex.glsl", string)
 
+device_pixel_ratio: f64 = 1
+canvas_width: i32 = 640
+canvas_height: i32 = 480
+
+a_position: i32
+a_color: i32
+u_resolution: i32
+
+positions_buffer: webgl.Buffer
+colors_buffer: webgl.Buffer
+
+iteration: i32
+
+// odinfmt: disable
+colors := [?]u8 {
+	255, 0, 0, 255,
+	0, 255, 0, 255,
+	0, 0, 255, 255,
+
+	255, 0, 0, 255,
+	0, 255, 0, 255,
+	0, 0, 255, 255,
+}
+// odinfmt: enable
 
 main :: proc() {
 	test_buf, err := wasm.page_alloc(2)
+	if err != nil {
+		fmt.println("Failed to allocate memory!")
+		return
+	}
 	context.allocator = mem.arena_allocator(&{data = test_buf})
 
-	div := dom.dispatch_custom_event("body", "lol")
+	dom.dispatch_custom_event("body", "lol")
 
 	fmt.print("Hellope, WebAssembly!!!\n")
 	fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
@@ -58,31 +85,18 @@ main :: proc() {
 
 	positions_buffer = webgl.CreateBuffer()
 	colors_buffer = webgl.CreateBuffer()
+
+	device_pixel_ratio = dom.device_pixel_ratio()
 }
-
-a_position: i32
-a_color: i32
-u_resolution: i32
-
-positions_buffer: webgl.Buffer
-colors_buffer: webgl.Buffer
-
-iteration: i32
-
-// odinfmt: disable
-colors := [?]u8 {
-	255, 0, 0, 255,
-	0, 255, 0, 255,
-	0, 0, 255, 255,
-
-	255, 0, 0, 255,
-	0, 255, 0, 255,
-	0, 0, 255, 255,
-}
-// odinfmt: enable
 
 @(export)
-frame :: proc "c" (delta: f32, ctx: ^runtime.Context) {
+on_canvas_rect_update :: proc "c" (w, h: i32) {
+	canvas_width = w
+	canvas_height = h
+}
+
+@(export)
+frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 	context = ctx^
 
 	err := webgl.GetError()
@@ -124,13 +138,13 @@ frame :: proc "c" (delta: f32, ctx: ^runtime.Context) {
 	webgl.VertexAttribPointer(a_color, 4, webgl.UNSIGNED_BYTE, true, 0, 0)
 
 	// set the resolution
-	webgl.Uniform2f(u_resolution, 640, 480)
+	webgl.Uniform2f(u_resolution, f32(canvas_width), f32(canvas_height))
 
 	// Tell WebGL how to convert from clip space to pixels
-	webgl.Viewport(0, 0, 640, 480)
+	webgl.Viewport(0, 0, canvas_width, canvas_height)
 
 	// Clear the canvas
-	webgl.ClearColor(0, 0, 0, 0)
+	webgl.ClearColor(0, 0.01, 0.02, 0)
 	webgl.Clear(webgl.COLOR_BUFFER_BIT)
 
 	// draw

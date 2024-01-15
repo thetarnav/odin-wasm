@@ -72,6 +72,7 @@ STYLES
 body {
 	background-color: #181717;
 	color: #fafafa;
+	height: 100vh;
 }
 
 html,
@@ -86,10 +87,10 @@ code {
 	right: 0;
 }
 
-.canvas-container {
-	position: fixed;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+#canvas {
+	position: absolute;
+	top: 10%;
+	left: 10%;
+	width: 80%;
+	height: 80%;
 }

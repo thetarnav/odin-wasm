@@ -33,6 +33,7 @@ if (IS_DEV) {
 
 let last_raf = 0
 let last_version = 0
+let exports = /** @type {t.WasmExports | null} */ (null)
 
 async function runWasm() {
 	last_version += 1
@@ -52,7 +53,8 @@ async function runWasm() {
 	if (version !== last_version) return
 
 	wasm.initWasmState(wasm_state, src_instance)
-	const exports = /** @type {t.WasmExports} */ (wasm_state.exports)
+	const _exports = /** @type {t.WasmExports} */ (wasm_state.exports)
+	exports = _exports
 
 	exports._start()
 	const odin_ctx = exports.default_context_ptr()
@@ -64,7 +66,7 @@ async function runWasm() {
 		const frame = time => {
 			const delta = (time - prev_time) * 0.001
 			prev_time = time
-			exports.frame(delta, odin_ctx)
+			_exports.frame(delta, odin_ctx)
 			last_raf = requestAnimationFrame(frame)
 		}
 
@@ -73,6 +75,18 @@ async function runWasm() {
 }
 
 void runWasm()
+
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas"))
+const dpr = window.devicePixelRatio || 1
+
+function updateCanvasSize() {
+	const rect = canvas.getBoundingClientRect()
+	canvas.width = rect.width * dpr
+	canvas.height = rect.height * dpr
+	exports?.on_canvas_rect_update(rect.width, rect.height)
+}
+updateCanvasSize()
+window.addEventListener("resize", updateCanvasSize)
 
 /* To test dispatching custom events */
 document.body.addEventListener("lol", () => {

@@ -70,7 +70,7 @@ const command_handlers = {
 		const server = makeHttpServer(requestListener)
 		const wss = makeWebSocketServer()
 
-		let wasm_build_promise = buildWASM()
+		let wasm_build_promise = buildWASM(false)
 		const config_promise = buildConfig(true)
 
 		const watcher = chokidar.watch(
@@ -84,7 +84,7 @@ const command_handlers = {
 			if (filepath.endsWith(".odin")) {
 				// eslint-disable-next-line no-console
 				console.log("Rebuilding WASM...")
-				wasm_build_promise = buildWASM()
+				wasm_build_promise = buildWASM(false)
 				sendToAllClients(wss, MESSAGE_RECOMPILE)
 			} else {
 				// eslint-disable-next-line no-console
@@ -168,7 +168,7 @@ const command_handlers = {
 		/* Clean dist dir */
 		await ensureEmptyDir(dist_path)
 
-		const wasm_promise = buildWASM()
+		const wasm_promise = buildWASM(true)
 		await buildConfig(false)
 
 		const bundle_res = await unsafePromiseToError(
@@ -247,17 +247,28 @@ function makeChildServer() {
 	})
 }
 
-/** @returns {Promise<number>} exit code */
-function buildWASM() {
-	const child = child_process.execFile(
-		"odin",
-		["build", playground_path, "-out:" + WASM_PATH, "-target:js_wasm32"],
-		{cwd: dirname},
-	)
+const RELESE_ODIN_ARGS = [
+	"-vet",
+	"-o:speed",
+	"-disable-assert",
+	"-no-bounds-check",
+	"-obfuscate-source-code-locations",
+]
+
+/**
+ * @param   {boolean}         is_release
+ * @returns {Promise<number>}            exit code
+ */
+function buildWASM(is_release) {
+	const args = ["build", playground_path, "-out:" + WASM_PATH, "-target:js_wasm32"]
+	if (is_release) args.push.apply(args, RELESE_ODIN_ARGS)
+
+	const child = child_process.execFile("odin", args, {cwd: dirname})
 	child.stderr?.on("data", data => {
 		// eslint-disable-next-line no-console
 		console.error(data.toString())
 	})
+
 	return childProcessToPromise(child)
 }
 
