@@ -14,6 +14,7 @@ import {
 	CONFIG_FILENAME,
 	HTTP_PORT,
 	MESSAGE_RELOAD,
+	MESSAGE_RECOMPILE,
 	PACKAGE_DIRNAME,
 	PLAYGROUND_DIRNAME,
 	WASM_PATH,
@@ -84,10 +85,12 @@ const command_handlers = {
 				// eslint-disable-next-line no-console
 				console.log("Rebuilding WASM...")
 				wasm_build_promise = buildWASM()
+				sendToAllClients(wss, MESSAGE_RECOMPILE)
+			} else {
+				// eslint-disable-next-line no-console
+				console.log("Reloading page...")
+				sendToAllClients(wss, MESSAGE_RELOAD)
 			}
-			// eslint-disable-next-line no-console
-			console.log("Reloading page...")
-			sendToAllClients(wss, MESSAGE_RELOAD)
 		})
 
 		void process.on("SIGINT", () => {
@@ -267,7 +270,11 @@ function buildWASM() {
 async function buildConfig(is_dev) {
 	const content = await fsp.readFile(config_path, "utf8")
 	const corrected =
-		"export const IS_DEV = /** @type {boolean} */ (" + is_dev + ")\n" + shiftLines(content, 1)
+		"/* THIS FILE IS AUTO GENERATED, DO NOT EDIT */\n" +
+		"export const IS_DEV = /** @type {boolean} */ (" +
+		is_dev +
+		")\n" +
+		shiftLines(content, 1)
 	await fsp.writeFile(config_path_out, corrected)
 }
 

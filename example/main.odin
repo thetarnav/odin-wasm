@@ -19,7 +19,7 @@ main :: proc() {
 
 	div := dom.dispatch_custom_event("body", "lol")
 
-	fmt.print("Hello, WebAssembly!\n")
+	fmt.print("Hellope, WebAssembly!!!\n")
 	fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
 
 
