@@ -32,3 +32,18 @@ export function initWasmState(state, src_instance) {
 	state.exports = /** @type {import("./types.js").OdinExports} */ (src_instance.instance.exports)
 	state.memory = state.exports.memory
 }
+
+/**
+ * @param   {string}                                             path
+ * @param   {WebAssembly.Imports}                                imports
+ * @returns {Promise<WebAssembly.WebAssemblyInstantiatedSource>}
+ */
+export function fetchInstanciateWasm(path, imports) {
+	const wasm_fetch = fetch(path)
+
+	return typeof WebAssembly.instantiateStreaming == "function"
+		? WebAssembly.instantiateStreaming(wasm_fetch, imports)
+		: wasm_fetch
+				.then(r => r.arrayBuffer())
+				.then(wasm_file => WebAssembly.instantiate(wasm_file, imports))
+}

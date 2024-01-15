@@ -23,8 +23,7 @@ document.body.addEventListener("lol", () => {
 const wasm_state = wasm.makeWasmState()
 const webgl_state = wasm.webgl.makeWebGLState()
 
-const wasm_file = await fetch(WASM_FILENAME).then(r => r.arrayBuffer())
-const src_instance = await WebAssembly.instantiate(wasm_file, {
+const src_instance = await wasm.fetchInstanciateWasm(WASM_FILENAME, {
 	env: {}, // TODO
 	odin_env: wasm.env.makeOdinEnv(wasm_state),
 	odin_ls: wasm.ls.makeOdinLS(wasm_state),
