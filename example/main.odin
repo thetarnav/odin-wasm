@@ -23,6 +23,8 @@ scale: f32 = 1
 scale_min: f32 = 0.25
 scale_max: f32 = 5
 
+rotation: f32 = 0
+
 a_position: i32
 a_color: i32
 u_resolution: i32
@@ -56,8 +58,8 @@ main :: proc() {
 	fmt.print("Hellope, WebAssembly!!!\n")
 	fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
 
-	dom.add_window_event_listener(.Mouse_Move, {}, on_mouse_move)
 	dom.add_window_event_listener(.Wheel, {}, on_wheel)
+	dom.add_window_event_listener(.Mouse_Move, {}, on_mouse_move)
 
 
 	// Make sure that this matches the id of your canvas.
@@ -152,12 +154,12 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 	webgl.ClearColor(0, 0.01, 0.02, 0)
 	webgl.Clear(webgl.COLOR_BUFFER_BIT)
 
-
+	rotation += 0.01 * f32(delta) * (window_rect.x / 2 - mouse_pos.x) / window_rect.x
 	mat :=
 		mat3_translate(mouse_pos - canvas_pos) *
 		mat3_scale({scale, scale}) *
+		mat3_rotate(rotation) *
 		mat3_translate(-box_size / 2)
-
 	webgl.UniformMatrix3fv(u_matrix, mat)
 
 	// draw

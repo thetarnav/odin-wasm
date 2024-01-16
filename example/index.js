@@ -36,7 +36,7 @@ exports._end()
 void requestAnimationFrame(prev_time => {
 	/** @type {FrameRequestCallback} */
 	const frame = time => {
-		const delta = (time - prev_time) * 0.001
+		const delta = time - prev_time
 		prev_time = time
 		exports.frame(delta, odin_ctx)
 		void requestAnimationFrame(frame)
