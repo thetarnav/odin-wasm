@@ -14,7 +14,6 @@ import {
 	CONFIG_FILENAME,
 	HTTP_PORT,
 	MESSAGE_RELOAD,
-	MESSAGE_RECOMPILE,
 	PACKAGE_DIRNAME,
 	PLAYGROUND_DIRNAME,
 	WASM_PATH,
@@ -88,12 +87,10 @@ const command_handlers = {
 				// eslint-disable-next-line no-console
 				console.log("Rebuilding WASM...")
 				wasm_build_promise = buildWASM(false)
-				sendToAllClients(wss, MESSAGE_RECOMPILE)
-			} else {
-				// eslint-disable-next-line no-console
-				console.log("Reloading page...")
-				sendToAllClients(wss, MESSAGE_RELOAD)
 			}
+			// eslint-disable-next-line no-console
+			console.log("Reloading page...")
+			sendToAllClients(wss, MESSAGE_RELOAD)
 		})
 
 		void process.on("SIGINT", () => {

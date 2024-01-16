@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import glm "core:math/linalg/glsl"
 import "core:mem"
 import "core:runtime"
 
@@ -11,18 +12,20 @@ import "../wasm/webgl"
 shader_fragment := #load("shader_fragment.glsl", string)
 shader_vertex := #load("shader_vertex.glsl", string)
 
-device_pixel_ratio: f64 = 1
-canvas_width: i32 = 640
-canvas_height: i32 = 480
+dpr: f32 = 1
+res: [2]i32
+canvas_pos: [2]i32
+canvas_rect: [2]i32 = {640, 480}
+window_rect: [2]i32 = {640, 480}
+mouse_pos: [2]i32 = {0, 0}
 
 a_position: i32
 a_color: i32
 u_resolution: i32
+u_matrix: i32
 
 positions_buffer: webgl.Buffer
 colors_buffer: webgl.Buffer
-
-iteration: i32
 
 // odinfmt: disable
 colors := [?]u8 {
@@ -49,6 +52,9 @@ main :: proc() {
 	fmt.print("Hellope, WebAssembly!!!\n")
 	fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
 
+	dom.add_window_event_listener(.Mouse_Move, {}, proc(e: dom.Event) {
+		mouse_pos = {i32(e.data.mouse.client.x), i32(e.data.mouse.client.y)}
+	})
 
 	dom.add_window_event_listener(.Scroll, {}, proc(e: dom.Event) {
 		fmt.println("Scroll event!", e.data.scroll.delta)
@@ -78,6 +84,7 @@ main :: proc() {
 	a_position = webgl.GetAttribLocation(program, "a_position")
 	a_color = webgl.GetAttribLocation(program, "a_color")
 	u_resolution = webgl.GetUniformLocation(program, "u_resolution")
+	u_matrix = webgl.GetUniformLocation(program, "u_matrix")
 
 	webgl.EnableVertexAttribArray(a_position)
 	webgl.EnableVertexAttribArray(a_color)
@@ -86,13 +93,18 @@ main :: proc() {
 	positions_buffer = webgl.CreateBuffer()
 	colors_buffer = webgl.CreateBuffer()
 
-	device_pixel_ratio = dom.device_pixel_ratio()
+	dpr = f32(dom.device_pixel_ratio())
+	canvas_rect = {640, 480}
+	window_rect = canvas_rect + 200
+	mouse_pos = window_rect / 2
 }
 
 @(export)
-on_canvas_rect_update :: proc "c" (w, h: i32) {
-	canvas_width = w
-	canvas_height = h
+on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: i32) {
+	window_rect = {vw, vh}
+	canvas_rect = {cw, ch}
+	canvas_pos = {cx, cy}
+	res = {i32(f32(canvas_rect.x) * dpr), i32(f32(canvas_rect.y) * dpr)}
 }
 
 @(export)
@@ -105,21 +117,17 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 		return
 	}
 
-	iteration += 2
-	if iteration > 200 {iteration = 0}
-
 	H: f32 : 100
 	W: f32 : 200
-	x := f32(iteration)
 	// odinfmt: disable
 	positions := [?]f32 {
-		10+x, 20+x,
-		 W+x, 20+x,
-		10+x,  H+x,
+		 0,  0,
+		 W,  0,
+		 0,  H,
 
-		10+x,  H+x,
-		 W+x, 20+x,
-		 W+x,  H+x,
+		 0,  H,
+		 W,  0,
+		 W,  H,
 	}
 	// odinfmt: enable
 
@@ -136,14 +144,24 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 	webgl.VertexAttribPointer(a_color, 4, webgl.UNSIGNED_BYTE, true, 0, 0)
 
 	// set the resolution
-	webgl.Uniform2f(u_resolution, f32(canvas_width), f32(canvas_height))
+	webgl.Uniform2f(u_resolution, f32(canvas_rect.x), f32(canvas_rect.y))
 
 	// Tell WebGL how to convert from clip space to pixels
-	webgl.Viewport(0, 0, canvas_width, canvas_height)
+	webgl.Viewport(0, 0, res.x, res.y)
 
 	// Clear the canvas
 	webgl.ClearColor(0, 0.01, 0.02, 0)
 	webgl.Clear(webgl.COLOR_BUFFER_BIT)
+	
+	// odinfmt: disable
+	mat: glm.mat3 = {
+		1, 0, f32(mouse_pos.x) - f32(canvas_pos.x),
+		0, 1, f32(mouse_pos.y) - f32(canvas_pos.y),
+		0, 0, 1,
+	}
+	// odinfmt: enable
+
+	webgl.UniformMatrix3fv(u_matrix, mat)
 
 	// draw
 	webgl.DrawArrays(webgl.TRIANGLES, 0, 6) // 2 triangles, 6 vertices

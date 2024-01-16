@@ -23,4 +23,3 @@ export const WASM_FILENAME = "_main.wasm"
 export const WASM_PATH = PLAYGROUND_DIRNAME + "/" + PUBLIC_DIRNAME + "/" + WASM_FILENAME
 
 export const MESSAGE_RELOAD = "reload"
-export const MESSAGE_RECOMPILE = "recompile"

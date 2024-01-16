@@ -1131,7 +1131,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @returns {void}
 		 */
 		UniformMatrix2fv: (location, addr) => {
-			webgl.ctx.uniformMatrix4fv(
+			webgl.ctx.uniformMatrix2fv(
 				webgl.uniforms[location],
 				false,
 				new Float32Array(wasm.memory.buffer, addr, 2 * 2),
@@ -1143,7 +1143,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @returns {void}
 		 */
 		UniformMatrix3fv: (location, addr) => {
-			webgl.ctx.uniformMatrix4fv(
+			webgl.ctx.uniformMatrix3fv(
 				webgl.uniforms[location],
 				false,
 				new Float32Array(wasm.memory.buffer, addr, 3 * 3),
