@@ -74,14 +74,17 @@ const command_handlers = {
 		const config_promise = buildConfig(true)
 
 		const watcher = chokidar.watch(
-			[`./${PLAYGROUND_DIRNAME}/**/*.{js,html,odin}`, `./${PACKAGE_DIRNAME}/**/*.{js,odin}`],
+			[
+				`./${PLAYGROUND_DIRNAME}/**/*.{js,html,odin,glsl}`,
+				`./${PACKAGE_DIRNAME}/**/*.{js,odin}`,
+			],
 			{
 				ignored: ["**/.*", "**/_*", "**/*.test.js"],
 				ignoreInitial: true,
 			},
 		)
 		void watcher.on("change", filepath => {
-			if (filepath.endsWith(".odin")) {
+			if (filepath.endsWith(".odin") || filepath.endsWith(".glsl")) {
 				// eslint-disable-next-line no-console
 				console.log("Rebuilding WASM...")
 				wasm_build_promise = buildWASM(false)

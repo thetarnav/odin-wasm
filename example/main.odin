@@ -136,7 +136,7 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 	webgl.VertexAttribPointer(a_color, 4, webgl.UNSIGNED_BYTE, true, 0, 0)
 
 	// set the resolution
-	webgl.Uniform2i(u_resolution, canvas_width, canvas_height)
+	webgl.Uniform2f(u_resolution, f32(canvas_width), f32(canvas_height))
 
 	// Tell WebGL how to convert from clip space to pixels
 	webgl.Viewport(0, 0, canvas_width, canvas_height)
