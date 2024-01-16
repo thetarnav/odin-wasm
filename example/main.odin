@@ -12,12 +12,16 @@ import "../wasm/webgl"
 shader_fragment := #load("shader_fragment.glsl", string)
 shader_vertex := #load("shader_vertex.glsl", string)
 
-dpr: f32 = 1
+dpr: f32
 res: [2]i32
-canvas_pos: [2]i32
-canvas_rect: [2]i32 = {640, 480}
-window_rect: [2]i32 = {640, 480}
-mouse_pos: [2]i32 = {0, 0}
+canvas_pos: [2]f32
+canvas_rect: [2]f32
+window_rect: [2]f32
+mouse_pos: [2]f32
+
+scale: f32 = 1
+scale_min: f32 = 0.25
+scale_max: f32 = 5
 
 a_position: i32
 a_color: i32
@@ -52,19 +56,8 @@ main :: proc() {
 	fmt.print("Hellope, WebAssembly!!!\n")
 	fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
 
-	dom.add_window_event_listener(.Mouse_Move, {}, proc(e: dom.Event) {
-		mouse_pos = {i32(e.data.mouse.client.x), i32(e.data.mouse.client.y)}
-	})
-
-	dom.add_window_event_listener(.Scroll, {}, proc(e: dom.Event) {
-		fmt.println("Scroll event!", e.data.scroll.delta)
-	})
-	dom.add_window_event_listener(.Wheel, {}, proc(e: dom.Event) {
-		fmt.println("Wheel event!", e.data.wheel.delta)
-	})
-	dom.add_window_event_listener(.Visibility_Change, {}, proc(e: dom.Event) {
-		fmt.println("Visibility_Change event!", e.data.visibility_change.is_visible)
-	})
+	dom.add_window_event_listener(.Mouse_Move, {}, on_mouse_move)
+	dom.add_window_event_listener(.Wheel, {}, on_wheel)
 
 
 	// Make sure that this matches the id of your canvas.
@@ -99,8 +92,15 @@ main :: proc() {
 	mouse_pos = window_rect / 2
 }
 
+on_mouse_move :: proc(e: dom.Event) {
+	mouse_pos = {f32(e.data.mouse.client.x), f32(e.data.mouse.client.y)}
+}
+on_wheel :: proc(e: dom.Event) {
+	scale += f32(e.data.wheel.delta.y) * 0.001
+	scale = clamp(scale, scale_min, scale_max)
+}
 @(export)
-on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: i32) {
+on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: f32) {
 	window_rect = {vw, vh}
 	canvas_rect = {cw, ch}
 	canvas_pos = {cx, cy}
@@ -117,17 +117,16 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 		return
 	}
 
-	H: f32 : 100
-	W: f32 : 200
+	box_size: [2]f32 = {160, 100}
 	// odinfmt: disable
 	positions := [?]f32 {
-		 0,  0,
-		 W,  0,
-		 0,  H,
+		 0,           0,
+		 box_size.x,  0,
+		 0,           box_size.y,
 
-		 0,  H,
-		 W,  0,
-		 W,  H,
+		 0,           box_size.y,
+		 box_size.x,  0,
+		 box_size.x,  box_size.y,
 	}
 	// odinfmt: enable
 
@@ -144,7 +143,7 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 	webgl.VertexAttribPointer(a_color, 4, webgl.UNSIGNED_BYTE, true, 0, 0)
 
 	// set the resolution
-	webgl.Uniform2f(u_resolution, f32(canvas_rect.x), f32(canvas_rect.y))
+	webgl.Uniform2f(u_resolution, canvas_rect.x, canvas_rect.y)
 
 	// Tell WebGL how to convert from clip space to pixels
 	webgl.Viewport(0, 0, res.x, res.y)
@@ -152,17 +151,44 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 	// Clear the canvas
 	webgl.ClearColor(0, 0.01, 0.02, 0)
 	webgl.Clear(webgl.COLOR_BUFFER_BIT)
-	
-	// odinfmt: disable
-	mat: glm.mat3 = {
-		1, 0, f32(mouse_pos.x) - f32(canvas_pos.x),
-		0, 1, f32(mouse_pos.y) - f32(canvas_pos.y),
-		0, 0, 1,
-	}
-	// odinfmt: enable
+
+
+	mat :=
+		mat3_translate(mouse_pos - canvas_pos) *
+		mat3_scale({scale, scale}) *
+		mat3_translate(-box_size / 2)
 
 	webgl.UniformMatrix3fv(u_matrix, mat)
 
 	// draw
 	webgl.DrawArrays(webgl.TRIANGLES, 0, 6) // 2 triangles, 6 vertices
 }
+
+// odinfmt: disable
+@(require_results)
+mat3_translate :: proc(v: [2]f32) -> glm.mat3 {
+	return {
+		1, 0, v.x,
+		0, 1, v.y,
+		0, 0, 1,
+   	}
+}
+@(require_results)
+mat3_scale :: proc(v: [2]f32) -> glm.mat3 {
+	return {
+		v.x, 0,   0,
+		0,   v.y, 0,
+		0,   0,   1,
+   	}
+}
+@(require_results)
+mat3_rotate :: proc(angle: f32) -> glm.mat3 {
+	c := glm.cos(angle)
+	s := glm.sin(angle)
+	return {
+		 c, s, 0,
+		-s, c, 0,
+		 0, 0, 1,
+	}
+}
+// odinfmt: enable
