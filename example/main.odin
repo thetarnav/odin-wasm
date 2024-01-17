@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:intrinsics"
 import glm "core:math/linalg/glsl"
 import "core:mem"
 import "core:runtime"
@@ -15,8 +16,8 @@ shader_vertex := #load("shader_vertex.glsl", string)
 dpr: f32
 res: [2]i32
 canvas_pos: [2]f32
-canvas_rect: [2]f32
-window_rect: [2]f32
+canvas_size: [2]f32
+window_size: [2]f32
 mouse_pos: [2]f32
 
 scale: f32 = 1
@@ -89,24 +90,24 @@ main :: proc() {
 	colors_buffer = webgl.CreateBuffer()
 
 	dpr = f32(dom.device_pixel_ratio())
-	canvas_rect = {640, 480}
-	window_rect = canvas_rect + 200
-	mouse_pos = window_rect / 2
+	window_size = cast_vec2(f32, dom.get_window_inner_size())
+	canvas_size = window_size - 200
+	mouse_pos = window_size / 2
 }
 
 on_mouse_move :: proc(e: dom.Event) {
-	mouse_pos = {f32(e.data.mouse.client.x), f32(e.data.mouse.client.y)}
+	mouse_pos = cast_vec2(f32, e.data.mouse.client)
 }
 on_wheel :: proc(e: dom.Event) {
 	scale += f32(e.data.wheel.delta.y) * 0.001
 	scale = clamp(scale, scale_min, scale_max)
 }
 @(export)
-on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: f32) {
-	window_rect = {vw, vh}
-	canvas_rect = {cw, ch}
+on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
+	window_size = {vw, vh}
+	canvas_size = {cw, ch}
 	canvas_pos = {cx, cy}
-	res = {i32(f32(canvas_rect.x) * dpr), i32(f32(canvas_rect.y) * dpr)}
+	res = cast_vec2(i32, canvas_size * dpr)
 }
 
 @(export)
@@ -135,40 +136,42 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 
 	webgl.BindBuffer(webgl.ARRAY_BUFFER, positions_buffer)
 	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, positions[:], webgl.STATIC_DRAW)
-
-	// Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
 	webgl.VertexAttribPointer(a_position, 2, webgl.FLOAT, false, 0, 0)
 
-	// bind, and fill color buffer
 	webgl.BindBuffer(webgl.ARRAY_BUFFER, colors_buffer)
 	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, colors[:], webgl.STATIC_DRAW)
 	webgl.VertexAttribPointer(a_color, 4, webgl.UNSIGNED_BYTE, true, 0, 0)
 
-	// set the resolution
-	webgl.Uniform2f(u_resolution, canvas_rect.x, canvas_rect.y)
+	webgl.Uniform2f(u_resolution, canvas_size.x, canvas_size.y)
 
-	// Tell WebGL how to convert from clip space to pixels
 	webgl.Viewport(0, 0, res.x, res.y)
-
-	// Clear the canvas
 	webgl.ClearColor(0, 0.01, 0.02, 0)
 	webgl.Clear(webgl.COLOR_BUFFER_BIT)
 
-	rotation += 0.01 * f32(delta) * (window_rect.x / 2 - mouse_pos.x) / window_rect.x
+
+	rotation += 0.01 * f32(delta) * (window_size.x / 2 - mouse_pos.x) / window_size.x
 	mat :=
 		mat3_translate(mouse_pos - canvas_pos) *
 		mat3_scale({scale, scale}) *
 		mat3_rotate(rotation) *
 		mat3_translate(-box_size / 2)
+
 	webgl.UniformMatrix3fv(u_matrix, mat)
 
-	// draw
 	webgl.DrawArrays(webgl.TRIANGLES, 0, 6) // 2 triangles, 6 vertices
+}
+
+cast_vec2 :: proc "contextless" (
+	$To: typeid,
+	v: [2]$From,
+) -> [2]To where intrinsics.type_is_numeric(From) &&
+	intrinsics.type_is_numeric(To) {
+	return {To(v.x), To(v.y)}
 }
 
 // odinfmt: disable
 @(require_results)
-mat3_translate :: proc(v: [2]f32) -> glm.mat3 {
+mat3_translate :: proc "contextless" (v: [2]f32) -> glm.mat3 {
 	return {
 		1, 0, v.x,
 		0, 1, v.y,
@@ -176,7 +179,7 @@ mat3_translate :: proc(v: [2]f32) -> glm.mat3 {
    	}
 }
 @(require_results)
-mat3_scale :: proc(v: [2]f32) -> glm.mat3 {
+mat3_scale :: proc "contextless" (v: [2]f32) -> glm.mat3 {
 	return {
 		v.x, 0,   0,
 		0,   v.y, 0,
@@ -184,7 +187,7 @@ mat3_scale :: proc(v: [2]f32) -> glm.mat3 {
    	}
 }
 @(require_results)
-mat3_rotate :: proc(angle: f32) -> glm.mat3 {
+mat3_rotate :: proc "contextless" (angle: f32) -> glm.mat3 {
 	c := glm.cos(angle)
 	s := glm.sin(angle)
 	return {

@@ -21,7 +21,7 @@ foreign dom_lib {
 
 	device_pixel_ratio :: proc() -> f64 ---
 
-	window_set_scroll :: proc(x, y: f64) ---
+	set_window_scroll :: proc(x, y: f64) ---
 }
 
 get_element_value_string :: proc "contextless" (id: string, buf: []byte) -> string {
@@ -53,32 +53,60 @@ Rect :: struct {
 }
 
 get_bounding_client_rect :: proc "contextless" (id: string) -> (rect: Rect) {
-	@(default_calling_convention = "contextless")
 	foreign dom_lib {
 		@(link_name = "get_bounding_client_rect")
-		_get_bounding_client_rect :: proc(rect: ^Rect, id: string) ---
+		_get_bounding_client_rect :: proc "contextless" (rect: ^Rect, id: string) ---
 	}
 	_get_bounding_client_rect(&rect, id)
 	return
 }
 
-window_get_rect :: proc "contextless" () -> (rect: Rect) {
-	@(default_calling_convention = "contextless")
+// Get `window.innerWidth` and `window.innerHeight`
+get_window_inner_size :: proc "contextless" () -> (size: [2]f64) {
 	foreign dom_lib {
-		@(link_name = "window_get_rect")
-		_window_get_rect :: proc(rect: ^Rect) ---
+		@(link_name = "get_window_inner_size")
+		_get_window_inner_size :: proc "contextless" (size: ^[2]f64) ---
 	}
-	_window_get_rect(&rect)
+	_get_window_inner_size(&size)
 	return
 }
 
-window_get_scroll :: proc "contextless" () -> (x, y: f64) {
-	@(default_calling_convention = "contextless")
+// Get `window.outerWidth` and `window.outerHeight`
+get_window_outer_size :: proc "contextless" () -> (size: [2]f64) {
 	foreign dom_lib {
-		@(link_name = "window_get_scroll")
-		_window_get_scroll :: proc(scroll: ^[2]f64) ---
+		@(link_name = "get_window_outer_size")
+		_get_window_outer_size :: proc "contextless" (size: ^[2]f64) ---
+	}
+	_get_window_outer_size(&size)
+	return
+}
+
+// Get `window.screen.width` and `window.screen.height`
+get_screen_size :: proc "contextless" () -> (size: [2]f64) {
+	foreign dom_lib {
+		@(link_name = "get_screen_size")
+		_get_screen_size :: proc "contextless" (size: ^[2]f64) ---
+	}
+	_get_screen_size(&size)
+	return
+}
+
+// Get `window.screenX` and `window.screenY`
+get_window_position :: proc "contextless" () -> (pos: [2]f64) {
+	foreign dom_lib {
+		@(link_name = "get_window_position")
+		_get_window_position :: proc "contextless" (pos: ^[2]f64) ---
+	}
+	_get_window_position(&pos)
+	return
+}
+
+get_window_scroll :: proc "contextless" () -> (x, y: f64) {
+	foreign dom_lib {
+		@(link_name = "get_window_scroll")
+		_get_window_scroll :: proc "contextless" (scroll: ^[2]f64) ---
 	}
 	scroll := [2]f64{x, y}
-	_window_get_scroll(&scroll)
+	_get_window_scroll(&scroll)
 	return
 }

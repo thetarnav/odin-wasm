@@ -32,12 +32,27 @@ get_bounding_client_rect :: proc "contextless" (id: string) -> (rect: Rect) {
 	panic("vendor:wasm/js not supported on non JS targets")
 }
 
-window_get_rect :: proc "contextless" () -> (rect: Rect) {
+get_window_inner_size :: proc "contextless" () -> (size: [2]f64) {
 	context = runtime.default_context()
 	panic("vendor:wasm/js not supported on non JS targets")
 }
 
-window_get_scroll :: proc "contextless" () -> (x, y: f64) {
+get_window_outer_size :: proc "contextless" () -> (size: [2]f64) {
+	context = runtime.default_context()
+	panic("vendor:wasm/js not supported on non JS targets")
+}
+
+get_screen_size :: proc "contextless" () -> (size: [2]f64) {
+	context = runtime.default_context()
+	panic("vendor:wasm/js not supported on non JS targets")
+}
+
+get_window_position :: proc "contextless" () -> (pos: [2]f64) {
+	context = runtime.default_context()
+	panic("vendor:wasm/js not supported on non JS targets")
+}
+
+get_window_scroll :: proc "contextless" () -> (x, y: f64) {
 	context = runtime.default_context()
 	panic("vendor:wasm/js not supported on non JS targets")
 }

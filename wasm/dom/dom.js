@@ -449,39 +449,56 @@ export function makeOdinDOM(_wasm) {
 			values[3] = rect.bottom - rect.top
 		},
 		/**
-		 * Get window rect
-		 *
-		 * @param   {number} rect_ptr pointer to Rect
+		 * @param   {number} size_ptr pointer to [2]f64
 		 * @returns {void}
 		 */
-		window_get_rect(rect_ptr) {
-			const values = mem.load_f64_array(wasm.memory.buffer, rect_ptr, 4)
-
-			values[0] = window.screenX
-			values[1] = window.screenY
-			values[2] = window.screen.width
-			values[3] = window.screen.height
+		get_window_inner_size(size_ptr) {
+			const values = mem.load_f64_array(wasm.memory.buffer, size_ptr, 2)
+			values[0] = window.innerWidth
+			values[1] = window.innerHeight
 		},
 		/**
-		 * Get window scroll
-		 *
+		 * @param   {number} size_ptr pointer to [2]f64
+		 * @returns {void}
+		 */
+		get_window_outer_size(size_ptr) {
+			const values = mem.load_f64_array(wasm.memory.buffer, size_ptr, 2)
+			values[0] = window.outerWidth
+			values[1] = window.outerHeight
+		},
+		/**
+		 * @param   {number} size_ptr pointer to [2]f64
+		 * @returns {void}
+		 */
+		get_screen_size(size_ptr) {
+			const values = mem.load_f64_array(wasm.memory.buffer, size_ptr, 2)
+			values[0] = window.screen.width
+			values[1] = window.screen.height
+		},
+		/**
 		 * @param   {number} pos_ptr pointer to [2]f64
 		 * @returns {void}
 		 */
-		window_get_scroll(pos_ptr) {
+		get_window_position(pos_ptr) {
 			const values = mem.load_f64_array(wasm.memory.buffer, pos_ptr, 2)
-
+			values[0] = window.screenX
+			values[1] = window.screenY
+		},
+		/**
+		 * @param   {number} pos_ptr pointer to [2]f64
+		 * @returns {void}
+		 */
+		get_window_scroll(pos_ptr) {
+			const values = mem.load_f64_array(wasm.memory.buffer, pos_ptr, 2)
 			values[0] = window.scrollX
 			values[1] = window.scrollY
 		},
 		/**
-		 * Set window scroll
-		 *
 		 * @param   {number} x scroll x
 		 * @param   {number} y scroll y
 		 * @returns {void}
 		 */
-		window_set_scroll(x, y) {
+		set_window_scroll(x, y) {
 			window.scroll(x, y)
 		},
 		/**
