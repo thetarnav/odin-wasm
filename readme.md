@@ -17,6 +17,6 @@ Add `js_wasm32` target to `ols.json`:
 
 ```json
 {
-	"checker_args": "-target:js_wasm32"
+	"checker_args": "-target:js_wasm32 -vet-unused -vet-shadowing -vet-style -vet-semicolon"
 }
 ```

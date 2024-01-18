@@ -248,7 +248,10 @@ function makeChildServer() {
 }
 
 const RELESE_ODIN_ARGS = [
-	"-vet",
+	"-vet-unused",
+	"-vet-shadowing",
+	"-vet-style",
+	"-vet-semicolon",
 	"-o:speed",
 	"-disable-assert",
 	"-no-bounds-check",
