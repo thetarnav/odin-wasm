@@ -29,6 +29,13 @@ const src_instance = await wasm.fetchInstanciateWasm(WASM_FILENAME, {
 wasm.initWasmState(wasm_state, src_instance)
 const exports = /** @type {t.WasmExports} */ (wasm_state.exports)
 
+if (IS_DEV) {
+	// eslint-disable-next-line no-console
+	console.log("WASM exports:", exports)
+	// eslint-disable-next-line no-console
+	console.log("WASM memory:", exports.memory)
+}
+
 exports._start()
 const odin_ctx = exports.default_context_ptr()
 exports._end()

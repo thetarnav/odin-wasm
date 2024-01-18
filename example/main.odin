@@ -28,7 +28,6 @@ rotation: f32 = 0
 
 a_position: i32
 a_color: i32
-u_resolution: i32
 u_matrix: i32
 
 positions_buffer: webgl.Buffer
@@ -79,7 +78,6 @@ main :: proc() {
 
 	a_position = webgl.GetAttribLocation(program, "a_position")
 	a_color = webgl.GetAttribLocation(program, "a_color")
-	u_resolution = webgl.GetUniformLocation(program, "u_resolution")
 	u_matrix = webgl.GetUniformLocation(program, "u_matrix")
 
 	webgl.EnableVertexAttribArray(a_position)
@@ -123,13 +121,13 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 	box_size: [2]f32 = {160, 100}
 	// odinfmt: disable
 	positions := [?]f32 {
-		 0,           0,
-		 box_size.x,  0,
-		 0,           box_size.y,
+		0,           0,
+		box_size.x,  0,
+		0,           box_size.y,
 
-		 0,           box_size.y,
-		 box_size.x,  0,
-		 box_size.x,  box_size.y,
+		0,           box_size.y,
+		box_size.x,  0,
+		box_size.x,  box_size.y,
 	}
 	// odinfmt: enable
 
@@ -142,8 +140,6 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, colors[:], webgl.STATIC_DRAW)
 	webgl.VertexAttribPointer(a_color, 4, webgl.UNSIGNED_BYTE, true, 0, 0)
 
-	webgl.Uniform2f(u_resolution, canvas_size.x, canvas_size.y)
-
 	webgl.Viewport(0, 0, res.x, res.y)
 	webgl.ClearColor(0, 0.01, 0.02, 0)
 	webgl.Clear(webgl.COLOR_BUFFER_BIT)
@@ -151,6 +147,7 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 
 	rotation += 0.01 * f32(delta) * (window_size.x / 2 - mouse_pos.x) / window_size.x
 	mat :=
+		mat3_projection(canvas_size) *
 		mat3_translate(mouse_pos - canvas_pos) *
 		mat3_scale({scale, scale}) *
 		mat3_rotate(rotation) *
@@ -194,6 +191,14 @@ mat3_rotate :: proc "contextless" (angle: f32) -> glm.mat3 {
 		 c, s, 0,
 		-s, c, 0,
 		 0, 0, 1,
+	}
+}
+@(require_results)
+mat3_projection :: proc "contextless" (size: [2]f32) -> glm.mat3 {
+	return {
+		2/size.x, 0,       -1,
+		0,       -2/size.y, 1,
+		0,        0,        1,
 	}
 }
 // odinfmt: enable
