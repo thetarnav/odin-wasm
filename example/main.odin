@@ -4,7 +4,6 @@ import "core:fmt"
 import "core:mem"
 import "core:runtime"
 
-import "../wasm"
 import "../wasm/dom"
 import "../wasm/webgl"
 
@@ -53,14 +52,12 @@ positions := [?]f32 {
 }
 // odinfmt: enable
 
-main :: proc() {
-	test_buf, err := wasm.page_alloc(2)
-	if err != nil {
-		fmt.println("Failed to allocate memory!")
-		return
-	}
-	context.allocator = mem.arena_allocator(&{data = test_buf})
+frame_arena_buffer: [1024 * 1024]byte
+frame_arena: mem.Arena = {
+	data = frame_arena_buffer[:],
+}
 
+main :: proc() {
 	dom.dispatch_custom_event("body", "lol")
 
 	fmt.print("Hellope, WebAssembly!!!\n")
@@ -117,12 +114,14 @@ on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
 }
 
 @(export)
-frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
+frame :: proc "contextless" (delta: f32, ctx: ^runtime.Context) {
 	context = ctx^
+	context.temp_allocator = mem.arena_allocator(&frame_arena)
+	defer free_all(context.temp_allocator)
 
-	err := webgl.GetError()
-	if err != webgl.NO_ERROR {
-		fmt.println("WebGL error:", err)
+
+	if err := webgl.GetError(); err != webgl.NO_ERROR {
+		fmt.eprintln("WebGL error:", err)
 		return
 	}
 
@@ -140,7 +139,7 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 	webgl.Clear(webgl.COLOR_BUFFER_BIT)
 
 
-	rotation += 0.01 * f32(delta) * (window_size.x / 2 - mouse_pos.x) / window_size.x
+	rotation += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
 	mat :=
 		mat3_projection(canvas_size) *
 		mat3_translate(mouse_pos - canvas_pos) *
