@@ -2,7 +2,6 @@ import * as wasm from "../wasm/runtime.js"
 
 import {IS_DEV, WEB_SOCKET_PORT, MESSAGE_RELOAD, WASM_FILENAME} from "./_config.js"
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as t from "./types.js"
 
 if (IS_DEV) {
@@ -40,12 +39,17 @@ exports._start()
 const odin_ctx = exports.default_context_ptr()
 exports._end()
 
+const ok = exports.start_example(odin_ctx, t.Example_Type.D2)
+if (!ok) {
+	throw new Error("Failed to start example")
+}
+
 void requestAnimationFrame(prev_time => {
 	/** @type {FrameRequestCallback} */
 	const frame = time => {
 		const delta = time - prev_time
 		prev_time = time
-		exports.frame(delta, odin_ctx)
+		exports.frame(odin_ctx, delta)
 		void requestAnimationFrame(frame)
 	}
 
