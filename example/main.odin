@@ -1,8 +1,6 @@
 package main
 
 import "core:fmt"
-import "core:intrinsics"
-import glm "core:math/linalg/glsl"
 import "core:mem"
 import "core:runtime"
 
@@ -34,14 +32,24 @@ positions_buffer: webgl.Buffer
 colors_buffer: webgl.Buffer
 
 // odinfmt: disable
+box_size := [2]f32{160, 100}
 colors := [?]u8 {
-	255, 0, 0, 255,
-	0, 255, 0, 255,
-	0, 0, 255, 255,
+	60,  210, 0,   255,
+	210, 210, 0,   255,
+	0,   80,  190, 255,
 
-	255, 0, 0, 255,
-	0, 255, 0, 255,
-	0, 0, 255, 255,
+	230, 20,  0,   255,
+	210, 210, 0,   255,
+	0,   80,  190, 255,
+}
+positions := [?]f32 {
+	0,           0,
+	box_size.x,  0,
+	0,           box_size.y,
+
+	box_size.x,  box_size.y,
+	box_size.x,  0,
+	0,           box_size.y,
 }
 // odinfmt: enable
 
@@ -118,19 +126,6 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 		return
 	}
 
-	box_size: [2]f32 = {160, 100}
-	// odinfmt: disable
-	positions := [?]f32 {
-		0,           0,
-		box_size.x,  0,
-		0,           box_size.y,
-
-		0,           box_size.y,
-		box_size.x,  0,
-		box_size.x,  box_size.y,
-	}
-	// odinfmt: enable
-
 
 	webgl.BindBuffer(webgl.ARRAY_BUFFER, positions_buffer)
 	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, positions[:], webgl.STATIC_DRAW)
@@ -157,48 +152,3 @@ frame :: proc "c" (delta: i32, ctx: ^runtime.Context) {
 
 	webgl.DrawArrays(webgl.TRIANGLES, 0, 6) // 2 triangles, 6 vertices
 }
-
-cast_vec2 :: proc "contextless" (
-	$To: typeid,
-	v: [2]$From,
-) -> [2]To where intrinsics.type_is_numeric(From) &&
-	intrinsics.type_is_numeric(To) {
-	return {To(v.x), To(v.y)}
-}
-
-// odinfmt: disable
-@(require_results)
-mat3_translate :: proc "contextless" (v: [2]f32) -> glm.mat3 {
-	return {
-		1, 0, v.x,
-		0, 1, v.y,
-		0, 0, 1,
-   	}
-}
-@(require_results)
-mat3_scale :: proc "contextless" (v: [2]f32) -> glm.mat3 {
-	return {
-		v.x, 0,   0,
-		0,   v.y, 0,
-		0,   0,   1,
-   	}
-}
-@(require_results)
-mat3_rotate :: proc "contextless" (angle: f32) -> glm.mat3 {
-	c := glm.cos(angle)
-	s := glm.sin(angle)
-	return {
-		 c, s, 0,
-		-s, c, 0,
-		 0, 0, 1,
-	}
-}
-@(require_results)
-mat3_projection :: proc "contextless" (size: [2]f32) -> glm.mat3 {
-	return {
-		2/size.x, 0,       -1,
-		0,       -2/size.y, 1,
-		0,        0,        1,
-	}
-}
-// odinfmt: enable
