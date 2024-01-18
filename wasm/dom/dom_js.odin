@@ -101,12 +101,12 @@ get_window_position :: proc "contextless" () -> (pos: [2]f64) {
 	return
 }
 
-get_window_scroll :: proc "contextless" () -> (x, y: f64) {
+// Get `window.scrollX` and `window.scrollY`
+get_window_scroll :: proc "contextless" () -> (scroll: [2]f64) {
 	foreign dom_lib {
 		@(link_name = "get_window_scroll")
 		_get_window_scroll :: proc "contextless" (scroll: ^[2]f64) ---
 	}
-	scroll := [2]f64{x, y}
 	_get_window_scroll(&scroll)
 	return
 }

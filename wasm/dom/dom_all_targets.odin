@@ -52,7 +52,7 @@ get_window_position :: proc "contextless" () -> (pos: [2]f64) {
 	panic("vendor:wasm/js not supported on non JS targets")
 }
 
-get_window_scroll :: proc "contextless" () -> (x, y: f64) {
+get_window_scroll :: proc "contextless" () -> (scroll: [2]f64) {
 	context = runtime.default_context()
 	panic("vendor:wasm/js not supported on non JS targets")
 }
