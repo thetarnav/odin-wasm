@@ -7,9 +7,12 @@ cast_vec2 :: #force_inline proc "contextless" (
 	$D: typeid,
 	v: [2]$S,
 ) -> [2]D where intrinsics.type_is_numeric(S) &&
-	intrinsics.type_is_numeric(D) {
-	return {D(v.x), D(v.y)}
-}
+	intrinsics.type_is_numeric(D) {return {D(v.x), D(v.y)}}
+
+vec2_to_vec3 :: #force_inline proc "contextless" (
+	v: [2]$T,
+	z: T,
+) -> [3]T where intrinsics.type_is_numeric(T) {return {v.x, v.y, z}}
 
 // odinfmt: disable
 @(require_results)
@@ -46,4 +49,69 @@ mat3_projection :: proc "contextless" (size: [2]f32) -> glm.mat3 {
 		0,        0,        1,
 	}
 }
+
+@(require_results)
+mat4_translate :: proc "contextless" (v: [3]f32) -> glm.mat4 {
+	return {
+		1,  0,  0,  v.x,
+		0,  1,  0,  v.y,
+		0,  0,  1,  v.z,
+		0,  0,  0,  1,
+	}
+}
+@(require_results)
+mat4_rotate_x :: proc "contextless" (radians: f32) -> glm.mat4 {
+	c := glm.cos(radians)
+	s := glm.sin(radians)
+
+	return {
+		1, 0, 0, 0,
+		0, c, s, 0,
+		0,-s, c, 0,
+		0, 0, 0, 1,
+	}
+}
+@(require_results)
+mat4_rotate_y :: proc "contextless" (radians: f32) -> glm.mat4 {
+	c := glm.cos(radians)
+	s := glm.sin(radians)
+
+	return {
+		c, 0,-s, 0,
+		0, 1, 0, 0,
+		s, 0, c, 0,
+		0, 0, 0, 1,
+	}
+}
+@(require_results)
+mat4_rotate_z :: proc "contextless" (radians: f32) -> glm.mat4 {
+	c := glm.cos(radians)
+	s := glm.sin(radians)
+
+	return {
+		c,  s, 0, 0,
+		-s, c, 0, 0,
+		0,  0, 1, 0,
+		0,  0, 0, 1,
+	}
+}
+@(require_results)
+mat4_scale :: proc "contextless" (v: [3]f32) -> glm.mat4 {
+	return {
+		v.x, 0,   0,   0,
+		0,   v.y, 0,   0,
+		0,   0,   v.z, 0,
+		0,   0,   0,   1,
+	}
+}
+mat4_projection :: proc "contextless" (v: [3]f32) -> glm.mat4 {
+    // Note: This matrix flips the Y axis so 0 is at the top.
+    return {
+       2/v.x, 0,     0,    -1,
+       0,    -2/v.y, 0,     1,
+       0,     0,     2/v.z, 0,
+       0,     0,     0,     1,
+	}
+}
+
 // odinfmt: enable

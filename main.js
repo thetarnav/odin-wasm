@@ -123,8 +123,7 @@ const command_handlers = {
 			if (req.url === "/" + CONFIG_FILENAME) {
 				await config_promise
 			} else if (req.url === "/" + WASM_FILENAME) {
-				const code = await wasm_build_promise
-				if (code !== 0) return end404(req, res)
+				await wasm_build_promise
 			}
 
 			/* Static files */

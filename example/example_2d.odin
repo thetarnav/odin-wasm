@@ -13,12 +13,20 @@ example_2d_state: struct {
 	colors_buffer:    webgl.Buffer,
 }
 
+@(private = "file")
+TRIANGLES :: 2
+@(private = "file")
+VERTICES :: TRIANGLES * 3
+@(private = "file")
 BOX_W: f32 : 160
+@(private = "file")
 BOX_H: f32 : 100
+@(private = "file")
 box_size: [2]f32 = {BOX_W, BOX_H}
 
 // odinfmt: disable
-example_2d_colors: [2*3*4]u8 = {
+@(private = "file")
+colors: [VERTICES*4]u8 = {
 	60,  210, 0,   255,
 	210, 210, 0,   255,
 	0,   80,  190, 255,
@@ -27,7 +35,8 @@ example_2d_colors: [2*3*4]u8 = {
 	210, 210, 0,   255,
 	0,   80,  190, 255,
 }
-example_2d_positions: [2*3*2]f32 = {
+@(private = "file")
+positions: [VERTICES*2]f32 = {
 	0,     0,
 	BOX_W, 0,
 	0,     BOX_H,
@@ -39,15 +48,8 @@ example_2d_positions: [2*3*2]f32 = {
 // odinfmt: enable
 
 
-example_2d_start :: proc() -> (ok: bool) {
+example_2d_start :: proc(program: webgl.Program) -> (ok: bool) {
 	using example_2d_state
-
-	program, program_ok := webgl.CreateProgramFromStrings({shader_vertex_2d}, {shader_fragment_2d})
-	if !program_ok {
-		fmt.eprintln("Failed to create program!")
-		return false
-	}
-	webgl.UseProgram(program)
 
 	a_position = webgl.GetAttribLocation(program, "a_position")
 	a_color = webgl.GetAttribLocation(program, "a_color")
@@ -72,11 +74,11 @@ example_2d_frame :: proc(delta: f32) {
 	using example_2d_state
 
 	webgl.BindBuffer(webgl.ARRAY_BUFFER, positions_buffer)
-	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, example_2d_positions[:], webgl.STATIC_DRAW)
+	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, positions[:], webgl.STATIC_DRAW)
 	webgl.VertexAttribPointer(a_position, 2, webgl.FLOAT, false, 0, 0)
 
 	webgl.BindBuffer(webgl.ARRAY_BUFFER, colors_buffer)
-	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, example_2d_colors[:], webgl.STATIC_DRAW)
+	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, colors[:], webgl.STATIC_DRAW)
 	webgl.VertexAttribPointer(a_color, 4, webgl.UNSIGNED_BYTE, true, 0, 0)
 
 	webgl.Viewport(0, 0, canvas_res.x, canvas_res.y)
@@ -87,11 +89,11 @@ example_2d_frame :: proc(delta: f32) {
 	mat :=
 		mat3_projection(canvas_size) *
 		mat3_translate(mouse_pos - canvas_pos) *
-		mat3_scale({scale, scale}) *
+		mat3_scale(scale) *
 		mat3_rotate(rotation) *
 		mat3_translate(-box_size / 2)
 
 	webgl.UniformMatrix3fv(u_matrix, mat)
 
-	webgl.DrawArrays(webgl.TRIANGLES, 0, 6) // 2 triangles, 6 vertices
+	webgl.DrawArrays(webgl.TRIANGLES, 0, VERTICES)
 }

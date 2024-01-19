@@ -7,8 +7,11 @@ import "core:runtime"
 import "../wasm/dom"
 import "../wasm/webgl"
 
-shader_fragment_2d := #load("shader_fragment.glsl", string)
-shader_vertex_2d := #load("shader_vertex.glsl", string)
+shader_fragment_2d := #load("shader_fragment_2d.glsl", string)
+shader_vertex_2d := #load("shader_vertex_2d.glsl", string)
+
+shader_fragment_3d := #load("shader_fragment_3d.glsl", string)
+shader_vertex_3d := #load("shader_vertex_3d.glsl", string)
 
 dpr: f32
 canvas_res: [2]i32
@@ -65,11 +68,30 @@ start_example :: proc "contextless" (
 		return false
 	}
 
+	vs_sources: []string
+	fs_sources: []string
+
 	switch example {
 	case .D2:
-		return example_2d_start()
+		vs_sources = {shader_vertex_2d}
+		fs_sources = {shader_fragment_2d}
 	case .D3:
-		return example_3d_start()
+		vs_sources = {shader_vertex_3d}
+		fs_sources = {shader_fragment_3d}
+	}
+
+	program, program_ok := webgl.CreateProgramFromStrings(vs_sources, fs_sources)
+	if !program_ok {
+		fmt.eprintln("Failed to create program!")
+		return false
+	}
+	webgl.UseProgram(program)
+
+	switch example {
+	case .D2:
+		return example_2d_start(program)
+	case .D3:
+		return example_3d_start(program)
 	case:
 		return false
 	}
