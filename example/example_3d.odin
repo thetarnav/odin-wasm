@@ -6,7 +6,8 @@ import "core:math"
 import "../wasm/webgl"
 
 example_3d_state: struct {
-	rotation:         f32,
+	rotation_y:       f32,
+	rotation_x:       f32,
 	a_position:       i32,
 	a_color:          i32,
 	u_matrix:         i32,
@@ -100,13 +101,15 @@ example_3d_frame :: proc(delta: f32) {
 	webgl.ClearColor(0, 0.01, 0.02, 0)
 	webgl.Clear(webgl.COLOR_BUFFER_BIT)
 
-	rotation += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
+	rotation_y += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
+	rotation_x += 0.01 * delta * (window_size.y / 2 - mouse_pos.y) / window_size.y
 	mat :=
 		mat4_projection(vec2_to_vec3(canvas_size, 400)) *
 		mat4_translate(vec2_to_vec3(mouse_pos - canvas_pos, 0)) *
 		mat4_scale(scale) *
-		mat4_translate({0, -H / 2, 0}) *
-		mat4_rotate_y(rotation)
+		mat4_rotate_y(rotation_y) *
+		mat4_rotate_x(-rotation_x) *
+		mat4_translate({0, -H / 2, 0})
 
 	webgl.UniformMatrix4fv(u_matrix, mat)
 
