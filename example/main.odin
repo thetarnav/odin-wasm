@@ -33,13 +33,20 @@ frame_arena: mem.Arena = {
 }
 
 main :: proc() {
-	dom.dispatch_custom_event("body", "lol")
+	if ODIN_DEBUG {
+		dom.dispatch_custom_event("body", "lol")
 
-	fmt.print("Hellope, WebAssembly!!!\n")
-	fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
+		fmt.print("Hellope, WebAssembly!!!\n")
+		fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
+	}
 
 	dom.add_window_event_listener(.Wheel, {}, on_wheel)
 	dom.add_window_event_listener(.Mouse_Move, {}, on_mouse_move)
+
+	dpr = f32(dom.device_pixel_ratio())
+	window_size = cast_vec2(f32, dom.get_window_inner_size())
+	canvas_size = window_size - 200
+	mouse_pos = window_size / 2
 }
 
 @(export)
@@ -62,10 +69,10 @@ start_example :: proc "contextless" (
 	case .D2:
 		return example_2d_start()
 	case .D3:
-		fmt.eprintln("3D example not implemented yet!")
+		return example_3d_start()
+	case:
+		return false
 	}
-
-	return true
 }
 
 on_mouse_move :: proc(e: dom.Event) {
@@ -98,6 +105,6 @@ frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
 	case .D2:
 		example_2d_frame(delta)
 	case .D3:
-		fmt.eprintln("3D example not implemented yet!")
+		example_3d_frame(delta)
 	}
 }

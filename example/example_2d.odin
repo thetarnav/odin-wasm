@@ -2,10 +2,9 @@ package main
 
 import "core:fmt"
 
-import "../wasm/dom"
 import "../wasm/webgl"
 
-Exmaple_2D_State :: struct {
+example_2d_state: struct {
 	rotation:         f32,
 	a_position:       i32,
 	a_color:          i32,
@@ -13,7 +12,6 @@ Exmaple_2D_State :: struct {
 	positions_buffer: webgl.Buffer,
 	colors_buffer:    webgl.Buffer,
 }
-example_2d_state: Exmaple_2D_State
 
 BOX_W: f32 : 160
 BOX_H: f32 : 100
@@ -30,13 +28,13 @@ example_2d_colors: [2*3*4]u8 = {
 	0,   80,  190, 255,
 }
 example_2d_positions: [2*3*2]f32 = {
-	0,      0,
-	BOX_W,  0,
-	0,      BOX_H,
+	0,     0,
+	BOX_W, 0,
+	0,     BOX_H,
 
-	BOX_W,  BOX_H,
-	BOX_W,  0,
-	0,      BOX_H,
+	BOX_W, BOX_H,
+	BOX_W, 0,
+	0,     BOX_H,
 }
 // odinfmt: enable
 
@@ -66,11 +64,6 @@ example_2d_start :: proc() -> (ok: bool) {
 		fmt.eprintln("WebGL error: ", err)
 		return false
 	}
-
-	dpr = f32(dom.device_pixel_ratio())
-	window_size = cast_vec2(f32, dom.get_window_inner_size())
-	canvas_size = window_size - 200
-	mouse_pos = window_size / 2
 
 	return true
 }

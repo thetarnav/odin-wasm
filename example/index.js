@@ -12,6 +12,12 @@ if (IS_DEV) {
 		"message",
 		event => event.data === MESSAGE_RELOAD && location.reload(),
 	)
+
+	/* To test dispatching custom events */
+	document.body.addEventListener("lol", () => {
+		// eslint-disable-next-line no-console
+		console.log("lol event has been received")
+	})
 }
 
 const wasm_state = wasm.makeWasmState()
@@ -39,7 +45,7 @@ exports._start()
 const odin_ctx = exports.default_context_ptr()
 exports._end()
 
-const ok = exports.start_example(odin_ctx, t.Example_Type.D2)
+const ok = exports.start_example(odin_ctx, t.Example_Type.D3)
 if (!ok) {
 	throw new Error("Failed to start example")
 }
@@ -74,9 +80,3 @@ function updateCanvasSize() {
 }
 updateCanvasSize()
 window.addEventListener("resize", updateCanvasSize)
-
-/* To test dispatching custom events */
-document.body.addEventListener("lol", () => {
-	// eslint-disable-next-line no-console
-	console.log("lol event has been received")
-})

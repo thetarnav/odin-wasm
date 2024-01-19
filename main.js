@@ -31,6 +31,18 @@ const config_path = path.join(dirname, CONFIG_FILENAME)
 const config_path_out = path.join(playground_path, CONFIG_OUT_FILENAME)
 const public_path = path.join(playground_path, PUBLIC_DIRNAME)
 
+const DEBUG_ODIN_ARGS = ["-debug"]
+const RELESE_ODIN_ARGS = [
+	"-vet-unused",
+	"-vet-shadowing",
+	"-vet-style",
+	"-vet-semicolon",
+	"-o:speed",
+	"-disable-assert",
+	"-no-bounds-check",
+	"-obfuscate-source-code-locations",
+]
+
 /** @enum {string} */
 const Command = {
 	/* Start a dev server, with server hot reload */
@@ -247,24 +259,13 @@ function makeChildServer() {
 	})
 }
 
-const RELESE_ODIN_ARGS = [
-	"-vet-unused",
-	"-vet-shadowing",
-	"-vet-style",
-	"-vet-semicolon",
-	"-o:speed",
-	"-disable-assert",
-	"-no-bounds-check",
-	"-obfuscate-source-code-locations",
-]
-
 /**
  * @param   {boolean}         is_release
  * @returns {Promise<number>}            exit code
  */
 function buildWASM(is_release) {
 	const args = ["build", playground_path, "-out:" + WASM_PATH, "-target:js_wasm32"]
-	if (is_release) args.push.apply(args, RELESE_ODIN_ARGS)
+	args.push.apply(args, is_release ? RELESE_ODIN_ARGS : DEBUG_ODIN_ARGS)
 
 	const child = child_process.execFile("odin", args, {cwd: dirname})
 	child.stderr?.on("data", data => {
