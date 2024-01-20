@@ -7,7 +7,11 @@ uniform mat4 u_matrix;
 varying vec4 v_color;
 
 void main() {
-	gl_Position = u_matrix * a_position;
+	// Multiply the position by the matrix.
+	vec4 position = u_matrix * a_position;
+
+	// apply "perspective"
+	gl_Position = vec4(position.xyz, 1.0 + position.z * 0.5);
 
 	v_color = a_color;
 }
