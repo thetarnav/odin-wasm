@@ -27,13 +27,13 @@ H :: math.SQRT_TWO * SIDE / 2
 // odinfmt: disable
 @(private = "file")
 colors: [VERTICES*4]u8 = {
-	230, 20,  0,   255, // R
-	0,   80,  190, 255, // B
-	210, 210, 0,   255, // Y
-
 	60,  210, 0,   255, // G
 	210, 210, 0,   255, // Y
 	0,   80,  190, 255, // B
+
+	230, 20,  0,   255, // R
+	0,   80,  190, 255, // B
+	210, 210, 0,   255, // Y
 
 	60,  210, 0,   255, // G
 	230, 20,  0,   255, // R
@@ -46,20 +46,20 @@ colors: [VERTICES*4]u8 = {
 @(private = "file")
 positions: [VERTICES*3]f32 = {
 	 0,      0,   SIDE/2,
-	-SIDE/2, H,   0,
-	 SIDE/2, H,   0,
-
-	 0,      0,  -SIDE/2,
 	 SIDE/2, H,   0,
 	-SIDE/2, H,   0,
 
 	 0,      0,  -SIDE/2,
-	 0,      0,   SIDE/2,
+	-SIDE/2, H,   0,
 	 SIDE/2, H,   0,
 
-	-SIDE/2, H,   0,
 	 0,      0,   SIDE/2,
 	 0,      0,  -SIDE/2,
+	 SIDE/2, H,   0,
+
+	-SIDE/2, H,   0,
+	 0,      0,  -SIDE/2,
+	 0,      0,   SIDE/2,
 }
 // odinfmt: enable
 
@@ -78,6 +78,7 @@ example_3d_start :: proc(program: webgl.Program) -> (ok: bool) {
 	colors_buffer = webgl.CreateBuffer()
 
 	webgl.Enable(webgl.CULL_FACE) // don't draw back faces
+	webgl.Enable(webgl.DEPTH_TEST) // draw only closest faces
 
 	err := webgl.GetError()
 	if err != webgl.NO_ERROR {
@@ -101,7 +102,8 @@ example_3d_frame :: proc(delta: f32) {
 
 	webgl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	webgl.ClearColor(0, 0.01, 0.02, 0)
-	webgl.Clear(webgl.COLOR_BUFFER_BIT)
+	// Clear the canvas AND the depth buffer.
+	webgl.Clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT)
 
 	rotation_y += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
 	rotation_x += 0.01 * delta * (window_size.y / 2 - mouse_pos.y) / window_size.y
@@ -109,8 +111,8 @@ example_3d_frame :: proc(delta: f32) {
 		mat4_projection(vec2_to_vec3(canvas_size, 400)) *
 		mat4_translate(vec2_to_vec3(mouse_pos - canvas_pos, 0)) *
 		mat4_scale(scale) *
-		mat4_rotate_y(rotation_y) *
-		mat4_rotate_x(-rotation_x) *
+		mat4_rotate_y(-rotation_y) *
+		mat4_rotate_x(rotation_x) *
 		mat4_translate({0, -H / 2, 0})
 
 	webgl.UniformMatrix4fv(u_matrix, mat)
