@@ -318,7 +318,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @returns {void}
 		 */
 		CompileShader: shader => {
-			webgl.ctx.compileShader(/** @type {WebGLShader} */(webgl.shaders[shader]))
+			webgl.ctx.compileShader(/** @type {WebGLShader} */ (webgl.shaders[shader]))
 		},
 		CompressedTexImage2D: (
 			/** @type {number} */ target,
@@ -576,7 +576,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		DetachShader: (program, shader) => {
 			webgl.ctx.detachShader(
 				/** @type {WebGLProgram} */ (webgl.programs[program]),
-				/** @type {WebGLShader} */(webgl.shaders[shader]),
+				/** @type {WebGLShader} */ (webgl.shaders[shader]),
 			)
 		},
 		/**
@@ -736,7 +736,9 @@ export function makeOdinWebGL(webgl, wasm) {
 		GetShaderInfoLog: (shader, buf_ptr, buf_len, length_ptr) => {
 			if (buf_len <= 0 || !buf_ptr) return
 
-			const log = webgl.ctx.getShaderInfoLog(/** @type {WebGLShader} */(webgl.shaders[shader])) ?? "(unknown error)"
+			const log =
+				webgl.ctx.getShaderInfoLog(/** @type {WebGLShader} */ (webgl.shaders[shader])) ??
+				"(unknown error)"
 			const n = mem.store_string_raw(wasm.memory.buffer, buf_ptr, buf_len, log)
 			mem.store_int(new DataView(wasm.memory.buffer), length_ptr, n)
 		},
@@ -947,7 +949,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 */
 		ShaderSource: (shader, strings_ptr, strings_length) => {
 			const source = getSource(wasm.memory.buffer, strings_ptr, strings_length)
-			webgl.ctx.shaderSource(/** @type {WebGLShader} */(webgl.shaders[shader]), source)
+			webgl.ctx.shaderSource(/** @type {WebGLShader} */ (webgl.shaders[shader]), source)
 		},
 		/**
 		 * @param   {number} func
