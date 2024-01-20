@@ -95,7 +95,9 @@ export function makeOdinWegGL2(
 		) => {
 			webgl.ctx.invalidateFramebuffer(
 				target,
-				new Uint32Array(wasm.memory.buffer, attachments_ptr, attachments_len),
+				/** @type {any} */ (
+					new Uint32Array(wasm.memory.buffer, attachments_ptr, attachments_len)
+				),
 			)
 		},
 		InvalidateSubFramebuffer: (
@@ -109,7 +111,9 @@ export function makeOdinWegGL2(
 		) => {
 			webgl.ctx.invalidateSubFramebuffer(
 				target,
-				new Uint32Array(wasm.memory.buffer, attachments_ptr, attachments_len),
+				/** @type {any} */ (
+					new Uint32Array(wasm.memory.buffer, attachments_ptr, attachments_len)
+				),
 				x,
 				y,
 				width,
@@ -280,7 +284,7 @@ export function makeOdinWegGL2(
 			/** @type {number} */ name_len,
 		) => {
 			return webgl.ctx.getFragDataLocation(
-				webgl.programs[program],
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
 				mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len),
 			)
 		},
@@ -463,7 +467,9 @@ export function makeOdinWegGL2(
 
 		/* Multiple Render Targets */
 		DrawBuffers: (/** @type {number} */ buffers_ptr, /** @type {number} */ buffers_len) => {
-			webgl.ctx.drawBuffers(mem.load_u32_array(wasm.memory.buffer, buffers_ptr, buffers_len))
+			webgl.ctx.drawBuffers(
+				/** @type {any} */ (new Uint32Array(wasm.memory.buffer, buffers_ptr, buffers_len)),
+			)
 		},
 		ClearBufferfv: (
 			/** @type {number} */ buffer,
@@ -474,7 +480,7 @@ export function makeOdinWegGL2(
 			webgl.ctx.clearBufferfv(
 				buffer,
 				drawbuffer,
-				mem.load_f32_array(wasm.memory.buffer, values_ptr, values_len),
+				new Float32Array(wasm.memory.buffer, values_ptr, values_len),
 			)
 		},
 		ClearBufferiv: (
@@ -486,7 +492,7 @@ export function makeOdinWegGL2(
 			webgl.ctx.clearBufferiv(
 				buffer,
 				drawbuffer,
-				mem.load_i32_array(wasm.memory.buffer, values_ptr, values_len),
+				new Int32Array(wasm.memory.buffer, values_ptr, values_len),
 			)
 		},
 		ClearBufferuiv: (
@@ -498,7 +504,7 @@ export function makeOdinWegGL2(
 			webgl.ctx.clearBufferuiv(
 				buffer,
 				drawbuffer,
-				mem.load_u32_array(wasm.memory.buffer, values_ptr, values_len),
+				new Uint32Array(wasm.memory.buffer, values_ptr, values_len),
 			)
 		},
 		ClearBufferfi: (
@@ -547,7 +553,7 @@ export function makeOdinWegGL2(
 		 * @param {number} query
 		 */
 		BeginQuery: (target, query) => {
-			webgl.ctx.beginQuery(target, webgl.queries[query])
+			webgl.ctx.beginQuery(target, /** @type {WebGLQuery} */ (webgl.queries[query]))
 		},
 		/** @param {number} target */
 		EndQuery: target => {
@@ -619,7 +625,11 @@ export function makeOdinWegGL2(
 		 * @returns {void}
 		 */
 		SamplerParameteri: (sampler, pname, param) => {
-			webgl.ctx.samplerParameteri(webgl.samplers[sampler], pname, param)
+			webgl.ctx.samplerParameteri(
+				/** @type {WebGLSampler} */ (webgl.samplers[sampler]),
+				pname,
+				param,
+			)
 		},
 		/**
 		 * @param   {number} sampler
@@ -628,7 +638,11 @@ export function makeOdinWegGL2(
 		 * @returns {void}
 		 */
 		SamplerParameterf: (sampler, pname, param) => {
-			webgl.ctx.samplerParameterf(webgl.samplers[sampler], pname, param)
+			webgl.ctx.samplerParameterf(
+				/** @type {WebGLSampler} */ (webgl.samplers[sampler]),
+				pname,
+				param,
+			)
 		},
 
 		/*
@@ -674,7 +688,11 @@ export function makeOdinWegGL2(
 		 * @returns {number}
 		 */
 		ClientWaitSync: (sync, flags, timeout) => {
-			return webgl.ctx.clientWaitSync(webgl.syncs[sync], flags, timeout)
+			return webgl.ctx.clientWaitSync(
+				/** @type {WebGLSync} */ (webgl.syncs[sync]),
+				flags,
+				timeout,
+			)
 		},
 		/**
 		 * @param   {number} sync
@@ -683,7 +701,7 @@ export function makeOdinWegGL2(
 		 * @returns {void}
 		 */
 		WaitSync: (sync, flags, timeout) => {
-			webgl.ctx.waitSync(webgl.syncs[sync], flags, timeout)
+			webgl.ctx.waitSync(/** @type {WebGLSync} */ (webgl.syncs[sync]), flags, timeout)
 		},
 
 		/*
@@ -738,7 +756,11 @@ export function makeOdinWegGL2(
 		) => {
 			const data = new DataView(wasm.memory.buffer)
 			const varyings = mem.load_strings(data, varyings_ptr, varyings_len)
-			webgl.ctx.transformFeedbackVaryings(webgl.programs[program], varyings, buffer_mode)
+			webgl.ctx.transformFeedbackVaryings(
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
+				varyings,
+				buffer_mode,
+			)
 		},
 		/** @returns {void} */
 		PauseTransformFeedback: () => {
@@ -778,7 +800,7 @@ export function makeOdinWegGL2(
 			/** @type {number} */ name_len,
 		) => {
 			return webgl.ctx.getUniformBlockIndex(
-				webgl.programs[program],
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
 				mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len),
 			)
 		},
@@ -791,7 +813,7 @@ export function makeOdinWegGL2(
 			/** @type {number} */ length_ptr,
 		) => {
 			const name = webgl.ctx.getActiveUniformBlockName(
-				webgl.programs[program],
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
 				uniform_block_index,
 			)
 			if (!name) {
@@ -808,7 +830,7 @@ export function makeOdinWegGL2(
 			/** @type {number} */ uniformBlockBinding,
 		) => {
 			webgl.ctx.uniformBlockBinding(
-				webgl.programs[program],
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
 				uniformBlockIndex,
 				uniformBlockBinding,
 			)

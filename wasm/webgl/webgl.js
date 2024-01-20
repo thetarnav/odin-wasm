@@ -140,7 +140,10 @@ export function makeOdinWebGL(webgl, wasm) {
 		},
 		/** @returns {void} */
 		AttachShader: (/** @type {number} */ program, /** @type {number} */ shader) => {
-			webgl.ctx.attachShader(webgl.programs[program], webgl.shaders[shader])
+			webgl.ctx.attachShader(
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
+				/** @type {WebGLShader} */ (webgl.shaders[shader]),
+			)
 		},
 		/**
 		 * @param   {number} program
@@ -151,7 +154,11 @@ export function makeOdinWebGL(webgl, wasm) {
 		 */
 		BindAttribLocation: (program, index, name_ptr, name_len) => {
 			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
-			webgl.ctx.bindAttribLocation(webgl.programs[program], index, name)
+			webgl.ctx.bindAttribLocation(
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
+				index,
+				name,
+			)
 		},
 		/**
 		 * @param   {number} target
@@ -184,7 +191,7 @@ export function makeOdinWebGL(webgl, wasm) {
 				// @ts-expect-error
 				webgl.ctx.currentPixelUnpackBufferBinding = buffer
 			}
-			webgl.ctx.bindBuffer(target, buffer ? webgl.buffers[buffer] : null)
+			webgl.ctx.bindBuffer(target, webgl.buffers[buffer])
 		},
 		/**
 		 * @param   {number} target
@@ -311,7 +318,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @returns {void}
 		 */
 		CompileShader: shader => {
-			webgl.ctx.compileShader(webgl.shaders[shader])
+			webgl.ctx.compileShader(/** @type {WebGLShader} */(webgl.shaders[shader]))
 		},
 		CompressedTexImage2D: (
 			/** @type {number} */ target,
@@ -567,7 +574,10 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @returns {void}
 		 */
 		DetachShader: (program, shader) => {
-			webgl.ctx.detachShader(webgl.programs[program], webgl.shaders[shader])
+			webgl.ctx.detachShader(
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
+				/** @type {WebGLShader} */(webgl.shaders[shader]),
+			)
 		},
 		/**
 		 * @param   {number} cap
@@ -676,7 +686,10 @@ export function makeOdinWebGL(webgl, wasm) {
 		 */
 		GetAttribLocation: (program, name_ptr, name_len) => {
 			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
-			return webgl.ctx.getAttribLocation(webgl.programs[program], name)
+			return webgl.ctx.getAttribLocation(
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
+				name,
+			)
 		},
 		/**
 		 * @param   {number} pname
@@ -691,7 +704,10 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @returns {number}
 		 */
 		GetProgramParameter: (program, pname) => {
-			return webgl.ctx.getProgramParameter(webgl.programs[program], pname)
+			return webgl.ctx.getProgramParameter(
+				/** @type {WebGLProgram} */ (webgl.programs[program]),
+				pname,
+			)
 		},
 		/**
 		 * @param   {number} program
@@ -703,7 +719,10 @@ export function makeOdinWebGL(webgl, wasm) {
 		GetProgramInfoLog: (program, buf_ptr, buf_len, length_ptr) => {
 			if (buf_len <= 0 || !buf_ptr) return
 
-			const log = webgl.ctx.getProgramInfoLog(webgl.programs[program]) ?? "(unknown error)"
+			const log =
+				webgl.ctx.getProgramInfoLog(
+					/** @type {WebGLProgram} */ (webgl.programs[program]),
+				) ?? "(unknown error)"
 			const n = mem.store_string_raw(wasm.memory.buffer, buf_ptr, buf_len, log)
 			mem.store_int(new DataView(wasm.memory.buffer), length_ptr, n)
 		},
@@ -717,7 +736,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		GetShaderInfoLog: (shader, buf_ptr, buf_len, length_ptr) => {
 			if (buf_len <= 0 || !buf_ptr) return
 
-			const log = webgl.ctx.getShaderInfoLog(webgl.shaders[shader]) ?? "(unknown error)"
+			const log = webgl.ctx.getShaderInfoLog(/** @type {WebGLShader} */(webgl.shaders[shader])) ?? "(unknown error)"
 			const n = mem.store_string_raw(wasm.memory.buffer, buf_ptr, buf_len, log)
 			mem.store_int(new DataView(wasm.memory.buffer), length_ptr, n)
 		},
@@ -850,7 +869,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @returns {void}
 		 */
 		LinkProgram: program => {
-			webgl.ctx.linkProgram(webgl.programs[program])
+			webgl.ctx.linkProgram(/** @type {WebGLProgram} */ (webgl.programs[program]))
 			webgl.program_infos[program] = null
 			populateUniformTable(webgl, program)
 		},
@@ -928,7 +947,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 */
 		ShaderSource: (shader, strings_ptr, strings_length) => {
 			const source = getSource(wasm.memory.buffer, strings_ptr, strings_length)
-			webgl.ctx.shaderSource(webgl.shaders[shader], source)
+			webgl.ctx.shaderSource(/** @type {WebGLShader} */(webgl.shaders[shader]), source)
 		},
 		/**
 		 * @param   {number} func
@@ -1173,7 +1192,7 @@ export function makeOdinWebGL(webgl, wasm) {
 		 * @returns {void}
 		 */
 		ValidateProgram: program => {
-			webgl.ctx.validateProgram(webgl.programs[program])
+			webgl.ctx.validateProgram(/** @type {WebGLProgram} */ (webgl.programs[program]))
 		},
 		/**
 		 * @param   {number} index
