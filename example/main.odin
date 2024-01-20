@@ -22,7 +22,7 @@ mouse_pos: [2]f32
 
 scale: f32 = 1
 scale_min: f32 = 0.25
-scale_max: f32 = 5
+scale_max: f32 = 3
 
 Example_Type :: enum {
 	D2,

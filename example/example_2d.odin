@@ -86,12 +86,11 @@ example_2d_frame :: proc(delta: f32) {
 	webgl.Clear(webgl.COLOR_BUFFER_BIT)
 
 	rotation += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
-	mat :=
-		mat3_projection(canvas_size) *
-		mat3_translate(mouse_pos - canvas_pos) *
-		mat3_scale(scale) *
-		mat3_rotate(rotation) *
-		mat3_translate(-box_size / 2)
+	mat := mat3_projection(canvas_size)
+	mat *= mat3_translate(mouse_pos - canvas_pos)
+	mat *= mat3_scale(scale)
+	mat *= mat3_rotate(rotation)
+	mat *= mat3_translate(-box_size / 2)
 
 	webgl.UniformMatrix3fv(u_matrix, mat)
 

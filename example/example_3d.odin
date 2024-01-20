@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:math"
+import glm "core:math/linalg/glsl"
 
 import "../wasm/webgl"
 
@@ -107,13 +108,20 @@ example_3d_frame :: proc(delta: f32) {
 
 	rotation_y += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
 	rotation_x += 0.01 * delta * (window_size.y / 2 - mouse_pos.y) / window_size.y
-	mat :=
-		mat4_projection(vec2_to_vec3(canvas_size, 400)) *
-		mat4_translate(vec2_to_vec3(mouse_pos - canvas_pos, 0)) *
-		mat4_scale(scale) *
-		mat4_rotate_y(-rotation_y) *
-		mat4_rotate_x(rotation_x) *
-		mat4_translate({0, -H / 2, 0})
+
+	mat := glm.mat4Ortho3d(
+		left = 0,
+		right = canvas_size.x,
+		bottom = canvas_size.y,
+		top = 0,
+		near = -400,
+		far = 400,
+	)
+	mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
+	mat *= glm.mat4Scale(scale)
+	mat *= mat4_rotate_y(-rotation_y)
+	mat *= mat4_rotate_x(rotation_x)
+	mat *= glm.mat4Translate({0, -H / 2, 0})
 
 	webgl.UniformMatrix4fv(u_matrix, mat)
 
