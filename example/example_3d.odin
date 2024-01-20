@@ -4,7 +4,7 @@ import "core:fmt"
 import "core:math"
 import glm "core:math/linalg/glsl"
 
-import "../wasm/webgl"
+import gl "../wasm/webgl"
 
 example_3d_state: struct {
 	rotation_y:       f32,
@@ -12,8 +12,8 @@ example_3d_state: struct {
 	a_position:       i32,
 	a_color:          i32,
 	u_matrix:         i32,
-	positions_buffer: webgl.Buffer,
-	colors_buffer:    webgl.Buffer,
+	positions_buffer: gl.Buffer,
+	colors_buffer:    gl.Buffer,
 }
 
 @(private = "file")
@@ -65,24 +65,24 @@ positions: [VERTICES*3]f32 = {
 // odinfmt: enable
 
 
-example_3d_start :: proc(program: webgl.Program) -> (ok: bool) {
+example_3d_start :: proc(program: gl.Program) -> (ok: bool) {
 	using example_3d_state
 
-	a_position = webgl.GetAttribLocation(program, "a_position")
-	a_color = webgl.GetAttribLocation(program, "a_color")
-	u_matrix = webgl.GetUniformLocation(program, "u_matrix")
+	a_position = gl.GetAttribLocation(program, "a_position")
+	a_color = gl.GetAttribLocation(program, "a_color")
+	u_matrix = gl.GetUniformLocation(program, "u_matrix")
 
-	webgl.EnableVertexAttribArray(a_position)
-	webgl.EnableVertexAttribArray(a_color)
+	gl.EnableVertexAttribArray(a_position)
+	gl.EnableVertexAttribArray(a_color)
 
-	positions_buffer = webgl.CreateBuffer()
-	colors_buffer = webgl.CreateBuffer()
+	positions_buffer = gl.CreateBuffer()
+	colors_buffer = gl.CreateBuffer()
 
-	webgl.Enable(webgl.CULL_FACE) // don't draw back faces
-	webgl.Enable(webgl.DEPTH_TEST) // draw only closest faces
+	gl.Enable(gl.CULL_FACE) // don't draw back faces
+	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	err := webgl.GetError()
-	if err != webgl.NO_ERROR {
+	err := gl.GetError()
+	if err != gl.NO_ERROR {
 		fmt.eprintln("WebGL error: ", err)
 		return false
 	}
@@ -93,18 +93,18 @@ example_3d_start :: proc(program: webgl.Program) -> (ok: bool) {
 example_3d_frame :: proc(delta: f32) {
 	using example_3d_state
 
-	webgl.BindBuffer(webgl.ARRAY_BUFFER, positions_buffer)
-	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, positions[:], webgl.STATIC_DRAW)
-	webgl.VertexAttribPointer(a_position, 3, webgl.FLOAT, false, 0, 0)
+	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
+	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
+	gl.VertexAttribPointer(a_position, 3, gl.FLOAT, false, 0, 0)
 
-	webgl.BindBuffer(webgl.ARRAY_BUFFER, colors_buffer)
-	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, colors[:], webgl.STATIC_DRAW)
-	webgl.VertexAttribPointer(a_color, 4, webgl.UNSIGNED_BYTE, true, 0, 0)
+	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
+	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
+	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 
-	webgl.Viewport(0, 0, canvas_res.x, canvas_res.y)
-	webgl.ClearColor(0, 0.01, 0.02, 0)
+	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
+	gl.ClearColor(0, 0.01, 0.02, 0)
 	// Clear the canvas AND the depth buffer.
-	webgl.Clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	rotation_y += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
 	rotation_x += 0.01 * delta * (window_size.y / 2 - mouse_pos.y) / window_size.y
@@ -123,7 +123,7 @@ example_3d_frame :: proc(delta: f32) {
 	mat *= mat4_rotate_x(rotation_x)
 	mat *= glm.mat4Translate({0, -H / 2, 0})
 
-	webgl.UniformMatrix4fv(u_matrix, mat)
+	gl.UniformMatrix4fv(u_matrix, mat)
 
-	webgl.DrawArrays(webgl.TRIANGLES, 0, VERTICES)
+	gl.DrawArrays(gl.TRIANGLES, 0, VERTICES)
 }

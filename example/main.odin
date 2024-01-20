@@ -5,7 +5,7 @@ import "core:mem"
 import "core:runtime"
 
 import "../wasm/dom"
-import "../wasm/webgl"
+import gl "../wasm/webgl"
 
 shader_fragment_2d := #load("shader_fragment_2d.glsl", string)
 shader_vertex_2d := #load("shader_vertex_2d.glsl", string)
@@ -63,7 +63,7 @@ start_example :: proc "contextless" (
 	example = example_type
 
 	// Make sure that this matches the id of your canvas.
-	if ok := webgl.SetCurrentContextById("canvas"); !ok {
+	if ok := gl.SetCurrentContextById("canvas"); !ok {
 		fmt.eprintln("Failed to set current context!")
 		return false
 	}
@@ -80,12 +80,12 @@ start_example :: proc "contextless" (
 		fs_sources = {shader_fragment_3d}
 	}
 
-	program, program_ok := webgl.CreateProgramFromStrings(vs_sources, fs_sources)
+	program, program_ok := gl.CreateProgramFromStrings(vs_sources, fs_sources)
 	if !program_ok {
 		fmt.eprintln("Failed to create program!")
 		return false
 	}
-	webgl.UseProgram(program)
+	gl.UseProgram(program)
 
 	switch example {
 	case .D2:
@@ -118,7 +118,7 @@ frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
 	context.temp_allocator = mem.arena_allocator(&frame_arena)
 	defer free_all(context.temp_allocator)
 
-	if err := webgl.GetError(); err != webgl.NO_ERROR {
+	if err := gl.GetError(); err != gl.NO_ERROR {
 		fmt.eprintln("WebGL error:", err)
 		return
 	}

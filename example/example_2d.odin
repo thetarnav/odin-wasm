@@ -2,15 +2,15 @@ package main
 
 import "core:fmt"
 
-import "../wasm/webgl"
+import gl "../wasm/webgl"
 
 example_2d_state: struct {
 	rotation:         f32,
 	a_position:       i32,
 	a_color:          i32,
 	u_matrix:         i32,
-	positions_buffer: webgl.Buffer,
-	colors_buffer:    webgl.Buffer,
+	positions_buffer: gl.Buffer,
+	colors_buffer:    gl.Buffer,
 }
 
 @(private = "file")
@@ -48,21 +48,21 @@ positions: [VERTICES*2]f32 = {
 // odinfmt: enable
 
 
-example_2d_start :: proc(program: webgl.Program) -> (ok: bool) {
+example_2d_start :: proc(program: gl.Program) -> (ok: bool) {
 	using example_2d_state
 
-	a_position = webgl.GetAttribLocation(program, "a_position")
-	a_color = webgl.GetAttribLocation(program, "a_color")
-	u_matrix = webgl.GetUniformLocation(program, "u_matrix")
+	a_position = gl.GetAttribLocation(program, "a_position")
+	a_color = gl.GetAttribLocation(program, "a_color")
+	u_matrix = gl.GetUniformLocation(program, "u_matrix")
 
-	webgl.EnableVertexAttribArray(a_position)
-	webgl.EnableVertexAttribArray(a_color)
+	gl.EnableVertexAttribArray(a_position)
+	gl.EnableVertexAttribArray(a_color)
 
-	positions_buffer = webgl.CreateBuffer()
-	colors_buffer = webgl.CreateBuffer()
+	positions_buffer = gl.CreateBuffer()
+	colors_buffer = gl.CreateBuffer()
 
-	err := webgl.GetError()
-	if err != webgl.NO_ERROR {
+	err := gl.GetError()
+	if err != gl.NO_ERROR {
 		fmt.eprintln("WebGL error: ", err)
 		return false
 	}
@@ -73,17 +73,17 @@ example_2d_start :: proc(program: webgl.Program) -> (ok: bool) {
 example_2d_frame :: proc(delta: f32) {
 	using example_2d_state
 
-	webgl.BindBuffer(webgl.ARRAY_BUFFER, positions_buffer)
-	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, positions[:], webgl.STATIC_DRAW)
-	webgl.VertexAttribPointer(a_position, 2, webgl.FLOAT, false, 0, 0)
+	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
+	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
+	gl.VertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
 
-	webgl.BindBuffer(webgl.ARRAY_BUFFER, colors_buffer)
-	webgl.BufferDataSlice(webgl.ARRAY_BUFFER, colors[:], webgl.STATIC_DRAW)
-	webgl.VertexAttribPointer(a_color, 4, webgl.UNSIGNED_BYTE, true, 0, 0)
+	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
+	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
+	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 
-	webgl.Viewport(0, 0, canvas_res.x, canvas_res.y)
-	webgl.ClearColor(0, 0.01, 0.02, 0)
-	webgl.Clear(webgl.COLOR_BUFFER_BIT)
+	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
+	gl.ClearColor(0, 0.01, 0.02, 0)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
 
 	rotation += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
 	mat := mat3_projection(canvas_size)
@@ -92,7 +92,7 @@ example_2d_frame :: proc(delta: f32) {
 	mat *= mat3_rotate(rotation)
 	mat *= mat3_translate(-box_size / 2)
 
-	webgl.UniformMatrix3fv(u_matrix, mat)
+	gl.UniformMatrix3fv(u_matrix, mat)
 
-	webgl.DrawArrays(webgl.TRIANGLES, 0, VERTICES)
+	gl.DrawArrays(gl.TRIANGLES, 0, VERTICES)
 }
