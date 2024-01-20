@@ -27,39 +27,39 @@ H :: math.SQRT_TWO * SIDE / 2
 // odinfmt: disable
 @(private = "file")
 colors: [VERTICES*4]u8 = {
-	230, 20,  0,   255,
-	0,   80,  190, 255,
-	0,   80,  190, 255,
+	230, 20,  0,   255, // R
+	0,   80,  190, 255, // B
+	210, 210, 0,   255, // Y
 
-	210, 210, 0,   255,
-	0,   80,  190, 255,
-	230, 20,  0,   255,
+	60,  210, 0,   255, // G
+	210, 210, 0,   255, // Y
+	0,   80,  190, 255, // B
 
-	60,  210, 0,   255,
-	210, 210, 0,   255,
-	0,   80,  190, 255,
+	60,  210, 0,   255, // G
+	230, 20,  0,   255, // R
+	210, 210, 0,   255, // Y
 
-	60,  210, 0,   255,
-	210, 210, 0,   255,
-	230, 20,  0,   255,
+	0,   80,  190, 255, // B
+	230, 20,  0,   255, // R
+	60,  210, 0,   255, // G
 }
 @(private = "file")
 positions: [VERTICES*3]f32 = {
 	 0,      0,   SIDE/2,
-	 SIDE/2, H,   0,
 	-SIDE/2, H,   0,
+	 SIDE/2, H,   0,
 
 	 0,      0,  -SIDE/2,
 	 SIDE/2, H,   0,
 	-SIDE/2, H,   0,
 
+	 0,      0,  -SIDE/2,
+	 0,      0,   SIDE/2,
+	 SIDE/2, H,   0,
+
+	-SIDE/2, H,   0,
 	 0,      0,   SIDE/2,
 	 0,      0,  -SIDE/2,
-	 SIDE/2, H,   0,
-
- 	 0,      0,   SIDE/2,
- 	 0,      0,  -SIDE/2,
-    -SIDE/2, H,   0,
 }
 // odinfmt: enable
 
@@ -76,6 +76,8 @@ example_3d_start :: proc(program: webgl.Program) -> (ok: bool) {
 
 	positions_buffer = webgl.CreateBuffer()
 	colors_buffer = webgl.CreateBuffer()
+
+	webgl.Enable(webgl.CULL_FACE) // don't draw back faces
 
 	err := webgl.GetError()
 	if err != webgl.NO_ERROR {
