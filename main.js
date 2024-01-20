@@ -55,7 +55,7 @@ const Command = {
 	Build: "build",
 }
 
-/** @type {Record<Command, (args: string[]) => void>} */
+/** @type {{[key in Command]?: (args: string[]) => void}} */
 const command_handlers = {
 	[Command.Dev]() {
 		let child = makeChildServer()
