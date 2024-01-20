@@ -114,8 +114,8 @@ example_3d_frame :: proc(delta: f32) {
 		right = canvas_size.x,
 		bottom = canvas_size.y,
 		top = 0,
-		near = -400,
-		far = 400,
+		near = -1000,
+		far = 1000,
 	)
 	mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
 	mat *= glm.mat4Scale(scale)
