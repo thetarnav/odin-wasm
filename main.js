@@ -1,3 +1,12 @@
+/*
+Main script for building and running the playground.
+
+TODO:
+
+- [ ] Better css reloading
+
+*/
+
 import * as fs from "node:fs"
 import * as fsp from "node:fs/promises"
 import * as path from "node:path"
@@ -86,7 +95,7 @@ const command_handlers = {
 
 		const watcher = chokidar.watch(
 			[
-				`./${PLAYGROUND_DIRNAME}/**/*.{js,html,odin,glsl}`,
+				`./${PLAYGROUND_DIRNAME}/**/*.{js,html,css,odin,glsl}`,
 				`./${PACKAGE_DIRNAME}/**/*.{js,odin}`,
 			],
 			{

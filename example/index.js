@@ -4,6 +4,10 @@ import {IS_DEV, WEB_SOCKET_PORT, MESSAGE_RELOAD, WASM_FILENAME} from "./_config.
 
 import * as t from "./types.js"
 
+/*
+Development server
+*/
+
 if (IS_DEV) {
 	wasm.enableConsole()
 
@@ -19,6 +23,37 @@ if (IS_DEV) {
 		console.log("lol event has been received")
 	})
 }
+
+/*
+Example selection
+*/
+
+/** @type {Record<string, t.Example_Type_Value | undefined>} */
+const example_hash_map = {
+	"#2d": t.Example_Type.D2,
+	"#3d": t.Example_Type.D3,
+}
+/** @type {t.Example_Type_Value} */
+const example = example_hash_map[location.hash] ?? t.Example_Type.D3
+
+for (const hash in example_hash_map) {
+	const anchor = document.querySelector(`a[href="${hash}"]`)
+	if (!anchor) continue
+
+	anchor.addEventListener("click", event => {
+		event.preventDefault()
+		location.hash = hash
+		location.reload()
+	})
+
+	if (example_hash_map[hash] === example) {
+		anchor.classList.add("active")
+	}
+}
+
+/*
+Wasm instance
+*/
 
 const wasm_state = wasm.makeWasmState()
 const webgl_state = wasm.webgl.makeWebGLState()
@@ -41,14 +76,16 @@ if (IS_DEV) {
 	console.log("WASM memory:", exports.memory)
 }
 
+/*
+Main
+*/
+
 exports._start()
 const odin_ctx = exports.default_context_ptr()
 exports._end()
 
-const ok = exports.start_example(odin_ctx, t.Example_Type.D3)
-if (!ok) {
-	throw new Error("Failed to start example")
-}
+const ok = exports.start_example(odin_ctx, example)
+if (!ok) throw new Error("Failed to start example")
 
 void requestAnimationFrame(prev_time => {
 	/** @type {FrameRequestCallback} */
