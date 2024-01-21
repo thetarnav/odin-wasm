@@ -1,4 +1,4 @@
-package main
+package example
 
 import "core:fmt"
 import "core:mem"

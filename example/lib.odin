@@ -1,4 +1,4 @@
-package main
+package example
 
 import "core:intrinsics"
 import glm "core:math/linalg/glsl"
