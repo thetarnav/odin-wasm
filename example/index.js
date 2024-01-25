@@ -28,12 +28,12 @@ if (IS_DEV) {
 Example selection
 */
 
-/** @type {Record<string, t.Example_Type_Value | undefined>} */
+/** @type {Record<string, t.Example_Type | undefined>} */
 const example_hash_map = {
 	"#2d": t.Example_Type.D2,
 	"#3d": t.Example_Type.D3,
 }
-/** @type {t.Example_Type_Value} */
+/** @type {t.Example_Type} */
 const example = example_hash_map[location.hash] ?? t.Example_Type.D3
 
 for (const hash in example_hash_map) {
