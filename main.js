@@ -63,8 +63,6 @@ const Command = /** @type {const} */ ({
 	/* Build the example page */
 	Build: "build",
 })
-/** @type {(str: string) => str is Command} */
-const isCommand = str => str in Command
 
 /** @type {Record<Command, (args: string[]) => void>} */
 const command_handlers = {
@@ -252,6 +250,9 @@ const command_handlers = {
 		process.exit(0)
 	},
 }
+
+/** @type {(str: string) => str is Command} */
+const isCommand = str => str in command_handlers
 
 const args = process.argv.slice(2)
 const command = args[0]
