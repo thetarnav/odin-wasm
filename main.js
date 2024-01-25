@@ -251,16 +251,17 @@ const command_handlers = {
 	},
 }
 
-/** @type {(str: string) => str is Command} */
-const isCommand = str => str in command_handlers
+/** @type {<O extends Object>(o: O, k: PropertyKey | keyof O) => k is keyof O} */
+const hasKey = (o, k) => o.hasOwnProperty(k)
 
 const args = process.argv.slice(2)
 const command = args[0]
 
 if (!command) panic("Command not specified")
-if (!isCommand(command)) panic("Unknown command", command)
+if (!hasKey(command_handlers, command)) panic("Unknown command", command)
 
-command_handlers[command](args.slice(1))
+const command_handler = command_handlers[command]
+command_handler(args.slice(1))
 
 /** @returns {child_process.ChildProcess} */
 function makeChildServer() {

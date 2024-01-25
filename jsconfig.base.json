@@ -5,7 +5,7 @@
 		"moduleResolution": "NodeNext",
 		"lib": ["ESNext"],
 		"newLine": "LF",
-		"types": [],
+		"types": ["@total-typescript/ts-reset"],
 		/*
 		referenced configs cannot have "noEmit": true
 		which conflicts with allowing js files
