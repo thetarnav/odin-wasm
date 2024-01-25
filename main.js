@@ -52,8 +52,8 @@ const RELESE_ODIN_ARGS = [
 	"-obfuscate-source-code-locations",
 ]
 
-/** @enum {string} */
-const Command = {
+/** @enum {(typeof Command)[keyof typeof Command]} */
+const Command = /** @type {const} */ ({
 	/* Start a dev server, with server hot reload */
 	Dev: "dev",
 	/* Start a dev server */
@@ -62,9 +62,11 @@ const Command = {
 	Preview: "preview",
 	/* Build the example page */
 	Build: "build",
-}
+})
+/** @type {(str: string) => str is Command} */
+const isCommand = str => str in Command
 
-/** @type {{[key in Command]?: (args: string[]) => void}} */
+/** @type {Record<Command, (args: string[]) => void>} */
 const command_handlers = {
 	[Command.Dev]() {
 		let child = makeChildServer()
@@ -253,12 +255,11 @@ const command_handlers = {
 
 const args = process.argv.slice(2)
 const command = args[0]
+
 if (!command) panic("Command not specified")
+if (!isCommand(command)) panic("Unknown command", command)
 
-const command_handler = command_handlers[command]
-if (!command_handler) panic("Unknown command", command)
-
-command_handler(args.slice(1))
+command_handlers[command](args.slice(1))
 
 /** @returns {child_process.ChildProcess} */
 function makeChildServer() {
