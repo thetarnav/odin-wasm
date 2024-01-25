@@ -1,9 +1,28 @@
 {
-	"extends": "./jsconfig.base.json",
 	"compilerOptions": {
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
 		"lib": ["ESNext", "DOM"],
-		"skipLibCheck": false
+		"newLine": "LF",
+		"types": ["@total-typescript/ts-reset"],
+
+		/* JS */
+		"allowJs": true,
+		"checkJs": true,
+		"skipLibCheck": false,
+		"maxNodeModuleJsDepth": 1,
+
+		/* Linting */
+		"strict": true,
+		"isolatedModules": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noFallthroughCasesInSwitch": true,
+		"verbatimModuleSyntax": true,
+		"useDefineForClassFields": true
 	},
-	"include": ["wasm"],
-	"references": [{"path": "./jsconfig.node.json"}]
+	"exclude": ["node_modules", "dist", "/types"]
 }

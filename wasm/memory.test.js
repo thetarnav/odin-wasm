@@ -1,7 +1,8 @@
-import * as vi from "vitest"
+import * as t from "node:test"
+import * as assert from "node:assert/strict"
 import * as mem from "./memory.js"
 
-void vi.describe("f16", () => {
+void t.describe("f16", () => {
 	/** @type {[f: number, be_bits: number, le_bits: number][]} */
 
 	// prettier-ignore
@@ -16,40 +17,40 @@ void vi.describe("f16", () => {
         [-Infinity, 0b11111100_00000000, 0b00000000_11111100],
     ]
 
-	void vi.describe("loads f16", () => {
+	void t.describe("loads f16", () => {
 		const data = new DataView(new ArrayBuffer(2))
 		for (const [f, be_bits, le_bits] of float_bit_pairs) {
-			vi.it(`le: loads ${f}`, () => {
+			void t.test(`le: loads ${f}`, () => {
 				data.setUint16(0, le_bits)
 				const f16 = mem.load_f16(data, 0, true)
-				vi.expect(f16).toBeCloseTo(f, 3)
+				assert.ok(f - 3 <= f16 && f16 <= f + 3)
 			})
-			vi.it(`be: loads ${f}`, () => {
+			void t.test(`be: loads ${f}`, () => {
 				data.setUint16(0, be_bits)
 				const f16 = mem.load_f16(data, 0, false)
-				vi.expect(f16).toBeCloseTo(f, 3)
+				assert.ok(f - 3 <= f16 && f16 <= f + 3)
 			})
 		}
 	})
 
-	void vi.describe("stores f16", () => {
+	void t.describe("stores f16", () => {
 		const data = new DataView(new ArrayBuffer(2))
 		for (const [f, be_bits, le_bits] of float_bit_pairs) {
-			vi.it(`le: stores ${f}`, () => {
+			void t.test(`le: stores ${f}`, () => {
 				mem.store_f16(data, 0, f, true)
 				const f16 = data.getUint16(0)
-				vi.expect(f16).toBe(le_bits)
+				assert.equal(f16, le_bits)
 			})
-			vi.it(`be: stores ${f}`, () => {
+			void t.test(`be: stores ${f}`, () => {
 				mem.store_f16(data, 0, f, false)
 				const f16 = data.getUint16(0)
-				vi.expect(f16).toBe(be_bits)
+				assert.equal(f16, be_bits)
 			})
 		}
 	})
 })
 
-void vi.describe("u64", () => {
+void t.describe("u64", () => {
 	/** @type {[v: bigint, bits: bigint][]} */
 	// prettier-ignore
 	const pairs = [
@@ -69,22 +70,22 @@ void vi.describe("u64", () => {
 		for (const endian of ["le", "be"]) {
 			const le = endian === "le"
 
-			vi.it(`${endian}: loads ${v}`, () => {
+			void t.test(`${endian}: loads ${v}`, () => {
 				data.setBigUint64(0, bits, le)
 				const loaded = mem.load_u64(data, 0, le)
-				vi.expect(loaded).toBe(v)
+				assert.equal(loaded, v)
 			})
 
-			vi.it(`${endian}: stores ${v}`, () => {
+			void t.test(`${endian}: stores ${v}`, () => {
 				mem.store_u64(data, 0, v, le)
 				const loaded = data.getBigUint64(0, le)
-				vi.expect(loaded).toBe(bits)
+				assert.equal(loaded, bits)
 			})
 		}
 	}
 })
 
-void vi.describe("u64 number", () => {
+void t.describe("u64 number", () => {
 	/** @type {[v: number, bits: bigint][]} */
 	// prettier-ignore
 	const pairs = [
@@ -101,22 +102,22 @@ void vi.describe("u64 number", () => {
 		for (const endian of ["le", "be"]) {
 			const le = endian === "le"
 
-			vi.it(`${endian}: loads ${v}`, () => {
+			void t.test(`${endian}: loads ${v}`, () => {
 				data.setBigUint64(0, bits, le)
 				const loaded = mem.load_u64_number(data, 0, le)
-				vi.expect(loaded).toBe(v)
+				assert.equal(loaded, v)
 			})
 
-			vi.it(`${endian}: stores ${v}`, () => {
+			void t.test(`${endian}: stores ${v}`, () => {
 				mem.store_u64_number(data, 0, v, le)
 				const loaded = data.getBigUint64(0, le)
-				vi.expect(loaded).toBe(bits)
+				assert.equal(loaded, bits)
 			})
 		}
 	}
 })
 
-void vi.describe("i64", () => {
+void t.describe("i64", () => {
 	/** @type {[v: bigint, bits: bigint][]} */
 	// prettier-ignore
 	const pairs = [
@@ -139,22 +140,22 @@ void vi.describe("i64", () => {
 		for (const endian of ["le", "be"]) {
 			const le = endian === "le"
 
-			vi.it(`${endian}: loads ${v}`, () => {
+			void t.test(`${endian}: loads ${v}`, () => {
 				data.setBigUint64(0, bits, le)
 				const loaded = mem.load_i64(data, 0, le)
-				vi.expect(loaded).toBe(v)
+				assert.equal(loaded, v)
 			})
 
-			vi.it(`${endian}: stores ${v}`, () => {
+			void t.test(`${endian}: stores ${v}`, () => {
 				mem.store_i64(data, 0, v, le)
 				const loaded = data.getBigUint64(0, le)
-				vi.expect(loaded).toBe(bits)
+				assert.equal(loaded, bits)
 			})
 		}
 	}
 })
 
-void vi.describe("i64 number", () => {
+void t.describe("i64 number", () => {
 	/** @type {[v: number, bits: bigint][]} */
 	// prettier-ignore
 	const pairs = [
@@ -177,22 +178,22 @@ void vi.describe("i64 number", () => {
 		for (const endian of ["le", "be"]) {
 			const le = endian === "le"
 
-			vi.it(`${endian}: loads ${v}`, () => {
+			void t.test(`${endian}: loads ${v}`, () => {
 				data.setBigUint64(0, bits, le)
 				const loaded = mem.load_i64_number(data, 0, le)
-				vi.expect(loaded).toBe(v)
+				assert.equal(loaded, v)
 			})
 
-			vi.it(`${endian}: stores ${v}`, () => {
+			void t.test(`${endian}: stores ${v}`, () => {
 				mem.store_i64_number(data, 0, v, le)
 				const loaded = data.getBigUint64(0, le)
-				vi.expect(loaded).toBe(bits)
+				assert.equal(loaded, bits)
 			})
 		}
 	}
 })
 
-void vi.describe("u128", () => {
+void t.describe("u128", () => {
 	/** @type {[v: bigint, bits: [bigint, bigint]][]} */
 	// prettier-ignore
 	const pairs = [
@@ -208,25 +209,25 @@ void vi.describe("u128", () => {
 		for (const endian of ["le", "be"]) {
 			const le = endian === "le"
 
-			vi.it(`${endian}: loads ${v}`, () => {
+			void t.test(`${endian}: loads ${v}`, () => {
 				data.setBigUint64(0 + 8 * /** @type {any} */ (le), bits_a, le)
 				data.setBigUint64(0 + 8 * /** @type {any} */ (!le), bits_b, le)
 				const loaded = mem.load_u128(data, 0, le)
-				vi.expect(loaded).toBe(v)
+				assert.equal(loaded, v)
 			})
 
-			vi.it(`${endian}: stores ${v}`, () => {
+			void t.test(`${endian}: stores ${v}`, () => {
 				mem.store_u128(data, 0, v, le)
 				const loaded_a = data.getBigUint64(0 + 8 * /** @type {any} */ (le), le)
 				const loaded_b = data.getBigUint64(0 + 8 * /** @type {any} */ (!le), le)
-				vi.expect(loaded_a).toBe(bits_a)
-				vi.expect(loaded_b).toBe(bits_b)
+				assert.equal(loaded_a, bits_a)
+				assert.equal(loaded_b, bits_b)
 			})
 		}
 	}
 })
 
-void vi.describe("i128", () => {
+void t.describe("i128", () => {
 	/** @type {[v: bigint, bits: [bigint, bigint]][]} */
 	// prettier-ignore
 	const pairs = [
@@ -247,19 +248,19 @@ void vi.describe("i128", () => {
 		for (const endian of ["le", "be"]) {
 			const le = endian === "le"
 
-			vi.it(`${endian}: loads ${v}`, () => {
+			void t.test(`${endian}: loads ${v}`, () => {
 				data.setBigUint64(0 + 8 * /** @type {any} */ (le), bits_a, le)
 				data.setBigUint64(0 + 8 * /** @type {any} */ (!le), bits_b, le)
 				const loaded = mem.load_i128(data, 0, le)
-				vi.expect(loaded).toBe(v)
+				assert.equal(loaded, v)
 			})
 
-			vi.it(`${endian}: stores ${v}`, () => {
+			void t.test(`${endian}: stores ${v}`, () => {
 				mem.store_i128(data, 0, v, le)
 				const loaded_a = data.getBigUint64(0 + 8 * /** @type {any} */ (le), le)
 				const loaded_b = data.getBigUint64(0 + 8 * /** @type {any} */ (!le), le)
-				vi.expect(loaded_a).toBe(bits_a)
-				vi.expect(loaded_b).toBe(bits_b)
+				assert.equal(loaded_a, bits_a)
+				assert.equal(loaded_b, bits_b)
 			})
 		}
 	}

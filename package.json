@@ -26,12 +26,12 @@
 		"build": "node main.js build",
 		"preview": "node main.js preview",
 		"format": "prettier --cache -w .",
-		"lint": "eslint --ignore-path .gitignore --max-warnings 0 --ignore-pattern '!**/*.test.*' '**/*.{js,jsx,ts,tsx}' && eslint --ignore-path .gitignore --quiet --rule 'no-only-tests/no-only-tests: error' '**/*.test.{js,jsx,ts,tsx}'",
-		"test": "vitest",
-		"typecheck:server": "tsc --noEmit -p ./jsconfig.node.json",
+		"lint": "eslint --ignore-path .gitignore --max-warnings 0 '**/*.{js,jsx,ts,tsx}'",
+		"test": "node --test",
+		"typecheck": "tsc --noEmit -p ./jsconfig.json",
 		"typecheck:example": "tsc --noEmit -p ./example/jsconfig.json",
 		"typecheck:odin": "odin check example -target:js_wasm32",
-		"build-test": "pnpm run build && pnpm run typecheck:server && pnpm run typecheck:example && pnpm run lint && pnpm run test"
+		"build-test": "pnpm run build && pnpm run typecheck && pnpm run typecheck:example && pnpm run lint && pnpm run test"
 	},
 	"devDependencies": {
 		"@nothing-but/eslint-plugin": "^0.1.5",
@@ -43,18 +43,16 @@
 		"chokidar": "^3.5.3",
 		"eslint": "^8.56.0",
 		"eslint-plugin-eslint-comments": "^3.2.0",
-		"eslint-plugin-no-only-tests": "^3.1.0",
 		"prettier": "^3.1.1",
 		"prettier-plugin-jsdoc": "^1.3.0",
 		"rollup": "^4.9.4",
 		"terser": "^5.26.0",
 		"typescript": "^5.3.3",
-		"vitest": "^1.1.3",
 		"ws": "^8.16.0"
 	},
 	"packageManager": "pnpm@8.14.0",
 	"engines": {
-		"node": ">=18",
+		"node": ">=20",
 		"pnpm": ">=8.14.0"
 	}
 }

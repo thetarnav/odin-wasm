@@ -7,12 +7,13 @@ TODO:
 
 */
 
-import * as fs from "node:fs"
-import * as fsp from "node:fs/promises"
-import * as path from "node:path"
-import * as url from "node:url"
-import * as http from "node:http"
-import * as child_process from "node:child_process"
+import fs from "node:fs"
+import fsp from "node:fs/promises"
+import path from "node:path"
+import url from "node:url"
+import http from "node:http"
+import process from "node:process"
+import child_process from "node:child_process"
 import * as chokidar from "chokidar"
 import * as ws from "ws"
 import * as rollup from "rollup"

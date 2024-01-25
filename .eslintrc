@@ -1,10 +1,10 @@
 {
 	"root": true,
 	"parser": "@typescript-eslint/parser",
-	"plugins": ["@typescript-eslint", "no-only-tests", "eslint-comments", "@nothing-but"],
+	"plugins": ["@typescript-eslint", "eslint-comments", "@nothing-but"],
 	"ignorePatterns": ["node_modules", "dist", "/types"],
 	"parserOptions": {
-		"project": ["./jsconfig.json", "./jsconfig.node.json", "./example/jsconfig.json"],
+		"project": ["./jsconfig.json", "./example/jsconfig.json"],
 		"tsconfigRootDir": ".",
 		"sourceType": "module"
 	},
@@ -46,10 +46,6 @@
 		"@typescript-eslint/switch-exhaustiveness-check": "warn",
 		"no-fallthrough": ["warn", {"allowEmptyCase": true}],
 		"@nothing-but/no-ignored-return": "warn",
-		"@nothing-but/no-return-to-void": "warn",
-		/*
-            tests
-        */
-		"no-only-tests/no-only-tests": "warn"
+		"@nothing-but/no-return-to-void": "warn"
 	}
 }

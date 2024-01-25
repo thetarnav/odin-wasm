@@ -1,5 +1,5 @@
 {
-	"extends": "../jsconfig.base.json",
+	"extends": "../jsconfig.json",
 	"compilerOptions": {
 		"lib": ["ESNext", "DOM"],
 		"skipLibCheck": false
