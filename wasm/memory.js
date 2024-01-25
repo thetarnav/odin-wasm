@@ -14,17 +14,14 @@ export const LITTLE_ENDIAN = /*#__PURE__*/ (() => {
 
 export const STRING_SIZE = 2 * REG_SIZE
 
-/**
- * @typedef  {Object} ByteOffset
- * @property {number} offset
- * @property {number} alignment
- */
-
-/** @returns {ByteOffset} */
-export function makeByteOffset(offset = 0, alignment = ALIGNMENT) {
-	return {
-		offset: offset,
-		alignment: alignment,
+export class ByteOffset {
+	/**
+	 * @param {number} offset
+	 * @param {number} alignment
+	 */
+	constructor(offset = 0, alignment = ALIGNMENT) {
+		this.offset = offset
+		this.alignment = alignment
 	}
 }
 
@@ -32,11 +29,9 @@ export function makeByteOffset(offset = 0, alignment = ALIGNMENT) {
  * Move the offset by the given amount.
  *
  * @param   {ByteOffset} offset
- * @param   {number}     amount                                         The amount of bytes to move
- *   by
- * @param   {number}     [alignment=Math.min(amount, offset.alignment)] Default is `Math.min(amount,
- *   offset.alignment)`. Default is `Math.min(amount, offset.alignment)`
- * @returns {number}                                                    The previous offset
+ * @param   {number}     amount      The amount of bytes to move by
+ * @param   {number}     [alignment]
+ * @returns {number}                 The previous offset
  */
 export function off(offset, amount, alignment = Math.min(amount, offset.alignment)) {
 	if (offset.offset % alignment != 0) {
@@ -882,7 +877,7 @@ export const load_slice = (mem, slice_ptr, mapFn) => {
 	const raw_data_ptr = load_ptr(mem, slice_ptr)
 	const raw_data_len = load_int(mem, slice_ptr + REG_SIZE)
 
-	const offset = makeByteOffset(raw_data_ptr)
+	const offset = new ByteOffset(raw_data_ptr)
 	const items = new Array(raw_data_len)
 	for (let i = 0; i < raw_data_len; i++) {
 		items[i] = mapFn(mem, offset)

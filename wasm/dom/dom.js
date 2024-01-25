@@ -46,7 +46,7 @@ export function makeOdinDOM(_wasm) {
 		 * @returns {void}
 		 */
 		init_event_raw(event_ptr) {
-			const offset = mem.makeByteOffset(event_ptr)
+			const offset = new mem.ByteOffset(event_ptr)
 			const data = new DataView(wasm.memory.buffer)
 			const e = temp_event
 			const name_code = temp_name_code
