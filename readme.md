@@ -12,8 +12,7 @@ The implementation is mostly the same as the original, here are the differences:
 
 -   ESM - it was written to be used in a modern JS environment, assuming that the user will use a bundler like [Webpack](https://webpack.js.org/) or [Rollup](https://rollupjs.org/) to bundle the code, and tree-shake the unused parts.
 -   JSDoc - the original bindings are not documented, so I added JSDoc to the bindings to make it easier to use them.
--   Some small fixes ([Pending PR to Odin](https://github.com/odin-lang/Odin/pull/2978))
--   [Improvements to getting window position and size](https://github.com/thetarnav/odin-wasm/commit/abd015822d0667ae7ebec7c0b7d4508a489b9c44#diff-70784127da28e4d9d43c91e03af22f56c23f45ec12af76e4deed68c37f7776e4) (no PR yet)
+-   [Improvements to getting window position and size](https://github.com/thetarnav/odin-wasm/commit/abd015822d0667ae7ebec7c0b7d4508a489b9c44#diff-70784127da28e4d9d43c91e03af22f56c23f45ec12af76e4deed68c37f7776e4)
 
 ### 2. Odin + WASM example
 
@@ -31,8 +30,7 @@ There are some convenience scripts in [`main.js`](https://github.com/thetarnav/o
 
 ### Requirements
 
--   [LLVM 14](https://apt.llvm.org/) - `llvm-17` can generte wrong wasm ([issue](https://github.com/odin-lang/Odin/issues/2855))
--   [Odin](https://odin-lang.org/docs/install/)
+-   [Odin](https://odin-lang.org/docs/install/) (and [LLVM](https://apt.llvm.org/))
 -   [Node 20](https://nodejs.org/)
 -   [PNPM](https://pnpm.io/installation) _(`npm` and others will also work, just don't commit the lockfile)_
 
