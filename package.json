@@ -21,7 +21,7 @@
 		}
 	},
 	"scripts": {
-		"dev": "node main.js dev",
+		"dev": "node --watch main.js server",
 		"server": "node main.js server",
 		"build": "node main.js build",
 		"preview": "node main.js preview",

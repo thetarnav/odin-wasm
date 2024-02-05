@@ -29,7 +29,6 @@ import {
 	WASM_PATH,
 	WEB_SOCKET_PORT,
 	CONFIG_OUT_FILENAME,
-	SCRIPT_FILENAME,
 	WASM_FILENAME,
 	PUBLIC_DIRNAME,
 } from "./config.js"
@@ -55,8 +54,6 @@ const RELESE_ODIN_ARGS = [
 
 /** @enum {(typeof Command)[keyof typeof Command]} */
 const Command = /** @type {const} */ ({
-	/* Start a dev server, with server hot reload */
-	Dev: "dev",
 	/* Start a dev server */
 	Server: "server",
 	/* Start a static server that serves the dist dir */
@@ -67,23 +64,6 @@ const Command = /** @type {const} */ ({
 
 /** @type {Record<Command, (args: string[]) => void>} */
 const command_handlers = {
-	[Command.Dev]() {
-		let child = makeChildServer()
-
-		const watcher = chokidar.watch(["./*.js"], {
-			ignored: "**/.*",
-			ignoreInitial: true,
-		})
-		void watcher.on("change", () => {
-			// eslint-disable-next-line no-console
-			console.log("Stopping server...")
-			const ok = child.kill("SIGINT")
-			// eslint-disable-next-line no-console
-			if (!ok) console.log("Failed to kill server")
-
-			child = makeChildServer()
-		})
-	},
 	[Command.Server]() {
 		/* Make sure the dist dir exists */
 		void fs.mkdirSync(dist_path, {recursive: true})
@@ -115,13 +95,15 @@ const command_handlers = {
 			sendToAllClients(wss, MESSAGE_RELOAD)
 		})
 
-		void process.on("SIGINT", () => {
+		function exit() {
 			void server.close()
 			void wss.close()
 			void watcher.close()
 			sendToAllClients(wss, MESSAGE_RELOAD)
 			void process.exit(0)
-		})
+		}
+		void process.on("SIGINT", exit)
+		void process.on("SIGTERM", exit)
 
 		/** @returns {Promise<void>} */
 		async function requestListener(
@@ -263,13 +245,6 @@ if (!hasKey(command_handlers, command)) panic("Unknown command", command)
 
 const command_handler = command_handlers[command]
 command_handler(args.slice(1))
-
-/** @returns {child_process.ChildProcess} */
-function makeChildServer() {
-	return child_process.spawn("node", [SCRIPT_FILENAME, Command.Server], {
-		stdio: "inherit",
-	})
-}
 
 /**
  * @param   {boolean}         is_release
