@@ -193,8 +193,8 @@ const command_handlers = {
 			}
 
 			const transformed = await swc.transform(chunk.code, {
-				jsc     : JSC_CONFIG,
-				minify  : true,
+				jsc: JSC_CONFIG,
+				minify: true,
 				filename: chunk.fileName,
 			})
 
@@ -238,15 +238,15 @@ command_handler(args.slice(1))
 
 /** @type {swc.JscConfig} */
 const JSC_CONFIG = {
-	target         : "es2018",
-	keepClassNames : false,
-	loose          : false,
+	target: "es2018",
+	keepClassNames: false,
+	loose: false,
 	externalHelpers: false,
-	minify         : {
-		compress            : true,
-		mangle              : true,
+	minify: {
+		compress: true,
+		mangle: true,
 		inlineSourcesContent: true,
-	}
+	},
 }
 
 /**
