@@ -85,7 +85,7 @@ const odin_ctx = exports.default_context_ptr()
 exports._end()
 
 const ok = exports.start_example(odin_ctx, example)
-if (!ok) throw new Error("Failed to start example")
+if (!ok) throw Error("Failed to start example")
 
 void requestAnimationFrame(prev_time => {
 	/** @type {FrameRequestCallback} */

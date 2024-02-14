@@ -26,7 +26,7 @@ function writeToConsole(fd, str) {
 		case fd !== 1 && fd !== 2:
 			buffer = ""
 			last_fd = null
-			throw new Error(`Invalid fd (${fd}) to 'write' ${str}`)
+			throw Error(`Invalid fd (${fd}) to 'write' ${str}`)
 		// flush on newline
 		case str[str.length - 1] === "\n":
 			buffer += str.slice(0, -1)
@@ -62,7 +62,7 @@ export function makeOdinEnv(wasm) {
 		},
 		/** @returns {never} */
 		trap: () => {
-			throw new Error()
+			throw Error()
 		},
 		/**
 		 * @param   {number} ptr
@@ -75,7 +75,7 @@ export function makeOdinEnv(wasm) {
 		},
 		/** @returns {never} */
 		abort: () => {
-			throw new Error("abort")
+			throw Error("abort")
 		},
 		/**
 		 * @param   {number} ptr

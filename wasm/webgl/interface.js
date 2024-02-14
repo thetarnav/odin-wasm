@@ -141,7 +141,7 @@ export function getSource(buffer, strings_ptr, strings_length) {
 //  */
 // export function makeShader(gl, type, source) {
 // 	const shader = gl.createShader(type)
-// 	if (!shader) return new Error("failed to create gl shader")
+// 	if (!shader) return Error("failed to create gl shader")
 
 // 	gl.shaderSource(shader, source)
 // 	gl.compileShader(shader)
@@ -150,7 +150,7 @@ export function getSource(buffer, strings_ptr, strings_length) {
 // 	if (!success) {
 // 		const log = gl.getShaderInfoLog(shader)
 // 		gl.deleteShader(shader)
-// 		return new Error(log || "failed to compile shader")
+// 		return Error(log || "failed to compile shader")
 // 	}
 
 // 	return shader
@@ -180,7 +180,7 @@ export function getSource(buffer, strings_ptr, strings_length) {
 //  */
 // export function makeProgram(gl, shaders) {
 // 	const program = gl.createProgram()
-// 	if (!program) return new Error("failed to create gl program")
+// 	if (!program) return Error("failed to create gl program")
 
 // 	for (const shader of shaders) {
 // 		gl.attachShader(program, shader)
@@ -191,7 +191,7 @@ export function getSource(buffer, strings_ptr, strings_length) {
 // 	if (!success) {
 // 		const log = gl.getProgramInfoLog(program)
 // 		gl.deleteProgram(program)
-// 		return new Error(log || "failed to link program")
+// 		return Error(log || "failed to link program")
 // 	}
 
 // 	return program
