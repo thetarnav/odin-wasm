@@ -17,7 +17,7 @@ import child_process from "node:child_process"
 import * as chokidar from "chokidar"
 import * as ws from "ws"
 import * as rollup from "rollup"
-import * as terser from "terser"
+import * as swc from "@swc/core"
 
 import {
 	DIST_DIRNAME,
@@ -192,23 +192,13 @@ const command_handlers = {
 				return
 			}
 
-			const minified = await unsafePromiseToError(terser.minify(chunk.code, {module: true}))
+			const transformed = await swc.transform(chunk.code, {
+				jsc     : JSC_CONFIG,
+				minify  : true,
+				filename: chunk.fileName,
+			})
 
-			if (minified instanceof Error) {
-				// eslint-disable-next-line no-console
-				console.error("Failed to minify " + chunk.fileName + ":", minified)
-				errors_count += 1
-				return
-			}
-
-			if (typeof minified.code !== "string") {
-				// eslint-disable-next-line no-console
-				console.error("No code for minified chunk:", chunk.fileName)
-				errors_count += 1
-				return
-			}
-
-			return fsp.writeFile(path.join(dist_path, chunk.fileName), minified.code)
+			return fsp.writeFile(path.join(dist_path, chunk.fileName), transformed.code)
 		})
 
 		await Promise.all(promises)
@@ -245,6 +235,19 @@ if (!hasKey(command_handlers, command)) panic("Unknown command", command)
 
 const command_handler = command_handlers[command]
 command_handler(args.slice(1))
+
+/** @type {swc.JscConfig} */
+const JSC_CONFIG = {
+	target         : "es2018",
+	keepClassNames : false,
+	loose          : false,
+	externalHelpers: false,
+	minify         : {
+		compress            : true,
+		mangle              : true,
+		inlineSourcesContent: true,
+	}
+}
 
 /**
  * @param   {boolean}         is_release
