@@ -112,7 +112,7 @@ const command_handlers = {
 		) {
 			if (!req.url || req.method !== "GET") return end404(req, res)
 
-			if (req.url === "/" + CONFIG_FILENAME) {
+			if (req.url === "/" + CONFIG_OUT_FILENAME) {
 				await config_promise
 			} else if (req.url === "/" + WASM_FILENAME) {
 				await wasm_build_promise
