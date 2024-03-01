@@ -14,3 +14,5 @@ indent_size = 2
 indent_style = space
 tab_width = 2
 
+[*.md]
+indent_style = space

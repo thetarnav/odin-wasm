@@ -16,14 +16,10 @@ jobs:
       - name: Setup LLVM and Odin
         run: ./setup_odin.sh
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
-          cache: pnpm
+          cache: npm
 
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm run build-test
+      - run: npm install --no-frozen-lockfile
+      - run: npm run build-test

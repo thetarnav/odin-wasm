@@ -69,7 +69,7 @@ const command_handlers = {
 		void fs.mkdirSync(dist_path, {recursive: true})
 
 		const server = makeHttpServer(requestListener)
-		const wss = makeWebSocketServer()
+		const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
 
 		let wasm_build_promise = buildWASM(false)
 		const config_promise = buildConfig(true)
@@ -296,18 +296,6 @@ function makeHttpServer(requestListener) {
 //`)
 
 	return server
-}
-
-/** @returns {ws.WebSocketServer} */
-function makeWebSocketServer() {
-	const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
-
-	// eslint-disable-next-line no-console
-	console.log(`//
-// WebSocket server running at http://127.0.0.1:${WEB_SOCKET_PORT}
-//`)
-
-	return wss
 }
 
 /**
