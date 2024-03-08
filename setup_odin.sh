@@ -7,6 +7,7 @@ echo "Setting up LLVM 14 and Odin ${ODIN_RELEASE_ID}..."
 wget -O odin.zip -q https://github.com/odin-lang/Odin/releases/download/${ODIN_RELEASE_ID}/odin-ubuntu-amd64-${ODIN_RELEASE_ID}.zip
 unzip odin.zip
 unzip dist.zip
+mkdir -p /home/runner/odin
 cp -r dist/* /home/runner/odin
 
 echo "/home/runner/odin" >>$GITHUB_PATH
