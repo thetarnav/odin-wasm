@@ -358,8 +358,8 @@ export function makeOdinDOM(_wasm) {
 			const n = Math.min(buf_len, str.length)
 			str = str.substring(0, n)
 
-			const str_buf = mem.load_bytes(wasm.memory.buffer, buf_ptr, buf_len)
-			str_buf.set(new TextEncoder().encode(str))
+			const bytes = mem.load_bytes(wasm.memory.buffer, buf_ptr, buf_len)
+			new TextEncoder().encodeInto(str, bytes)
 
 			return n
 		},

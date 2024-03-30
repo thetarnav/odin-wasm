@@ -1051,10 +1051,9 @@ export const store_string_raw = (
 	/** @type {number} */ length,
 	/** @type {string} */ value,
 ) => {
-	length = Math.min(length, value.length)
 	const bytes = load_bytes(buffer, addr, length)
-	void new TextEncoder().encodeInto(value, bytes)
-	return length
+	const res = new TextEncoder().encodeInto(value, bytes)
+	return res.written
 }
 /** @returns {void} */
 export const store_cstring_raw = (
