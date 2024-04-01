@@ -32,6 +32,7 @@ There are some convenience scripts in [`main.js`](https://github.com/thetarnav/o
 
 -   [Odin](https://odin-lang.org/docs/install/) (and [LLVM](https://apt.llvm.org/))
 -   [Node 20](https://nodejs.org/)
+-   [Chrome Devtools Support](https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb): for debugging *(optional)*
 
 ### OLS
 
