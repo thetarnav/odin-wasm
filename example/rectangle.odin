@@ -2,15 +2,6 @@ package example
 
 import gl "../wasm/webgl"
 
-example_2d_state: struct {
-	rotation:         f32,
-	a_position:       i32,
-	a_color:          i32,
-	u_matrix:         i32,
-	positions_buffer: gl.Buffer,
-	colors_buffer:    gl.Buffer,
-	vao:              gl.VertexArrayObject,
-}
 
 @(private="file") TRIANGLES :: 2
 @(private="file") VERTICES  :: TRIANGLES * 3
@@ -37,9 +28,18 @@ example_2d_state: struct {
 	0,     BOX_H,
 }
 
+@(private="file") state: struct {
+	rotation:         f32,
+	a_position:       i32,
+	a_color:          i32,
+	u_matrix:         i32,
+	positions_buffer: gl.Buffer,
+	colors_buffer:    gl.Buffer,
+	vao:              gl.VertexArrayObject,
+}
 
-example_2d_start :: proc(program: gl.Program) {
-	using example_2d_state
+rectangle_start :: proc(program: gl.Program) {
+	using state
 
 	/*
 	Position and color buffers are static,
@@ -68,8 +68,8 @@ example_2d_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
-example_2d_frame :: proc(delta: f32) {
-	using example_2d_state
+rectangle_frame :: proc(delta: f32) {
+	using state
 
 	gl.BindVertexArray(vao)
 	

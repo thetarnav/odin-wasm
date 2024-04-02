@@ -175,7 +175,7 @@ const command_handlers = {
 		await buildConfig(false)
 
 		const bundle_res = await unsafePromiseToError(
-			rollup.rollup({input: path.join(playground_path, "index.js")}),
+			rollup.rollup({input: path.join(playground_path, "setup.js")}),
 		)
 		if (bundle_res instanceof Error) panic("Failed to bundle, error:", bundle_res)
 

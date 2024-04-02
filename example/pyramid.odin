@@ -5,17 +5,6 @@ import glm "core:math/linalg/glsl"
 
 import gl "../wasm/webgl"
 
-example_3d_state: struct {
-	rotation_y:       f32,
-	rotation_x:       f32,
-	a_position:       i32,
-	a_color:          i32,
-	u_matrix:         i32,
-	positions_buffer: gl.Buffer,
-	colors_buffer:    gl.Buffer,
-	vao:              gl.VertexArrayObject,
-}
-
 @(private="file") TRIANGLES :: 4
 @(private="file") VERTICES  :: TRIANGLES * 3
 @(private="file") SIDE      :: 200
@@ -56,9 +45,19 @@ example_3d_state: struct {
 	 0,      0,   SIDE/2,
 }
 
+@(private="file") state: struct {
+	rotation_y:       f32,
+	rotation_x:       f32,
+	a_position:       i32,
+	a_color:          i32,
+	u_matrix:         i32,
+	positions_buffer: gl.Buffer,
+	colors_buffer:    gl.Buffer,
+	vao:              gl.VertexArrayObject,
+}
 
-example_3d_start :: proc(program: gl.Program) {
-	using example_3d_state
+pyramid_start :: proc(program: gl.Program) {
+	using state
 
 	vao = gl.CreateVertexArray()
 	gl.BindVertexArray(vao)
@@ -79,17 +78,17 @@ example_3d_start :: proc(program: gl.Program) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_position, 3, gl.FLOAT, false, 0, 0)
-
+	
 	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
-example_3d_frame :: proc(delta: f32) {
-	using example_3d_state
-
+pyramid_frame :: proc(delta: f32) {
+	using state
+	
 	gl.BindVertexArray(vao)
-
+	
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0.01, 0.02, 0)
 	// Clear the canvas AND the depth buffer.

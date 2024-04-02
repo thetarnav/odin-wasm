@@ -1,13 +1,13 @@
 import * as wasm from "../wasm/runtime.js"
 
-export type Example_Type = (typeof Example_Type)[keyof typeof Example_Type]
-declare const Example_Type: {
-	D2: 0
-	D3: 1
+export type Example_Kind = (typeof Example_Kind)[keyof typeof Example_Kind]
+declare const Example_Kind: {
+	Rectangle: 0
+	Pyramid  : 1
 }
 
 export interface WasmExports extends wasm.OdinExports {
-	start_example: (ctx_ptr: wasm.rawptr, example_type: Example_Type) => wasm.bool
+	start_example: (ctx_ptr: wasm.rawptr, example_type: Example_Kind) => wasm.bool
 	frame: (ctx_ptr: wasm.rawptr, delta: wasm.f32) => void
 	on_window_resize: (
 		window_w: wasm.f32,

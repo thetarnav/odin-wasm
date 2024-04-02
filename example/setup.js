@@ -28,13 +28,13 @@ if (IS_DEV) {
 Example selection
 */
 
-/** @type {Record<string, t.Example_Type | undefined>} */
+/** @type {Record<string, t.Example_Kind | undefined>} */
 const example_hash_map = {
-	"#2d": t.Example_Type.D2,
-	"#3d": t.Example_Type.D3,
+	"#rectangle": t.Example_Kind.Rectangle,
+	"#pyramid":   t.Example_Kind.Pyramid,
 }
-/** @type {t.Example_Type} */
-const example = example_hash_map[location.hash] ?? t.Example_Type.D3
+/** @type {t.Example_Kind} */
+const example = example_hash_map[location.hash] ?? t.Example_Kind.Pyramid
 
 for (const hash in example_hash_map) {
 	const anchor = document.querySelector(`a[href="${hash}"]`)

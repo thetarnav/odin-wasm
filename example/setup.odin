@@ -7,28 +7,28 @@ import "core:runtime"
 import "../wasm/dom"
 import gl "../wasm/webgl"
 
-shader_fragment_2d := #load("shader_fragment_2d.glsl", string)
-shader_vertex_2d := #load("shader_vertex_2d.glsl", string)
+rectangle_fs := #load("./rectangle_fs.glsl", string)
+rectangle_vs := #load("./rectangle_vs.glsl", string)
 
-shader_fragment_3d := #load("shader_fragment_3d.glsl", string)
-shader_vertex_3d := #load("shader_vertex_3d.glsl", string)
+pyramid_fs := #load("./pyramid_fs.glsl", string)
+pyramid_vs := #load("./pyramid_vs.glsl", string)
 
 dpr: f32
-canvas_res: [2]i32
-canvas_pos: [2]f32
+canvas_res:  [2]i32
+canvas_pos:  [2]f32
 canvas_size: [2]f32
 window_size: [2]f32
-mouse_pos: [2]f32
+mouse_pos:   [2]f32
 
 scale: f32 = 1
 scale_min: f32 = 0.25
 scale_max: f32 = 3
 
-Example_Type :: enum {
-	D2,
-	D3,
+Example_Kind :: enum {
+	Rectangle,
+	Pyramid,
 }
-example: Example_Type
+example: Example_Kind
 
 frame_arena_buffer: [1024]byte
 frame_arena: mem.Arena = {
@@ -55,10 +55,10 @@ main :: proc() {
 @(export)
 start_example :: proc "contextless" (
 	ctx: ^runtime.Context,
-	example_type: Example_Type,
+	example_kind: Example_Kind,
 ) -> (ok: bool) {
 	context = ctx^
-	example = example_type
+	example = example_kind
 
 	// Make sure that this matches the id of your canvas.
 	if ok := gl.SetCurrentContextById("canvas"); !ok {
@@ -66,16 +66,15 @@ start_example :: proc "contextless" (
 		return false
 	}
 
-	vs_sources: []string
-	fs_sources: []string
+	vs_sources, fs_sources: []string
 
 	switch example {
-	case .D2:
-		vs_sources = {shader_vertex_2d}
-		fs_sources = {shader_fragment_2d}
-	case .D3:
-		vs_sources = {shader_vertex_3d}
-		fs_sources = {shader_fragment_3d}
+	case .Rectangle:
+		vs_sources = {rectangle_vs}
+		fs_sources = {rectangle_fs}
+	case .Pyramid:
+		vs_sources = {pyramid_vs}
+		fs_sources = {pyramid_fs}
 	}
 
 	program, program_ok := gl.CreateProgramFromStrings(vs_sources, fs_sources)
@@ -87,8 +86,8 @@ start_example :: proc "contextless" (
 	gl.UseProgram(program)
 
 	switch example {
-	case .D2: example_2d_start(program)
-	case .D3: example_3d_start(program)
+	case .Rectangle: rectangle_start(program)
+	case .Pyramid  : pyramid_start(program)
 	}
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
@@ -126,7 +125,7 @@ frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
 	}
 
 	switch example {
-	case .D2: example_2d_frame(delta)
-	case .D3: example_3d_frame(delta)
+	case .Rectangle: rectangle_frame(delta)
+	case .Pyramid  : pyramid_frame(delta)
 	}
 }
