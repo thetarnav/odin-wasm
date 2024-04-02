@@ -13,6 +13,7 @@ example_3d_state: struct {
 	u_matrix:         i32,
 	positions_buffer: gl.Buffer,
 	colors_buffer:    gl.Buffer,
+	vao:              gl.VertexArrayObject,
 }
 
 @(private="file") TRIANGLES :: 4
@@ -59,6 +60,9 @@ example_3d_state: struct {
 example_3d_start :: proc(program: gl.Program) {
 	using example_3d_state
 
+	vao = gl.CreateVertexArray()
+	gl.BindVertexArray(vao)
+
 	a_position = gl.GetAttribLocation (program, "a_position")
 	a_color    = gl.GetAttribLocation (program, "a_color")
 	u_matrix   = gl.GetUniformLocation(program, "u_matrix")
@@ -71,10 +75,6 @@ example_3d_start :: proc(program: gl.Program) {
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
-}
-
-example_3d_frame :: proc(delta: f32) {
-	using example_3d_state
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
@@ -83,6 +83,12 @@ example_3d_frame :: proc(delta: f32) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
+}
+
+example_3d_frame :: proc(delta: f32) {
+	using example_3d_state
+
+	gl.BindVertexArray(vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0.01, 0.02, 0)
