@@ -29,9 +29,8 @@
 		"lint": "eslint --ignore-path .gitignore --max-warnings 0 '**/*.{js,jsx,ts,tsx}'",
 		"test": "node --test",
 		"typecheck": "tsc --noEmit -p ./jsconfig.json",
-		"typecheck:example": "tsc --noEmit -p ./example/jsconfig.json",
 		"typecheck:odin": "odin check example -target:js_wasm32",
-		"build-test": "npm run build && npm run typecheck && npm run typecheck:example && npm run test"
+		"build-test": "npm run build && npm run typecheck && npm run test"
 	},
 	"devDependencies": {
 		"@types/node": "^20.10.7",
