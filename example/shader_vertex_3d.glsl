@@ -1,10 +1,11 @@
+#version 300 es
 // will pass vec3, but will be converted to vec4 with w = 1.0
-attribute vec4 a_position;
-attribute vec4 a_color;
+in vec4 a_position;
+in vec4 a_color;
 
 uniform mat4 u_matrix;
 
-varying vec4 v_color;
+out vec4 v_color;
 
 void main() {
 	// Multiply the position by the matrix.

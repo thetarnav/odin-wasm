@@ -1,12 +1,13 @@
+#version 300 es
 // an attribute will receive data from a buffer
-attribute vec2 a_position;
-attribute vec4 a_color;
+in vec2 a_position;
+in vec4 a_color;
 
 uniform mat3 u_matrix;
 
 // color to pass to the fragment shader
 // value in fragment shader will be interpolated
-varying vec4 v_color;
+out vec4 v_color;
 
 void main() {
 	// Multiply the position by the matrix.
