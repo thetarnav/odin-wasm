@@ -1,7 +1,5 @@
 package example
 
-import "core:fmt"
-
 import gl "../wasm/webgl"
 
 example_2d_state: struct {
@@ -13,20 +11,13 @@ example_2d_state: struct {
 	colors_buffer:    gl.Buffer,
 }
 
-@(private = "file")
-TRIANGLES :: 2
-@(private = "file")
-VERTICES :: TRIANGLES * 3
-@(private = "file")
-BOX_W: f32 : 160
-@(private = "file")
-BOX_H: f32 : 100
-@(private = "file")
-box_size: [2]f32 = {BOX_W, BOX_H}
+@(private="file") TRIANGLES :: 2
+@(private="file") VERTICES  :: TRIANGLES * 3
+@(private="file") BOX_W: f32 : 160
+@(private="file") BOX_H: f32 : 100
+@(private="file") box_size: [2]f32 = {BOX_W, BOX_H}
 
-// odinfmt: disable
-@(private = "file")
-colors: [VERTICES*4]u8 = {
+@(private="file") colors: [VERTICES*4]u8 = {
 	60,  210, 0,   255, // G
 	210, 210, 0,   255, // Y
 	0,   80,  190, 255, // B
@@ -35,8 +26,7 @@ colors: [VERTICES*4]u8 = {
 	210, 210, 0,   255, // Y
 	0,   80,  190, 255, // B
 }
-@(private = "file")
-positions: [VERTICES*2]f32 = {
+@(private="file") positions: [VERTICES*2]f32 = {
 	0,     0,
 	BOX_W, 0,
 	0,     BOX_H,
@@ -45,29 +35,20 @@ positions: [VERTICES*2]f32 = {
 	BOX_W, 0,
 	0,     BOX_H,
 }
-// odinfmt: enable
 
 
-example_2d_start :: proc(program: gl.Program) -> (ok: bool) {
+example_2d_start :: proc(program: gl.Program) {
 	using example_2d_state
 
-	a_position = gl.GetAttribLocation(program, "a_position")
-	a_color = gl.GetAttribLocation(program, "a_color")
-	u_matrix = gl.GetUniformLocation(program, "u_matrix")
+	a_position = gl.GetAttribLocation (program, "a_position")
+	a_color    = gl.GetAttribLocation (program, "a_color")
+	u_matrix   = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
 
 	positions_buffer = gl.CreateBuffer()
-	colors_buffer = gl.CreateBuffer()
-
-	err := gl.GetError()
-	if err != gl.NO_ERROR {
-		fmt.eprintln("WebGL error: ", err)
-		return false
-	}
-
-	return true
+	colors_buffer    = gl.CreateBuffer()
 }
 
 example_2d_frame :: proc(delta: f32) {
@@ -86,11 +67,12 @@ example_2d_frame :: proc(delta: f32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
 	rotation += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
-	mat := mat3_projection(canvas_size)
-	mat *= mat3_translate(mouse_pos - canvas_pos)
-	mat *= mat3_scale(scale)
-	mat *= mat3_rotate(rotation)
-	mat *= mat3_translate(-box_size / 2)
+	mat :=
+		mat3_projection(canvas_size) *
+		mat3_translate(mouse_pos - canvas_pos) *
+		mat3_scale(scale) *
+		mat3_rotate(rotation) *
+		mat3_translate(-box_size / 2)
 
 	gl.UniformMatrix3fv(u_matrix, mat)
 

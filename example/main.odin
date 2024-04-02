@@ -49,16 +49,14 @@ main :: proc() {
 	dpr = f32(dom.device_pixel_ratio())
 	window_size = cast_vec2(f32, dom.get_window_inner_size())
 	canvas_size = window_size - 200
-	mouse_pos = window_size / 2
+	mouse_pos   = window_size / 2
 }
 
 @(export)
 start_example :: proc "contextless" (
 	ctx: ^runtime.Context,
 	example_type: Example_Type,
-) -> (
-	ok: bool,
-) {
+) -> (ok: bool) {
 	context = ctx^
 	example = example_type
 
@@ -85,16 +83,20 @@ start_example :: proc "contextless" (
 		fmt.eprintln("Failed to create program!")
 		return false
 	}
+
 	gl.UseProgram(program)
 
 	switch example {
-	case .D2:
-		return example_2d_start(program)
-	case .D3:
-		return example_3d_start(program)
-	case:
+	case .D2: example_2d_start(program)
+	case .D3: example_3d_start(program)
+	}
+
+	if err := gl.GetError(); err != gl.NO_ERROR {
+		fmt.eprintln("WebGL error:", err)
 		return false
 	}
+
+	return true
 }
 
 on_mouse_move :: proc(e: dom.Event) {
@@ -108,8 +110,8 @@ on_wheel :: proc(e: dom.Event) {
 on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
 	window_size = {vw, vh}
 	canvas_size = {cw, ch}
-	canvas_pos = {cx, cy}
-	canvas_res = cast_vec2(i32, canvas_size * dpr)
+	canvas_pos  = {cx, cy}
+	canvas_res  = cast_vec2(i32, canvas_size * dpr)
 }
 
 @(export)
@@ -124,9 +126,7 @@ frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
 	}
 
 	switch example {
-	case .D2:
-		example_2d_frame(delta)
-	case .D3:
-		example_3d_frame(delta)
+	case .D2: example_2d_frame(delta)
+	case .D3: example_3d_frame(delta)
 	}
 }

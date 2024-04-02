@@ -1,6 +1,5 @@
 package example
 
-import "core:fmt"
 import "core:math"
 import glm "core:math/linalg/glsl"
 
@@ -16,18 +15,12 @@ example_3d_state: struct {
 	colors_buffer:    gl.Buffer,
 }
 
-@(private = "file")
-TRIANGLES :: 4
-@(private = "file")
-VERTICES :: TRIANGLES * 3
-@(private = "file")
-SIDE :: 200
-@(private = "file")
-H :: math.SQRT_TWO * SIDE / 2
+@(private="file") TRIANGLES :: 4
+@(private="file") VERTICES  :: TRIANGLES * 3
+@(private="file") SIDE      :: 200
+@(private="file") H         :: math.SQRT_TWO * SIDE / 2
 
-// odinfmt: disable
-@(private = "file")
-colors: [VERTICES*4]u8 = {
+@(private="file") colors: [VERTICES*4]u8 = {
 	60,  210, 0,   255, // G
 	210, 210, 0,   255, // Y
 	0,   80,  190, 255, // B
@@ -44,8 +37,7 @@ colors: [VERTICES*4]u8 = {
 	230, 20,  0,   255, // R
 	60,  210, 0,   255, // G
 }
-@(private = "file")
-positions: [VERTICES*3]f32 = {
+@(private="file") positions: [VERTICES*3]f32 = {
 	 0,      0,   SIDE/2,
 	 SIDE/2, H,   0,
 	-SIDE/2, H,   0,
@@ -62,32 +54,23 @@ positions: [VERTICES*3]f32 = {
 	 0,      0,  -SIDE/2,
 	 0,      0,   SIDE/2,
 }
-// odinfmt: enable
 
 
-example_3d_start :: proc(program: gl.Program) -> (ok: bool) {
+example_3d_start :: proc(program: gl.Program) {
 	using example_3d_state
 
-	a_position = gl.GetAttribLocation(program, "a_position")
-	a_color = gl.GetAttribLocation(program, "a_color")
-	u_matrix = gl.GetUniformLocation(program, "u_matrix")
+	a_position = gl.GetAttribLocation (program, "a_position")
+	a_color    = gl.GetAttribLocation (program, "a_color")
+	u_matrix   = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
 
 	positions_buffer = gl.CreateBuffer()
-	colors_buffer = gl.CreateBuffer()
+	colors_buffer    = gl.CreateBuffer()
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
-
-	err := gl.GetError()
-	if err != gl.NO_ERROR {
-		fmt.eprintln("WebGL error: ", err)
-		return false
-	}
-
-	return true
 }
 
 example_3d_frame :: proc(delta: f32) {
