@@ -32,9 +32,10 @@ Example selection
 const example_hash_map = {
 	"#rectangle": t.Example_Kind.Rectangle,
 	"#pyramid":   t.Example_Kind.Pyramid,
+	"#boxes":     t.Example_Kind.Boxes,
 }
 /** @type {t.Example_Kind} */
-const example = example_hash_map[location.hash] ?? t.Example_Kind.Pyramid
+const example = example_hash_map[location.hash] ?? t.Example_Kind.Boxes
 
 for (const hash in example_hash_map) {
 	const anchor = document.querySelector(`a[href="${hash}"]`)

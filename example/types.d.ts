@@ -4,6 +4,7 @@ export type Example_Kind = (typeof Example_Kind)[keyof typeof Example_Kind]
 declare const Example_Kind: {
 	Rectangle: 0
 	Pyramid  : 1
+	Boxes    : 2
 }
 
 export interface WasmExports extends wasm.OdinExports {

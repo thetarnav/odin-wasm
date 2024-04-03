@@ -13,6 +13,9 @@ rectangle_vs := #load("./rectangle_vs.glsl", string)
 pyramid_fs := #load("./pyramid_fs.glsl", string)
 pyramid_vs := #load("./pyramid_vs.glsl", string)
 
+boxes_fs := #load("./boxes_fs.glsl", string)
+boxes_vs := #load("./boxes_vs.glsl", string)
+
 dpr: f32
 canvas_res:  [2]i32
 canvas_pos:  [2]f32
@@ -27,6 +30,7 @@ scale_max: f32 = 3
 Example_Kind :: enum {
 	Rectangle,
 	Pyramid,
+	Boxes,
 }
 example: Example_Kind
 
@@ -75,6 +79,9 @@ start_example :: proc "contextless" (
 	case .Pyramid:
 		vs_sources = {pyramid_vs}
 		fs_sources = {pyramid_fs}
+	case .Boxes:
+		vs_sources = {boxes_vs}
+		fs_sources = {boxes_fs}
 	}
 
 	program, program_ok := gl.CreateProgramFromStrings(vs_sources, fs_sources)
@@ -88,6 +95,7 @@ start_example :: proc "contextless" (
 	switch example {
 	case .Rectangle: rectangle_start(program)
 	case .Pyramid  : pyramid_start(program)
+	case .Boxes    : boxes_start(program)
 	}
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
@@ -127,5 +135,6 @@ frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
 	switch example {
 	case .Rectangle: rectangle_frame(delta)
 	case .Pyramid  : pyramid_frame(delta)
+	case .Boxes    : boxes_frame(delta)
 	}
 }
