@@ -29,13 +29,11 @@ import gl "../wasm/webgl"
 }
 
 @(private="file") state: struct {
-	rotation:         f32,
-	a_position:       i32,
-	a_color:          i32,
-	u_matrix:         i32,
-	positions_buffer: gl.Buffer,
-	colors_buffer:    gl.Buffer,
-	vao:              gl.VertexArrayObject,
+	rotation:   f32,
+	a_position: i32,
+	a_color:    i32,
+	u_matrix:   i32,
+	vao:        gl.VertexArrayObject,
 }
 
 rectangle_start :: proc(program: gl.Program) {
@@ -56,8 +54,8 @@ rectangle_start :: proc(program: gl.Program) {
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
 
-	positions_buffer = gl.CreateBuffer()
-	colors_buffer    = gl.CreateBuffer()
+	positions_buffer := gl.CreateBuffer()
+	colors_buffer    := gl.CreateBuffer()
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)

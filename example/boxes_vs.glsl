@@ -12,7 +12,7 @@ void main() {
 	vec4 position = u_matrix * a_position;
 
 	// apply "perspective"
-	gl_Position = vec4(position.xyz, 1.0 + position.z * 0.5);
+	gl_Position = vec4(position.xyz, 1.0 + position.z * 2.0);
 
 	v_color = a_color;
 }

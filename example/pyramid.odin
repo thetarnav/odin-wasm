@@ -10,6 +10,10 @@ import gl "../wasm/webgl"
 @(private="file") SIDE      :: 200
 @(private="file") H         :: math.SQRT_TWO * SIDE / 2
 
+/*
+Points should be in counter-clockwise order
+to show the front-face.
+*/
 @(private="file") colors: [VERTICES*4]u8 = {
 	60,  210, 0,   255, // G
 	210, 210, 0,   255, // Y
@@ -29,31 +33,29 @@ import gl "../wasm/webgl"
 }
 @(private="file") positions: [VERTICES*3]f32 = {
 	 0,      0,   SIDE/2,
+	 -SIDE/2, H,   0,
 	 SIDE/2, H,   0,
-	-SIDE/2, H,   0,
 
 	 0,      0,  -SIDE/2,
-	-SIDE/2, H,   0,
 	 SIDE/2, H,   0,
+	 -SIDE/2, H,   0,
 
-	 0,      0,   SIDE/2,
-	 0,      0,  -SIDE/2,
-	 SIDE/2, H,   0,
-
-	-SIDE/2, H,   0,
 	 0,      0,  -SIDE/2,
 	 0,      0,   SIDE/2,
+	 SIDE/2, H,   0,
+
+	-SIDE/2, H,   0,
+	0,      0,   SIDE/2,
+	0,      0,  -SIDE/2,
 }
 
 @(private="file") state: struct {
-	rotation_y:       f32,
-	rotation_x:       f32,
-	a_position:       i32,
-	a_color:          i32,
-	u_matrix:         i32,
-	positions_buffer: gl.Buffer,
-	colors_buffer:    gl.Buffer,
-	vao:              gl.VertexArrayObject,
+	rotation_y: f32,
+	rotation_x: f32,
+	a_position: i32,
+	a_color:    i32,
+	u_matrix:   i32,
+	vao:        gl.VertexArrayObject,
 }
 
 pyramid_start :: proc(program: gl.Program) {
@@ -69,11 +71,10 @@ pyramid_start :: proc(program: gl.Program) {
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
 
-	positions_buffer = gl.CreateBuffer()
-	colors_buffer    = gl.CreateBuffer()
+	positions_buffer := gl.CreateBuffer()
+	colors_buffer    := gl.CreateBuffer()
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
-	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
@@ -91,8 +92,7 @@ pyramid_frame :: proc(delta: f32) {
 	
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0.01, 0.02, 0)
-	// Clear the canvas AND the depth buffer.
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
 
 	rotation_y += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
 	rotation_x += 0.01 * delta * (window_size.y / 2 - mouse_pos.y) / window_size.y
@@ -107,8 +107,8 @@ pyramid_frame :: proc(delta: f32) {
 	)
 	mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
 	mat *= glm.mat4Scale(scale)
-	mat *= mat4_rotate_y(-rotation_y)
-	mat *= mat4_rotate_x(rotation_x)
+	mat *= mat4_rotate_y(rotation_y)
+	mat *= mat4_rotate_x(-rotation_x)
 	mat *= glm.mat4Translate({0, -H / 2, 0})
 
 	gl.UniformMatrix4fv(u_matrix, mat)
