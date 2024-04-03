@@ -2,7 +2,9 @@ package example
 
 import "core:intrinsics"
 import glm "core:math/linalg/glsl"
+import gl "../wasm/webgl"
 
+VAO  :: gl.VertexArrayObject
 Vec  :: glm.vec3
 RGBA :: distinct [4]u8
 

@@ -33,7 +33,7 @@ import gl "../wasm/webgl"
 	a_position: i32,
 	a_color:    i32,
 	u_matrix:   i32,
-	vao:        gl.VertexArrayObject,
+	vao:        VAO,
 }
 
 rectangle_start :: proc(program: gl.Program) {

@@ -105,10 +105,10 @@ cube_positions: [CUBE_VERTICES]Vec = {
 	{1, 1, 1},
 }
 
-write_cube_positions :: proc(to: []Vec, x, y, z, h: f32) {
-	assert(len(to) == CUBE_VERTICES)
-	copy(to, cube_positions[:])
-	for &vec in to {
+write_cube_positions :: proc(dst: []Vec, x, y, z, h: f32) {
+	assert(len(dst) == CUBE_VERTICES)
+	copy(dst, cube_positions[:])
+	for &vec in dst {
 		vec *= h
 		vec.x += x
 		vec.y += y
@@ -118,12 +118,12 @@ write_cube_positions :: proc(to: []Vec, x, y, z, h: f32) {
 
 
 @(private="file") state: struct {
-	rotation_y:       f32,
-	rotation_x:       f32,
-	a_position:       i32,
-	a_color:          i32,
-	u_matrix:         i32,
-	vao:              gl.VertexArrayObject,
+	rotation_y: f32,
+	rotation_x: f32,
+	a_position: i32,
+	a_color:    i32,
+	u_matrix:   i32,
+	vao:        VAO,
 }
 
 boxes_start :: proc(program: gl.Program) {

@@ -55,7 +55,7 @@ to show the front-face.
 	a_position: i32,
 	a_color:    i32,
 	u_matrix:   i32,
-	vao:        gl.VertexArrayObject,
+	vao:        VAO,
 }
 
 pyramid_start :: proc(program: gl.Program) {
