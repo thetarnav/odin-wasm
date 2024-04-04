@@ -18,7 +18,7 @@ The implementation is mostly the same as the original, here are the differences:
 
 [thetarnav.github.io/odin-wasm](https://thetarnav.github.io/odin-wasm)
 
-In [`example/`](https://github.com/thetarnav/odin-wasm/tree/main/example) you can find an example of how to use Odin and WASM together. Mainly focused on WebGL as I'm going through the [WebGL Fundamentals](https://webglfundamentals.org/) tutorial.
+In [`example/`](https://github.com/thetarnav/odin-wasm/tree/main/example) you can find an example of how to use Odin and WASM together. Mainly focused on WebGL as I'm going through the [WebGL Fundamentals](https://webgl2fundamentals.org/) tutorial.
 
 ### 3. A template repo
 
