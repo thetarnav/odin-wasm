@@ -75,18 +75,19 @@ code {
 	left: 0;
 	display: flex;
 	flex-direction: column;
-	padding: 0.5rem;
+	padding: 0.6rem;
+}
+.examples ol {
+	margin-left: 1.8rem;
 }
 .examples li {
-	list-style: none;
 	padding: 0.2rem;
 }
-.examples a {
-	color: #fafafa;
-	text-decoration: none;
+.examples li::marker {
+	color: #3882d2;
 }
-.examples a::before {
-	content: "> ";
+.examples a {
+	color: inherit;
 }
 .examples a.active {
 	color: #3882d2;
