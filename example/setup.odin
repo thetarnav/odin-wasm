@@ -23,9 +23,7 @@ canvas_size: [2]f32
 window_size: [2]f32
 mouse_pos:   [2]f32
 
-scale: f32 = 1
-scale_min: f32 = 0.25
-scale_max: f32 = 3
+scale: f32 = 0.5
 
 Example_Kind :: enum {
 	Rectangle,
@@ -110,8 +108,8 @@ on_mouse_move :: proc(e: dom.Event) {
 	mouse_pos = cast_vec2(f32, e.data.mouse.client)
 }
 on_wheel :: proc(e: dom.Event) {
-	scale += f32(e.data.wheel.delta.y) * 0.001
-	scale = clamp(scale, scale_min, scale_max)
+	scale -= f32(e.data.wheel.delta.y) * 0.001
+	scale = clamp(scale, 0, 1)
 }
 @(export)
 on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {

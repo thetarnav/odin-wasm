@@ -106,7 +106,7 @@ pyramid_frame :: proc(delta: f32) {
 		far    = 1000,
 	)
 	mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
-	mat *= glm.mat4Scale(scale)
+	mat *= glm.mat4Scale(scale*2 + 0.4)
 	mat *= mat4_rotate_y(rotation_y)
 	mat *= mat4_rotate_x(-rotation_x)
 	mat *= glm.mat4Translate({0, -H / 2, 0})

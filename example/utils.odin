@@ -6,6 +6,7 @@ import gl "../wasm/webgl"
 
 VAO  :: gl.VertexArrayObject
 Vec  :: glm.vec3
+Mat3 :: glm.mat3
 Mat4 :: glm.mat4
 RGBA :: distinct [4]u8
 

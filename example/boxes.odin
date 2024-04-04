@@ -177,14 +177,12 @@ boxes_frame :: proc(delta: f32) {
 	rotation += 0.01 * delta * (window_size.yx / 2 - mouse_pos.yx) / window_size.yx
 
 	mat: Mat4 = 1
-	mat *= mat4_perspective(
-		fov    = glm.radians_f32(80),
+	mat *= glm.mat4PerspectiveInfinite(
+		fovy   = glm.radians_f32(80),
 		aspect = f32(canvas_res.x / canvas_res.y),
 		near   = 1,
-		far    = 1000,
 	)
-	mat *= glm.mat4Translate({0, 0, -400})
-	mat *= glm.mat4Scale(scale)
+	mat *= glm.mat4Translate({0, 0, -1000 + scale * 800})
 	mat *= mat4_rotate_x(rotation.x)
 	mat *= mat4_rotate_y(rotation.y)
 
