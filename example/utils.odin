@@ -6,6 +6,7 @@ import gl "../wasm/webgl"
 
 VAO  :: gl.VertexArrayObject
 Vec  :: glm.vec3
+Mat4 :: glm.mat4
 RGBA :: distinct [4]u8
 
 cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D

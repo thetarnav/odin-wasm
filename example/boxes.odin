@@ -1,7 +1,7 @@
 package example
 
 import glm "core:math/linalg/glsl"
-import gl "../wasm/webgl"
+import gl  "../wasm/webgl"
 
 @(private="file") BOX_HEIGHT :: 60
 
@@ -115,8 +115,7 @@ write_cube_positions :: proc(dst: []Vec, x, y, z, h: f32) {
 
 
 @(private="file") state: struct {
-	rotation_y: f32,
-	rotation_x: f32,
+	rotation:   [2]f32,
 	a_position: i32,
 	a_color:    i32,
 	u_matrix:   i32,
@@ -175,29 +174,19 @@ boxes_frame :: proc(delta: f32) {
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	rotation_y += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
-	rotation_x += 0.01 * delta * (window_size.y / 2 - mouse_pos.y) / window_size.y
+	rotation += 0.01 * delta * (window_size.yx / 2 - mouse_pos.yx) / window_size.yx
 
-	// mat := glm.mat4Ortho3d(
-	// 	left   = 0,
-	// 	right  = canvas_size.x,
-	// 	bottom = canvas_size.y,
-	// 	top    = 0,
-	// 	near   = -2000,
-	// 	far    = 2000,
-	// )
-	mat := mat4_perspective(
+	mat: Mat4 = 1
+	mat *= mat4_perspective(
 		fov    = glm.radians_f32(80),
 		aspect = f32(canvas_res.x / canvas_res.y),
 		near   = 1,
 		far    = 1000,
 	)
 	mat *= glm.mat4Translate({0, 0, -400})
-	// mat *= glm.mat4Translate(vec2_to_vec3(window_size / 2 - canvas_pos))
-	// mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
 	mat *= glm.mat4Scale(scale)
-	mat *= mat4_rotate_y(rotation_y)
-	mat *= mat4_rotate_x(rotation_x)
+	mat *= mat4_rotate_x(rotation.x)
+	mat *= mat4_rotate_y(rotation.y)
 
 	gl.UniformMatrix4fv(u_matrix, mat)
 
