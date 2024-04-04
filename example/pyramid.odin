@@ -98,12 +98,12 @@ pyramid_frame :: proc(delta: f32) {
 	rotation_x += 0.01 * delta * (window_size.y / 2 - mouse_pos.y) / window_size.y
 
 	mat := glm.mat4Ortho3d(
-		left = 0,
-		right = canvas_size.x,
+		left   = 0,
+		right  = canvas_size.x,
 		bottom = canvas_size.y,
-		top = 0,
-		near = -1000,
-		far = 1000,
+		top    = 0,
+		near   = -1000,
+		far    = 1000,
 	)
 	mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
 	mat *= glm.mat4Scale(scale)
