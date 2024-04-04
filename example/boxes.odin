@@ -57,52 +57,52 @@ cube_colors: [CUBE_VERTICES]RGBA = {
 
 cube_positions: [CUBE_VERTICES]Vec = {
 	{0, 0, 0}, // 0
-	{0, 0, 1},
 	{1, 0, 0},
+	{0, 0, 1},
 
 	{0, 0, 1}, // 1
-	{1, 0, 1},
 	{1, 0, 0},
+	{1, 0, 1},
 
 	{0, 0, 1}, // 2
-	{0, 1, 1},
 	{1, 0, 1},
+	{0, 1, 1},
 
 	{0, 1, 1}, // 3
-	{1, 1, 1},
 	{1, 0, 1},
+	{1, 1, 1},
 
 	{0, 0, 0}, // 4
-	{0, 1, 1},
 	{0, 0, 1},
+	{0, 1, 1},
 
 	{0, 0, 0}, // 5
-	{0, 1, 0},
 	{0, 1, 1},
+	{0, 1, 0},
 
 	{1, 0, 0}, // 6
-	{1, 0, 1},
 	{1, 1, 1},
+	{1, 0, 1},
 
 	{1, 0, 0}, // 7
-	{1, 1, 1},
 	{1, 1, 0},
+	{1, 1, 1},
 
 	{0, 0, 0}, // 8
-	{1, 0, 0},
 	{1, 1, 0},
+	{1, 0, 0},
 
 	{0, 0, 0}, // 9
-	{1, 1, 0},
 	{0, 1, 0},
+	{1, 1, 0},
 
 	{0, 1, 0}, // 10
-	{1, 1, 1},
 	{0, 1, 1},
+	{1, 1, 1},
 	
 	{0, 1, 0}, // 11
-	{1, 1, 0},
 	{1, 1, 1},
+	{1, 1, 0},
 }
 
 write_cube_positions :: proc(dst: []Vec, x, y, z, h: f32) {
@@ -187,17 +187,17 @@ boxes_frame :: proc(delta: f32) {
 	// 	far    = 2000,
 	// )
 	mat := mat4_perspective(
-		fov    = glm.radians_f32(60),
+		fov    = glm.radians_f32(80),
 		aspect = f32(canvas_res.x / canvas_res.y),
-		near   = -400,
-		far    = 400,
+		near   = 1,
+		far    = 1000,
 	)
-	// mat *= glm.mat4Translate({0, 0, 99900})
+	mat *= glm.mat4Translate({0, 0, -400})
 	// mat *= glm.mat4Translate(vec2_to_vec3(window_size / 2 - canvas_pos))
 	// mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
 	mat *= glm.mat4Scale(scale)
 	mat *= mat4_rotate_y(rotation_y)
-	mat *= mat4_rotate_x(-rotation_x)
+	mat *= mat4_rotate_x(rotation_x)
 
 	gl.UniformMatrix4fv(u_matrix, mat)
 

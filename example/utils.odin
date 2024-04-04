@@ -90,7 +90,7 @@ mat4_rotate_z :: proc "contextless" (radians: f32) -> glm.mat4 {
 }
 @(require_results)
 mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> glm.mat4 {
-    f    : f32 = glm.tan(glm.PI*0.5 - fov*0.5)
+    f    : f32 = glm.tan(fov*0.5)
     range: f32 = 1.0 / (near - far)
 
     return {

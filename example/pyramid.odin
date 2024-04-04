@@ -33,20 +33,20 @@ to show the front-face.
 }
 @(private="file") positions: [VERTICES*3]f32 = {
 	 0,      0,   SIDE/2,
-	 -SIDE/2, H,   0,
 	 SIDE/2, H,   0,
+	-SIDE/2, H,   0,
 
 	 0,      0,  -SIDE/2,
+	-SIDE/2, H,   0,
 	 SIDE/2, H,   0,
-	 -SIDE/2, H,   0,
 
-	 0,      0,  -SIDE/2,
 	 0,      0,   SIDE/2,
+	 0,      0,  -SIDE/2,
 	 SIDE/2, H,   0,
 
 	-SIDE/2, H,   0,
-	0,      0,   SIDE/2,
 	0,      0,  -SIDE/2,
+	0,      0,   SIDE/2,
 }
 
 @(private="file") state: struct {
