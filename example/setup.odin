@@ -7,22 +7,12 @@ import "core:runtime"
 import "../wasm/dom"
 import gl "../wasm/webgl"
 
-rectangle_fs := #load("./rectangle_fs.glsl", string)
-rectangle_vs := #load("./rectangle_vs.glsl", string)
-
-pyramid_fs := #load("./pyramid_fs.glsl", string)
-pyramid_vs := #load("./pyramid_vs.glsl", string)
-
-boxes_fs := #load("./boxes_fs.glsl", string)
-boxes_vs := #load("./boxes_vs.glsl", string)
-
-dpr: f32
 canvas_res:  [2]i32
 canvas_pos:  [2]f32
 canvas_size: [2]f32
 window_size: [2]f32
 mouse_pos:   [2]f32
-
+dpr: f32
 scale: f32 = 0.5
 
 Example_Kind :: enum {
@@ -31,6 +21,32 @@ Example_Kind :: enum {
 	Boxes,
 }
 example: Example_Kind
+
+Demo_Interface :: struct {
+	vs_sources, fs_sources: []string,
+	setup: proc(program: gl.Program),
+	frame: proc(delta: f32),
+}
+demos: [Example_Kind]Demo_Interface = {
+	.Rectangle = {
+		vs_sources = {#load("./rectangle_vs.glsl", string)},
+		fs_sources = {#load("./fs_simple.glsl", string)},
+		setup      = rectangle_start,
+		frame      = rectangle_frame,
+	},
+	.Pyramid   = {
+		vs_sources = {#load("./pyramid_vs.glsl", string)},
+		fs_sources = {#load("./fs_simple.glsl", string)},
+		setup      = pyramid_start,
+		frame      = pyramid_frame,
+	},
+	.Boxes     = {
+		vs_sources = {#load("./boxes_vs.glsl", string)},
+		fs_sources = {#load("./fs_simple.glsl", string)},
+		setup      = boxes_start,
+		frame      = boxes_frame,
+	},
+}
 
 frame_arena_buffer: [1024]byte
 frame_arena: mem.Arena = {
@@ -63,38 +79,21 @@ start_example :: proc "contextless" (
 	example = example_kind
 
 	// Make sure that this matches the id of your canvas.
-	if ok := gl.SetCurrentContextById("canvas"); !ok {
+	if ok = gl.SetCurrentContextById("canvas"); !ok {
 		fmt.eprintln("Failed to set current context!")
 		return false
 	}
 
-	vs_sources, fs_sources: []string
+	demo := demos[example]
 
-	switch example {
-	case .Rectangle:
-		vs_sources = {rectangle_vs}
-		fs_sources = {rectangle_fs}
-	case .Pyramid:
-		vs_sources = {pyramid_vs}
-		fs_sources = {pyramid_fs}
-	case .Boxes:
-		vs_sources = {boxes_vs}
-		fs_sources = {boxes_fs}
-	}
-
-	program, program_ok := gl.CreateProgramFromStrings(vs_sources, fs_sources)
+	program, program_ok := gl.CreateProgramFromStrings(demo.vs_sources, demo.fs_sources)
 	if !program_ok {
 		fmt.eprintln("Failed to create program!")
 		return false
 	}
 
 	gl.UseProgram(program)
-
-	switch example {
-	case .Rectangle: rectangle_start(program)
-	case .Pyramid  : pyramid_start(program)
-	case .Boxes    : boxes_start(program)
-	}
+	demo.setup(program)
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
 		fmt.eprintln("WebGL error:", err)
@@ -130,9 +129,5 @@ frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
 		return
 	}
 
-	switch example {
-	case .Rectangle: rectangle_frame(delta)
-	case .Pyramid  : pyramid_frame(delta)
-	case .Boxes    : boxes_frame(delta)
-	}
+	demos[example].frame(delta)
 }

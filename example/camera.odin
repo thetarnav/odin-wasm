@@ -16,7 +16,7 @@ import gl  "../wasm/webgl"
 	vao:        VAO,
 }
 
-boxes_start :: proc(program: gl.Program) {
+camera_start :: proc(program: gl.Program) {
 	using state
 
 	vao = gl.CreateVertexArray()
@@ -58,7 +58,7 @@ boxes_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
-boxes_frame :: proc(delta: f32) {
+camera_frame :: proc(delta: f32) {
 	using state
 
 	gl.BindVertexArray(vao)
@@ -70,15 +70,21 @@ boxes_frame :: proc(delta: f32) {
 
 	rotation += 0.01 * delta * (window_size.yx / 2 - mouse_pos.yx) / window_size.yx
 
-	mat: Mat4 = 1
-	mat *= glm.mat4PerspectiveInfinite(
-		fovy   = glm.radians_f32(80),
+	camera_mat := mat4_rotate_y(-rotation.y)
+	camera_mat *= mat4_rotate_x(-rotation.x)
+	camera_mat *= mat4_translate({0, 0, 800 - 700 * (scale/1.2)})
+	camera_mat = glm.inverse_mat4(camera_mat)
+
+	mat := glm.mat4PerspectiveInfinite(
+		fovy   = radians(80),
 		aspect = f32(canvas_res.x / canvas_res.y),
 		near   = 1,
 	)
-	mat *= glm.mat4Translate({0, 0, -1000 + scale * 800})
-	mat *= mat4_rotate_x(rotation.x)
-	mat *= mat4_rotate_y(rotation.y)
+	mat *= camera_mat
+
+	// mat *= mat4_translate({0, 0, -1000 + scale * 800})
+	// mat *= mat4_rotate_x(rotation.x)
+	// mat *= mat4_rotate_y(rotation.y)
 
 	gl.UniformMatrix4fv(u_matrix, mat)
 

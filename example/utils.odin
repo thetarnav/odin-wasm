@@ -10,6 +10,8 @@ Mat3 :: glm.mat3
 Mat4 :: glm.mat4
 RGBA :: distinct [4]u8
 
+radians :: glm.radians_f32
+
 cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
 	where intrinsics.type_is_numeric(S) && intrinsics.type_is_numeric(D) {
 	return {D(v.x), D(v.y)}
@@ -53,6 +55,9 @@ mat3_projection :: proc "contextless" (size: [2]f32) -> glm.mat3 {
 		0,        0,        1,
 	}
 }
+
+mat4_translate :: glm.mat4Translate
+mat4_inverse :: glm.inverse_mat4
 
 @(require_results)
 mat4_rotate_x :: proc "contextless" (radians: f32) -> glm.mat4 {
@@ -100,5 +105,112 @@ mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> glm.mat4
 		0,        f, 0,                    0,
 		0,        0, (near + far) * range, near * far * range * 2,
 		0,        0, -1,                   0,
+	}
+}
+
+
+
+CUBE_TRIANGLES :: 6 * 2
+CUBE_VERTICES  :: CUBE_TRIANGLES * 3
+
+cube_colors: [CUBE_VERTICES]RGBA = {
+	{60, 210, 0, 255}, // 0
+	{60, 210, 0, 255}, // Green
+	{60, 210, 0, 255}, // 
+	{60, 210, 0, 255}, // 1
+	{60, 210, 0, 255}, // Green
+	{60, 210, 0, 255}, // 
+
+	{210, 210, 0, 255}, // 2
+	{210, 210, 0, 255}, // Yellow
+	{210, 210, 0, 255}, //
+	{210, 210, 0, 255}, // 3
+	{210, 210, 0, 255}, // Yellow
+	{210, 210, 0, 255}, //
+
+	{0, 80, 190, 255}, // 4
+	{0, 80, 190, 255}, // Blue
+	{0, 80, 190, 255}, //
+	{0, 80, 190, 255}, // 5
+	{0, 80, 190, 255}, // Blue
+	{0, 80, 190, 255}, //
+
+	{230, 20, 0, 255}, // 6 
+	{230, 20, 0, 255}, // Red
+	{230, 20, 0, 255}, //
+	{230, 20, 0, 255}, // 7
+	{230, 20, 0, 255}, // Red
+	{230, 20, 0, 255}, //
+
+	{250, 160, 50, 255}, // 8
+	{250, 160, 50, 255}, // Orange
+	{250, 160, 50, 255}, //
+	{250, 160, 50, 255}, // 9
+	{250, 160, 50, 255}, // Orange
+	{250, 160, 50, 255}, //
+
+	{160, 100, 200, 255}, // 10
+	{160, 100, 200, 255}, // Purple
+	{160, 100, 200, 255}, //
+	{160, 100, 200, 255}, // 11
+	{160, 100, 200, 255}, // Purple
+	{160, 100, 200, 255}, //
+}
+
+cube_positions: [CUBE_VERTICES]Vec = {
+	{0, 0, 0}, // 0
+	{1, 0, 0},
+	{0, 0, 1},
+
+	{0, 0, 1}, // 1
+	{1, 0, 0},
+	{1, 0, 1},
+
+	{0, 0, 1}, // 2
+	{1, 0, 1},
+	{0, 1, 1},
+
+	{0, 1, 1}, // 3
+	{1, 0, 1},
+	{1, 1, 1},
+
+	{0, 0, 0}, // 4
+	{0, 0, 1},
+	{0, 1, 1},
+
+	{0, 0, 0}, // 5
+	{0, 1, 1},
+	{0, 1, 0},
+
+	{1, 0, 0}, // 6
+	{1, 1, 1},
+	{1, 0, 1},
+
+	{1, 0, 0}, // 7
+	{1, 1, 0},
+	{1, 1, 1},
+
+	{0, 0, 0}, // 8
+	{1, 1, 0},
+	{1, 0, 0},
+
+	{0, 0, 0}, // 9
+	{0, 1, 0},
+	{1, 1, 0},
+
+	{0, 1, 0}, // 10
+	{0, 1, 1},
+	{1, 1, 1},
+	
+	{0, 1, 0}, // 11
+	{1, 1, 1},
+	{1, 1, 0},
+}
+
+write_cube_positions :: proc(dst: []Vec, x, y, z, h: f32) {
+	assert(len(dst) == CUBE_VERTICES)
+	copy(dst, cube_positions[:])
+	for &vec in dst {
+		vec = {x, y, z} + (vec - {0.5, 0.5, 0.5}) * h
 	}
 }

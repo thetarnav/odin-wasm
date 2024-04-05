@@ -2,7 +2,6 @@ package example
 
 import gl "../wasm/webgl"
 
-
 @(private="file") TRIANGLES :: 2
 @(private="file") VERTICES  :: TRIANGLES * 3
 @(private="file") BOX_W: f32 : 160
