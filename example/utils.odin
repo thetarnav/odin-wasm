@@ -4,6 +4,7 @@ import "core:intrinsics"
 import glm "core:math/linalg/glsl"
 import gl "../wasm/webgl"
 
+PI   :: glm.PI
 VAO  :: gl.VertexArrayObject
 Vec  :: glm.vec3
 Mat3 :: glm.mat3
@@ -11,6 +12,9 @@ Mat4 :: glm.mat4
 RGBA :: distinct [4]u8
 
 radians :: glm.radians_f32
+cos :: glm.cos
+sin :: glm.sin
+tan :: glm.tan
 
 cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
 	where intrinsics.type_is_numeric(S) && intrinsics.type_is_numeric(D) {
@@ -109,52 +113,29 @@ mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> glm.mat4
 }
 
 
+GREEN : RGBA : {60, 210, 0, 255}
+YELLOW: RGBA : {210, 210, 0, 255}
+BLUE  : RGBA : {0, 80, 190, 255}
+RED   : RGBA : {230, 20, 0, 255}
+ORANGE: RGBA : {250, 160, 50, 255}
+PURPLE: RGBA : {160, 100, 200, 255}
 
 CUBE_TRIANGLES :: 6 * 2
 CUBE_VERTICES  :: CUBE_TRIANGLES * 3
 
 cube_colors: [CUBE_VERTICES]RGBA = {
-	{60, 210, 0, 255}, // 0
-	{60, 210, 0, 255}, // Green
-	{60, 210, 0, 255}, // 
-	{60, 210, 0, 255}, // 1
-	{60, 210, 0, 255}, // Green
-	{60, 210, 0, 255}, // 
-
-	{210, 210, 0, 255}, // 2
-	{210, 210, 0, 255}, // Yellow
-	{210, 210, 0, 255}, //
-	{210, 210, 0, 255}, // 3
-	{210, 210, 0, 255}, // Yellow
-	{210, 210, 0, 255}, //
-
-	{0, 80, 190, 255}, // 4
-	{0, 80, 190, 255}, // Blue
-	{0, 80, 190, 255}, //
-	{0, 80, 190, 255}, // 5
-	{0, 80, 190, 255}, // Blue
-	{0, 80, 190, 255}, //
-
-	{230, 20, 0, 255}, // 6 
-	{230, 20, 0, 255}, // Red
-	{230, 20, 0, 255}, //
-	{230, 20, 0, 255}, // 7
-	{230, 20, 0, 255}, // Red
-	{230, 20, 0, 255}, //
-
-	{250, 160, 50, 255}, // 8
-	{250, 160, 50, 255}, // Orange
-	{250, 160, 50, 255}, //
-	{250, 160, 50, 255}, // 9
-	{250, 160, 50, 255}, // Orange
-	{250, 160, 50, 255}, //
-
-	{160, 100, 200, 255}, // 10
-	{160, 100, 200, 255}, // Purple
-	{160, 100, 200, 255}, //
-	{160, 100, 200, 255}, // 11
-	{160, 100, 200, 255}, // Purple
-	{160, 100, 200, 255}, //
+	GREEN,  GREEN,  GREEN,  // 0
+	GREEN,  GREEN,  GREEN,  // 1
+	YELLOW, YELLOW, YELLOW, // 2
+	YELLOW, YELLOW, YELLOW, // 3
+	BLUE,   BLUE,   BLUE,   // 4
+	BLUE,   BLUE,   BLUE,   // 5
+	RED,    RED,    RED,    // 6
+	RED,    RED,    RED,    // 7
+	ORANGE, ORANGE, ORANGE, // 8
+	ORANGE, ORANGE, ORANGE, // 9
+	PURPLE, PURPLE, PURPLE, // 10
+	PURPLE, PURPLE, PURPLE, // 11
 }
 
 cube_positions: [CUBE_VERTICES]Vec = {

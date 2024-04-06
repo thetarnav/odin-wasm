@@ -3,15 +3,42 @@ package example
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-@(private="file") BOX_HEIGHT :: 60
+PYRAMID_TRIANGLES :: 6
+PYRAMID_VERTICES  :: PYRAMID_TRIANGLES * 3
 
-@(private="file") BOXES_ROWS   :: 3
-@(private="file") BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
+pyramid_colors: [PYRAMID_VERTICES]RGBA = {
+	BLUE,   BLUE,   BLUE,   // 0
+	BLUE,   BLUE,   BLUE,   // 1
+	YELLOW, YELLOW, YELLOW, // 2
+	PURPLE, PURPLE, PURPLE, // 3
+	RED,    RED,    RED,    // 4
+	ORANGE, ORANGE, ORANGE, // 5
+}
+
+write_pyramid_positions :: proc(dst: []Vec, x, y, z, h: f32) {
+	assert(len(dst) == PYRAMID_VERTICES)
+
+	positions: [PYRAMID_VERTICES]Vec = {
+		{x, y, z},   {x+h, y, z}, {x,   y, z+h},
+		{x, y, z+h}, {x+h, y, z}, {x+h, y, z+h},
+
+		{x,   y, z},   {x+h/2, y+h, z+h/2}, {x+h, y, z},
+		{x+h, y, z},   {x+h/2, y+h, z+h/2}, {x+h, y, z+h},
+		{x+h, y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z+h},
+		{x,   y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z},
+	}
+	for &vec in positions {
+		vec -= {0.5, 0.5, 0.5} * h
+	}
+	copy(dst, positions[:])
+}
+
+@(private="file") HEIGHT   :: 60
+@(private="file") AMOUNT   :: 10
+@(private="file") VERTICES :: AMOUNT * PYRAMID_VERTICES
 
 @(private="file") state: struct {
 	rotation:   [2]f32,
-	a_position: i32,
-	a_color:    i32,
 	u_matrix:   i32,
 	vao:        VAO,
 }
@@ -22,9 +49,9 @@ look_at_start :: proc(program: gl.Program) {
 	vao = gl.CreateVertexArray()
 	gl.BindVertexArray(vao)
 
-	a_position = gl.GetAttribLocation (program, "a_position")
-	a_color    = gl.GetAttribLocation (program, "a_color")
-	u_matrix   = gl.GetUniformLocation(program, "u_matrix")
+	a_position := gl.GetAttribLocation (program, "a_position")
+	a_color    := gl.GetAttribLocation (program, "a_color")
+	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -35,18 +62,21 @@ look_at_start :: proc(program: gl.Program) {
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	positions: [BOXES_AMOUNT * CUBE_VERTICES]Vec
-	colors   : [BOXES_AMOUNT * CUBE_VERTICES]RGBA
+	positions: [VERTICES]Vec
+	colors   : [VERTICES]RGBA
 
-	for i in 0..<BOXES_AMOUNT {
-		write_cube_positions(
-			positions[i*CUBE_VERTICES:][:CUBE_VERTICES],
-			x = 100 * f32(i % BOXES_ROWS)              - 100,
-			y = 100 * f32(i / BOXES_ROWS % BOXES_ROWS) - 100,
-			z = 100 * f32(i / BOXES_ROWS / BOXES_ROWS) - 100,
-			h = BOX_HEIGHT,
+	for i in 0..<AMOUNT {
+		angle := 2*PI * f32(i)/f32(AMOUNT)
+
+		write_pyramid_positions(
+			positions[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES],
+			x = 300 * cos(angle),
+			y = 0,
+			z = 300 * sin(angle),
+			h = HEIGHT,
 		)
-		copy(colors[i*CUBE_VERTICES:][:CUBE_VERTICES], cube_colors[:])
+		
+		copy(colors[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES], pyramid_colors[:])
 	}
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
@@ -88,5 +118,5 @@ look_at_frame :: proc(delta: f32) {
 
 	gl.UniformMatrix4fv(u_matrix, mat)
 
-	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES * BOXES_AMOUNT)
+	gl.DrawArrays(gl.TRIANGLES, 0, VERTICES)
 }

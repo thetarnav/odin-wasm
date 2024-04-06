@@ -48,6 +48,10 @@ const example_kind_href_hashes_entries = /** @type {*} */(Object.entries(example
 let example_kind = Example_Kind.Boxes
 
 for (const [kind, hash] of example_kind_href_hashes_entries) {
+	if (location.hash === hash) {
+		example_kind = kind
+	}
+
 	const anchor = document.querySelector(`a[href="${hash}"]`)
 	if (!anchor) continue
 
@@ -59,7 +63,6 @@ for (const [kind, hash] of example_kind_href_hashes_entries) {
 
 	if (location.hash === hash) {
 		anchor.classList.add("active")
-		example_kind = kind
 	}
 }
 
