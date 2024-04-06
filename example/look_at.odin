@@ -3,10 +3,20 @@ package example
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-PYRAMID_TRIANGLES :: 6
-PYRAMID_VERTICES  :: PYRAMID_TRIANGLES * 3
+@(private="file") HEIGHT         :: 60
+@(private="file") RADIUS         :: 260
+@(private="file") CUBE_ELEVATION :: 140
+@(private="file") AMOUNT         :: 10
+@(private="file") ALL_PYRAMID_VERTICES :: AMOUNT * PYRAMID_VERTICES
+@(private="file") ALL_VERTICES :: ALL_PYRAMID_VERTICES + CUBE_VERTICES
 
-pyramid_colors: [PYRAMID_VERTICES]RGBA = {
+@(private="file") look_at_state: struct {
+	rotation: [2]f32,
+	u_matrix: i32,
+	vao:      VAO,
+}
+
+@(private="file") pyramid_colors: [PYRAMID_VERTICES]RGBA = {
 	BLUE,   BLUE,   BLUE,   // 0
 	BLUE,   BLUE,   BLUE,   // 1
 	YELLOW, YELLOW, YELLOW, // 2
@@ -15,36 +25,23 @@ pyramid_colors: [PYRAMID_VERTICES]RGBA = {
 	ORANGE, ORANGE, ORANGE, // 5
 }
 
-write_pyramid_positions :: proc(dst: []Vec, x, y, z, h: f32) {
-	assert(len(dst) == PYRAMID_VERTICES)
-
-	positions: [PYRAMID_VERTICES]Vec = {
-		{x, y, z},   {x+h, y, z}, {x,   y, z+h},
-		{x, y, z+h}, {x+h, y, z}, {x+h, y, z+h},
-
-		{x,   y, z},   {x+h/2, y+h, z+h/2}, {x+h, y, z},
-		{x+h, y, z},   {x+h/2, y+h, z+h/2}, {x+h, y, z+h},
-		{x+h, y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z+h},
-		{x,   y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z},
-	}
-	for &vec in positions {
-		vec -= {0.5, 0.5, 0.5} * h
-	}
-	copy(dst, positions[:])
-}
-
-@(private="file") HEIGHT   :: 60
-@(private="file") AMOUNT   :: 10
-@(private="file") VERTICES :: AMOUNT * PYRAMID_VERTICES
-
-@(private="file") state: struct {
-	rotation:   [2]f32,
-	u_matrix:   i32,
-	vao:        VAO,
+@(private="file") cube_colors: [CUBE_VERTICES]RGBA = {
+	WHITE, WHITE, WHITE, // 0
+	WHITE, WHITE, WHITE, // 1
+	WHITE, WHITE, WHITE, // 2
+	WHITE, WHITE, WHITE, // 3
+	WHITE, WHITE, WHITE, // 4
+	WHITE, WHITE, WHITE, // 5
+	WHITE, WHITE, WHITE, // 6
+	WHITE, WHITE, WHITE, // 7
+	WHITE, WHITE, WHITE, // 8
+	WHITE, WHITE, WHITE, // 9
+	WHITE, WHITE, WHITE, // 10
+	WHITE, WHITE, WHITE, // 11
 }
 
 look_at_start :: proc(program: gl.Program) {
-	using state
+	using look_at_state
 
 	vao = gl.CreateVertexArray()
 	gl.BindVertexArray(vao)
@@ -62,22 +59,33 @@ look_at_start :: proc(program: gl.Program) {
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	positions: [VERTICES]Vec
-	colors   : [VERTICES]RGBA
+	positions: [ALL_VERTICES]Vec
+	colors   : [ALL_VERTICES]RGBA
 
+	/* Pyramids */
 	for i in 0..<AMOUNT {
 		angle := 2*PI * f32(i)/f32(AMOUNT)
 
 		write_pyramid_positions(
 			positions[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES],
-			x = 300 * cos(angle),
+			x = RADIUS * cos(angle),
 			y = 0,
-			z = 300 * sin(angle),
+			z = RADIUS * sin(angle),
 			h = HEIGHT,
 		)
 		
 		copy(colors[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES], pyramid_colors[:])
 	}
+
+	/* Cube */
+	write_cube_positions(
+		positions[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES],
+		x = 0,
+		y = CUBE_ELEVATION,
+		z = -RADIUS,
+		h = HEIGHT,
+	)
+	copy(colors[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES], cube_colors[:])
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
@@ -89,7 +97,7 @@ look_at_start :: proc(program: gl.Program) {
 }
 
 look_at_frame :: proc(delta: f32) {
-	using state
+	using look_at_state
 
 	gl.BindVertexArray(vao)
 
@@ -118,5 +126,5 @@ look_at_frame :: proc(delta: f32) {
 
 	gl.UniformMatrix4fv(u_matrix, mat)
 
-	gl.DrawArrays(gl.TRIANGLES, 0, VERTICES)
+	gl.DrawArrays(gl.TRIANGLES, 0, ALL_VERTICES)
 }

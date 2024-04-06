@@ -113,6 +113,7 @@ mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> glm.mat4
 }
 
 
+WHITE : RGBA : {255, 255, 255, 255}
 GREEN : RGBA : {60, 210, 0, 255}
 YELLOW: RGBA : {210, 210, 0, 255}
 BLUE  : RGBA : {0, 80, 190, 255}
@@ -122,21 +123,6 @@ PURPLE: RGBA : {160, 100, 200, 255}
 
 CUBE_TRIANGLES :: 6 * 2
 CUBE_VERTICES  :: CUBE_TRIANGLES * 3
-
-cube_colors: [CUBE_VERTICES]RGBA = {
-	GREEN,  GREEN,  GREEN,  // 0
-	GREEN,  GREEN,  GREEN,  // 1
-	YELLOW, YELLOW, YELLOW, // 2
-	YELLOW, YELLOW, YELLOW, // 3
-	BLUE,   BLUE,   BLUE,   // 4
-	BLUE,   BLUE,   BLUE,   // 5
-	RED,    RED,    RED,    // 6
-	RED,    RED,    RED,    // 7
-	ORANGE, ORANGE, ORANGE, // 8
-	ORANGE, ORANGE, ORANGE, // 9
-	PURPLE, PURPLE, PURPLE, // 10
-	PURPLE, PURPLE, PURPLE, // 11
-}
 
 cube_positions: [CUBE_VERTICES]Vec = {
 	{0, 0, 0}, // 0
@@ -194,4 +180,26 @@ write_cube_positions :: proc(dst: []Vec, x, y, z, h: f32) {
 	for &vec in dst {
 		vec = {x, y, z} + (vec - {0.5, 0.5, 0.5}) * h
 	}
+}
+
+
+PYRAMID_TRIANGLES :: 6
+PYRAMID_VERTICES  :: PYRAMID_TRIANGLES * 3
+
+write_pyramid_positions :: proc(dst: []Vec, x, y, z, h: f32) {
+	assert(len(dst) == PYRAMID_VERTICES)
+
+	positions: [PYRAMID_VERTICES]Vec = {
+		{x, y, z},   {x+h, y, z}, {x,   y, z+h},
+		{x, y, z+h}, {x+h, y, z}, {x+h, y, z+h},
+
+		{x,   y, z},   {x+h/2, y+h, z+h/2}, {x+h, y, z},
+		{x+h, y, z},   {x+h/2, y+h, z+h/2}, {x+h, y, z+h},
+		{x+h, y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z+h},
+		{x,   y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z},
+	}
+	for &vec in positions {
+		vec -= {0.5, 0.5, 0.5} * h
+	}
+	copy(dst, positions[:])
 }
