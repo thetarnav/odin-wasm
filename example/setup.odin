@@ -13,6 +13,8 @@ canvas_size: [2]f32
 window_size: [2]f32
 mouse_pos:   [2]f32
 dpr: f32
+aspect_ratio: f32
+
 scale: f32 = 0.5
 
 Example_Kind :: enum {
@@ -118,10 +120,11 @@ on_wheel :: proc(e: dom.Event) {
 }
 @(export)
 on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
-	window_size = {vw, vh}
-	canvas_size = {cw, ch}
-	canvas_pos  = {cx, cy}
-	canvas_res  = cast_vec2(i32, canvas_size * dpr)
+	window_size  = {vw, vh}
+	canvas_size  = {cw, ch}
+	canvas_pos   = {cx, cy}
+	canvas_res   = cast_vec2(i32, canvas_size * dpr)
+	aspect_ratio = canvas_size.x / canvas_size.y
 }
 
 @(export)

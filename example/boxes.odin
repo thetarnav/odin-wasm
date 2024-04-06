@@ -8,23 +8,21 @@ import gl  "../wasm/webgl"
 @(private="file") BOXES_ROWS   :: 3
 @(private="file") BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
 
-@(private="file") state: struct {
+@(private="file") boxes_state: struct {
 	rotation:   [2]f32,
-	a_position: i32,
-	a_color:    i32,
 	u_matrix:   i32,
 	vao:        VAO,
 }
 
 boxes_start :: proc(program: gl.Program) {
-	using state
+	using boxes_state
 
 	vao = gl.CreateVertexArray()
 	gl.BindVertexArray(vao)
 
-	a_position = gl.GetAttribLocation (program, "a_position")
-	a_color    = gl.GetAttribLocation (program, "a_color")
-	u_matrix   = gl.GetUniformLocation(program, "u_matrix")
+	a_position := gl.GetAttribLocation (program, "a_position")
+	a_color    := gl.GetAttribLocation (program, "a_color")
+	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -59,7 +57,7 @@ boxes_start :: proc(program: gl.Program) {
 }
 
 boxes_frame :: proc(delta: f32) {
-	using state
+	using boxes_state
 
 	gl.BindVertexArray(vao)
 
@@ -73,7 +71,7 @@ boxes_frame :: proc(delta: f32) {
 	mat: Mat4 = 1
 	mat *= glm.mat4PerspectiveInfinite(
 		fovy   = glm.radians_f32(80),
-		aspect = f32(canvas_res.x / canvas_res.y),
+		aspect = aspect_ratio,
 		near   = 1,
 	)
 	mat *= glm.mat4Translate({0, 0, -1000 + scale * 800})

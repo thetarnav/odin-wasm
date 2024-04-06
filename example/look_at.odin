@@ -77,7 +77,7 @@ look_at_frame :: proc(delta: f32) {
 
 	mat := glm.mat4PerspectiveInfinite(
 		fovy   = radians(80),
-		aspect = f32(canvas_res.x / canvas_res.y),
+		aspect = aspect_ratio,
 		near   = 1,
 	)
 	mat *= camera_mat
