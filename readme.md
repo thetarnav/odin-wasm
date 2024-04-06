@@ -28,7 +28,7 @@ There are some convenience scripts in [`main.js`](https://github.com/thetarnav/o
 
 ## Development
 
-### Requirements
+### Dependencies
 
 -   [Odin](https://odin-lang.org/docs/install/) (and [LLVM](https://apt.llvm.org/))
 -   [Node 20](https://nodejs.org/)
@@ -36,10 +36,11 @@ There are some convenience scripts in [`main.js`](https://github.com/thetarnav/o
 
 ### OLS
 
-Add `js_wasm32` target to `ols.json`:
+Add `js_wasm32` target to `ols.json` if you want to use [OLS](https://github.com/DanielGavin/ols):
 
 ```json
 {
-	"checker_args": "-target:js_wasm32 -vet-unused -vet-shadowing -vet-style -vet-semicolon"
+    "checker_args": "-target:js_wasm32 -vet-unused -vet-shadowing -vet-style -vet-semicolon",
+	"enable_format": false
 }
 ```
