@@ -66,6 +66,9 @@ for (const [kind, hash] of example_kind_href_hashes_entries) {
 	}
 }
 
+/* Reload on hash change */
+window.addEventListener("hashchange", () => location.reload())
+
 /*
 Wasm instance
 */
