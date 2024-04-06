@@ -16,7 +16,7 @@ import gl  "../wasm/webgl"
 	vao:        VAO,
 }
 
-camera_start :: proc(program: gl.Program) {
+look_at_start :: proc(program: gl.Program) {
 	using state
 
 	vao = gl.CreateVertexArray()
@@ -58,7 +58,7 @@ camera_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
-camera_frame :: proc(delta: f32) {
+look_at_frame :: proc(delta: f32) {
 	using state
 
 	gl.BindVertexArray(vao)

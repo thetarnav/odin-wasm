@@ -2,8 +2,6 @@ import * as wasm from "../wasm/runtime.js"
 
 import {IS_DEV, WEB_SOCKET_PORT, MESSAGE_RELOAD, WASM_FILENAME} from "./_config.js"
 
-import * as t from "./types.js"
-
 /*
 Development server
 */
@@ -28,16 +26,28 @@ if (IS_DEV) {
 Example selection
 */
 
-/** @type {Record<string, t.Example_Kind | undefined>} */
-const example_hash_map = {
-	"#rectangle": t.Example_Kind.Rectangle,
-	"#pyramid":   t.Example_Kind.Pyramid,
-	"#boxes":     t.Example_Kind.Boxes,
-}
-/** @type {t.Example_Kind} */
-const example = example_hash_map[location.hash] ?? t.Example_Kind.Boxes
+/** @enum {(typeof Example_Kind)[keyof typeof Example_Kind]} */
+const Example_Kind = /** @type {const} */ ({
+	Rectangle: 0,
+	Pyramid  : 1,
+	Boxes    : 2,
+	Look_At  : 3,
+})
 
-for (const hash in example_hash_map) {
+/** @type {Record<Example_Kind, string>} */
+const example_kind_href_hashes = {
+	[Example_Kind.Rectangle]: "#rectangle",
+	[Example_Kind.Pyramid]  : "#pyramid",
+	[Example_Kind.Boxes]    : "#boxes",
+	[Example_Kind.Look_At]  : "#look-at",
+}
+/** @type {[Example_Kind, string][]} */
+const example_kind_href_hashes_entries = /** @type {*} */(Object.entries(example_kind_href_hashes))
+
+/** @type {Example_Kind} */
+let example_kind = Example_Kind.Boxes
+
+for (const [kind, hash] of example_kind_href_hashes_entries) {
 	const anchor = document.querySelector(`a[href="${hash}"]`)
 	if (!anchor) continue
 
@@ -47,14 +57,43 @@ for (const hash in example_hash_map) {
 		location.reload()
 	})
 
-	if (example_hash_map[hash] === example) {
+	if (location.hash === hash) {
 		anchor.classList.add("active")
+		example_kind = kind
 	}
 }
 
 /*
 Wasm instance
 */
+
+/**
+ * @typedef {object} Example_Exports
+ * @property {Example_Start           } start
+ * @property {Example_Frame           } frame
+ * @property {Example_On_Window_Resize} on_window_resize
+ * 
+ * @typedef {wasm.OdinExports & Example_Exports} Wasm_Exports
+ * 
+ * @callback Example_Start
+ * @param   {wasm.rawptr } ctx_ptr
+ * @param   {Example_Kind} example_type
+ * @returns {wasm.bool   }
+ * 
+ * @callback Example_Frame
+ * @param   {wasm.rawptr} ctx_ptr
+ * @param   {wasm.f32   } delta
+ * @returns {void       }
+ * 
+ * @callback Example_On_Window_Resize
+ * @param   {wasm.f32} window_w
+ * @param   {wasm.f32} window_h
+ * @param   {wasm.f32} canvas_w
+ * @param   {wasm.f32} canvas_h
+ * @param   {wasm.f32} canvas_x
+ * @param   {wasm.f32} canvas_y
+ * @returns {void    }
+ */
 
 const wasm_state = wasm.makeWasmState()
 const webgl_state = wasm.webgl.makeWebGLState()
@@ -68,7 +107,7 @@ const src_instance = await wasm.fetchInstanciateWasm(WASM_FILENAME, {
 })
 
 wasm.initWasmState(wasm_state, src_instance)
-const exports = /** @type {t.WasmExports} */ (wasm_state.exports)
+const exports = /** @type {Wasm_Exports} */ (wasm_state.exports)
 
 if (IS_DEV) {
 	// eslint-disable-next-line no-console
@@ -85,7 +124,7 @@ exports._start()
 const odin_ctx = exports.default_context_ptr()
 exports._end()
 
-const ok = exports.start_example(odin_ctx, example)
+const ok = exports.start(odin_ctx, example_kind)
 if (!ok) throw Error("Failed to start example")
 
 void requestAnimationFrame(prev_time => {

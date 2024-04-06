@@ -19,6 +19,7 @@ Example_Kind :: enum {
 	Rectangle,
 	Pyramid,
 	Boxes,
+	Look_At,
 }
 example: Example_Kind
 
@@ -46,6 +47,12 @@ demos: [Example_Kind]Demo_Interface = {
 		setup      = boxes_start,
 		frame      = boxes_frame,
 	},
+	.Look_At   = {
+		vs_sources = {#load("./boxes_vs.glsl", string)},
+		fs_sources = {#load("./fs_simple.glsl", string)},
+		setup      = look_at_start,
+		frame      = look_at_frame,
+	},
 }
 
 frame_arena_buffer: [1024]byte
@@ -70,8 +77,7 @@ main :: proc() {
 	mouse_pos   = window_size / 2
 }
 
-@(export)
-start_example :: proc "contextless" (
+@export start :: proc "contextless" (
 	ctx: ^runtime.Context,
 	example_kind: Example_Kind,
 ) -> (ok: bool) {
