@@ -21,7 +21,7 @@ Example_Kind :: enum {
 	Rectangle,
 	Pyramid,
 	Boxes,
-	Look_At,
+	Camera,
 }
 example: Example_Kind
 
@@ -49,11 +49,11 @@ demos: [Example_Kind]Demo_Interface = {
 		setup      = boxes_start,
 		frame      = boxes_frame,
 	},
-	.Look_At   = {
+	.Camera   = {
 		vs_sources = {#load("./boxes_vs.glsl", string)},
 		fs_sources = {#load("./fs_simple.glsl", string)},
-		setup      = look_at_start,
-		frame      = look_at_frame,
+		setup      = camera_start,
+		frame      = camera_frame,
 	},
 }
 

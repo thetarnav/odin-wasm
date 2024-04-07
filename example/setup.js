@@ -31,7 +31,7 @@ const Example_Kind = /** @type {const} */ ({
 	Rectangle: 0,
 	Pyramid  : 1,
 	Boxes    : 2,
-	Look_At  : 3,
+	Camera   : 3,
 })
 
 /** @type {Record<Example_Kind, string>} */
@@ -39,7 +39,7 @@ const example_kind_href_hashes = {
 	[Example_Kind.Rectangle]: "#rectangle",
 	[Example_Kind.Pyramid]  : "#pyramid",
 	[Example_Kind.Boxes]    : "#boxes",
-	[Example_Kind.Look_At]  : "#look-at",
+	[Example_Kind.Camera]   : "#camera",
 }
 /** @type {[Example_Kind, string][]} */
 const example_kind_href_hashes_entries = /** @type {*} */(Object.entries(example_kind_href_hashes))

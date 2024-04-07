@@ -40,7 +40,7 @@ import gl  "../wasm/webgl"
 @(private="file") RADIUS :: 260
 @(private="file") AMOUNT :: 10
 
-look_at_start :: proc(program: gl.Program) {
+camera_start :: proc(program: gl.Program) {
 	using look_at_state
 
 	vao = gl.CreateVertexArray()
@@ -85,7 +85,7 @@ look_at_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
-look_at_frame :: proc(delta: f32) {
+camera_frame :: proc(delta: f32) {
 	using look_at_state
 
 	gl.BindVertexArray(vao)
