@@ -112,8 +112,8 @@ camera_frame :: proc(delta: f32) {
 
 	cube_pos: Vec
 	cube_pos.y = elevation
-	cube_pos.x = RADIUS * cos(rotation)
-	cube_pos.z = RADIUS * sin(rotation)
+	cube_pos.x = (RADIUS-40) * cos(rotation)
+	cube_pos.z = (RADIUS-40) * sin(rotation)
 
 	for i in 0..<AMOUNT {
 		/* Draw pyramid looking at the cube */
@@ -130,12 +130,15 @@ camera_frame :: proc(delta: f32) {
 			up     = {0, 1, 0},
 		)
 		mat *= mat4_rotate_x(PI/2)
+
 		gl.UniformMatrix4fv(u_matrix, mat)
 		gl.DrawArrays(gl.TRIANGLES, i*PYRAMID_VERTICES, PYRAMID_VERTICES)
 	}
 
 	{ /* Draw cube */
-		mat := view_mat * mat4_translate(cube_pos)
+		mat := view_mat
+		mat *= mat4_translate(cube_pos)
+		mat *= mat4_rotate_y(rotation)
 		gl.UniformMatrix4fv(u_matrix, mat)
 		gl.DrawArrays(gl.TRIANGLES, ALL_PYRAMID_VERTICES, CUBE_VERTICES)
 	}
