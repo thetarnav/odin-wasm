@@ -110,21 +110,23 @@ look_at_frame :: proc(delta: f32) {
 	)
 	view_mat *= camera_mat
 
-	cupe_pos: Vec = {0, 100, RADIUS}
+	cupe_pos: Vec = {0, 120, RADIUS}
 
 	for i in 0..<AMOUNT {
 		/* Draw pyramid looking at the cube */
 
 		angle := 2*PI * f32(i)/f32(AMOUNT)
 		x: f32 = RADIUS * cos(angle)
-		y: f32 = -50
+		y: f32 = -60
 		z: f32 = RADIUS * sin(angle)
 
-		mat := view_mat * mat4_look_at(
+		mat := view_mat
+		mat *= mat4_look_at(
 			eye    = {x, y, z},
 			target = cupe_pos,
 			up     = {0, 1, 0},
 		)
+		mat *= mat4_rotate_x(PI/2)
 		gl.UniformMatrix4fv(u_matrix, mat)
 		gl.DrawArrays(gl.TRIANGLES, i*PYRAMID_VERTICES, PYRAMID_VERTICES)
 	}
