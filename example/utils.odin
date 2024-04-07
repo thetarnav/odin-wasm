@@ -7,14 +7,17 @@ import gl "../wasm/webgl"
 PI   :: glm.PI
 VAO  :: gl.VertexArrayObject
 Vec  :: glm.vec3
+Vec3 :: glm.vec3
 Mat3 :: glm.mat3
 Mat4 :: glm.mat4
 RGBA :: distinct [4]u8
 
 radians :: glm.radians_f32
-cos :: glm.cos
-sin :: glm.sin
-tan :: glm.tan
+cos     :: glm.cos
+sin     :: glm.sin
+tan     :: glm.tan
+dot     :: glm.dot
+cross   :: glm.cross
 
 cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
 	where intrinsics.type_is_numeric(S) && intrinsics.type_is_numeric(D) {
@@ -111,6 +114,31 @@ mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> glm.mat4
 		0,        0, -1,                   0,
 	}
 }
+@(require_results)
+mat4_look_at :: proc "contextless" (eye, target, up: Vec3) -> Mat4 {
+	// f  := glm.normalize(target - eye)
+	// s  := glm.normalize(cross(f, up))
+	// u  := cross(s, f)
+	// fe := dot(f, eye)
+	
+	// return {
+	// 	+s.x, +s.y, +s.z, -dot(s, eye),
+	// 	+u.x, +u.y, +u.z, -dot(u, eye),
+	// 	-f.x, -f.y, -f.z, +fe,
+	// 	0,    0,    0,    1,
+	// }
+
+	z := glm.normalize(eye - target)
+	x := glm.normalize(cross(up, z))
+	y := glm.normalize(cross(z, x))
+
+	return {
+		x.x, y.x, z.x, eye.x,
+		x.y, y.y, z.y, eye.y,
+		x.z, y.z, z.z, eye.z,
+		0,   0,   0,   1,	
+	}
+}
 
 
 WHITE : RGBA : {255, 255, 255, 255}
@@ -124,7 +152,7 @@ PURPLE: RGBA : {160, 100, 200, 255}
 CUBE_TRIANGLES :: 6 * 2
 CUBE_VERTICES  :: CUBE_TRIANGLES * 3
 
-cube_positions: [CUBE_VERTICES]Vec = {
+CUBE_POSITIONS: [CUBE_VERTICES]Vec : {
 	{0, 0, 0}, // 0
 	{1, 0, 0},
 	{0, 0, 1},
@@ -174,22 +202,24 @@ cube_positions: [CUBE_VERTICES]Vec = {
 	{1, 1, 0},
 }
 
-write_cube_positions :: proc(dst: []Vec, x, y, z, h: f32) {
-	assert(len(dst) == CUBE_VERTICES)
-	copy(dst, cube_positions[:])
-	for &vec in dst {
-		vec = {x, y, z} + (vec - {0.5, 0.5, 0.5}) * h
+get_cube_positions :: proc(pos: Vec = 0, h: f32 = 1) -> [CUBE_VERTICES]Vec {
+	positions := CUBE_POSITIONS
+	for &vec in positions {
+		vec = pos + (vec - {0.5, 0.5, 0.5}) * h
 	}
+	return positions
 }
 
 
 PYRAMID_TRIANGLES :: 6
 PYRAMID_VERTICES  :: PYRAMID_TRIANGLES * 3
 
-write_pyramid_positions :: proc(dst: []Vec, x, y, z, h: f32) {
-	assert(len(dst) == PYRAMID_VERTICES)
+get_pyramid_positions :: proc(pos: Vec = 0, h: f32 = 1) -> [PYRAMID_VERTICES]Vec {
+	x := pos.x - h/2
+	y := pos.y - h/2
+	z := pos.z - h/2
 
-	positions: [PYRAMID_VERTICES]Vec = {
+	return {
 		{x, y, z},   {x+h, y, z}, {x,   y, z+h},
 		{x, y, z+h}, {x+h, y, z}, {x+h, y, z+h},
 
@@ -198,8 +228,4 @@ write_pyramid_positions :: proc(dst: []Vec, x, y, z, h: f32) {
 		{x+h, y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z+h},
 		{x,   y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z},
 	}
-	for &vec in positions {
-		vec -= {0.5, 0.5, 0.5} * h
-	}
-	copy(dst, positions[:])
 }

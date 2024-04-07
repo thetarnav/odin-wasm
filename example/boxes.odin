@@ -52,13 +52,15 @@ boxes_start :: proc(program: gl.Program) {
 	colors   : [BOXES_AMOUNT * CUBE_VERTICES]RGBA
 
 	for i in 0..<BOXES_AMOUNT {
-		write_cube_positions(
-			positions[i*CUBE_VERTICES:][:CUBE_VERTICES],
-			x = 100 * f32(i % BOXES_ROWS)              - 100,
-			y = 100 * f32(i / BOXES_ROWS % BOXES_ROWS) - 100,
-			z = 100 * f32(i / BOXES_ROWS / BOXES_ROWS) - 100,
-			h = BOX_HEIGHT,
+		cube_positions := get_cube_positions(
+			pos = {
+				100 * f32(i % BOXES_ROWS)              - 100,
+				100 * f32(i / BOXES_ROWS % BOXES_ROWS) - 100,
+				100 * f32(i / BOXES_ROWS / BOXES_ROWS) - 100,
+			},
+			h   = BOX_HEIGHT,
 		)
+		copy(positions[i*CUBE_VERTICES:][:CUBE_VERTICES], cube_positions[:])
 		copy(colors[i*CUBE_VERTICES:][:CUBE_VERTICES], cube_colors[:])
 	}
 

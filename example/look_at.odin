@@ -64,27 +64,16 @@ look_at_start :: proc(program: gl.Program) {
 
 	/* Pyramids */
 	for i in 0..<AMOUNT {
-		angle := 2*PI * f32(i)/f32(AMOUNT)
-
-		write_pyramid_positions(
-			positions[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES],
-			x = RADIUS * cos(angle),
-			y = -50,
-			z = RADIUS * sin(angle),
-			h = HEIGHT,
-		)
-		
+		// Position of the pyramids is 0
+		// because they will be moved with the matrix
+		pyramid_positions := get_pyramid_positions(0, HEIGHT)
+		copy(positions[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES], pyramid_positions[:])
 		copy(colors[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES], pyramid_colors[:])
 	}
 
 	/* Cube */
-	write_cube_positions(
-		positions[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES],
-		x = 0,
-		y = 140,
-		z = RADIUS,
-		h = HEIGHT,
-	)
+	cube_positions := get_cube_positions(0, HEIGHT)
+	copy(positions[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES], cube_positions[:])
 	copy(colors[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES], cube_colors[:])
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
@@ -113,19 +102,36 @@ look_at_frame :: proc(delta: f32) {
 	camera_mat *= mat4_translate({0, 0, 800 - 700 * (scale/1.2)})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
-	mat: Mat4 = 1
-	mat = glm.mat4PerspectiveInfinite(
+	view_mat: Mat4 = 1
+	view_mat = glm.mat4PerspectiveInfinite(
 		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	mat *= camera_mat
+	view_mat *= camera_mat
 
-	// mat *= mat4_translate({0, 0, -1000 + scale * 800})
-	// mat *= mat4_rotate_x(rotation.x)
-	// mat *= mat4_rotate_y(rotation.y)
+	cupe_pos: Vec = {0, 100, RADIUS}
 
-	gl.UniformMatrix4fv(u_matrix, mat)
+	for i in 0..<AMOUNT {
+		/* Draw pyramid looking at the cube */
 
-	gl.DrawArrays(gl.TRIANGLES, 0, ALL_VERTICES)
+		angle := 2*PI * f32(i)/f32(AMOUNT)
+		x: f32 = RADIUS * cos(angle)
+		y: f32 = -50
+		z: f32 = RADIUS * sin(angle)
+
+		mat := view_mat * mat4_look_at(
+			eye    = {x, y, z},
+			target = cupe_pos,
+			up     = {0, 1, 0},
+		)
+		gl.UniformMatrix4fv(u_matrix, mat)
+		gl.DrawArrays(gl.TRIANGLES, i*PYRAMID_VERTICES, PYRAMID_VERTICES)
+	}
+
+	{ /* Draw cube */
+		mat := view_mat * mat4_translate(cupe_pos)
+		gl.UniformMatrix4fv(u_matrix, mat)
+		gl.DrawArrays(gl.TRIANGLES, ALL_PYRAMID_VERTICES, CUBE_VERTICES)
+	}
 }
