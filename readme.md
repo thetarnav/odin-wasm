@@ -2,6 +2,8 @@
 
 **For using Odin and WASM together.**
 
+[![demo gif](https://raw.githubusercontent.com/thetarnav/odin-wasm/main/assets/camera.gif)](https://thetarnav.github.io/odin-wasm/#camera)
+
 ## What is this?
 
 ### 1. A library of WASM bindings
