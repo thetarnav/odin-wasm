@@ -3,10 +3,6 @@ package example
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-@(private="file") HEIGHT         :: 60
-@(private="file") RADIUS         :: 260
-@(private="file") CUBE_ELEVATION :: 140
-@(private="file") AMOUNT         :: 10
 @(private="file") ALL_PYRAMID_VERTICES :: AMOUNT * PYRAMID_VERTICES
 @(private="file") ALL_VERTICES :: ALL_PYRAMID_VERTICES + CUBE_VERTICES
 
@@ -40,6 +36,10 @@ import gl  "../wasm/webgl"
 	WHITE, WHITE, WHITE, // 11
 }
 
+@(private="file") HEIGHT :: 60
+@(private="file") RADIUS :: 260
+@(private="file") AMOUNT :: 10
+
 look_at_start :: proc(program: gl.Program) {
 	using look_at_state
 
@@ -69,7 +69,7 @@ look_at_start :: proc(program: gl.Program) {
 		write_pyramid_positions(
 			positions[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES],
 			x = RADIUS * cos(angle),
-			y = 0,
+			y = -50,
 			z = RADIUS * sin(angle),
 			h = HEIGHT,
 		)
@@ -81,8 +81,8 @@ look_at_start :: proc(program: gl.Program) {
 	write_cube_positions(
 		positions[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES],
 		x = 0,
-		y = CUBE_ELEVATION,
-		z = -RADIUS,
+		y = 140,
+		z = RADIUS,
 		h = HEIGHT,
 	)
 	copy(colors[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES], cube_colors[:])
@@ -108,12 +108,13 @@ look_at_frame :: proc(delta: f32) {
 
 	rotation += 0.01 * delta * (window_size.yx / 2 - mouse_pos.yx) / window_size.yx
 
-	camera_mat := mat4_rotate_y(-rotation.y)
-	camera_mat *= mat4_rotate_x(-rotation.x)
+	camera_mat: Mat4 = 1
+	camera_mat *= mat4_rotate_y(-rotation.y)
 	camera_mat *= mat4_translate({0, 0, 800 - 700 * (scale/1.2)})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
-	mat := glm.mat4PerspectiveInfinite(
+	mat: Mat4 = 1
+	mat = glm.mat4PerspectiveInfinite(
 		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,

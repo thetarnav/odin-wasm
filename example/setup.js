@@ -74,7 +74,7 @@ Wasm instance
 */
 
 /**
- * @typedef {object} Example_Exports
+ * @typedef  {object}                   Example_Exports
  * @property {Example_Start           } start
  * @property {Example_Frame           } frame
  * @property {Example_On_Window_Resize} on_window_resize

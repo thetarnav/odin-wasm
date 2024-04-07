@@ -77,8 +77,8 @@ mat4_rotate_x :: proc "contextless" (radians: f32) -> glm.mat4 {
 }
 @(require_results)
 mat4_rotate_y :: proc "contextless" (radians: f32) -> glm.mat4 {
-	c := glm.cos(radians)
-	s := glm.sin(radians)
+	c := cos(radians)
+	s := sin(radians)
 
 	return {
 		c, 0,-s, 0,
@@ -89,8 +89,8 @@ mat4_rotate_y :: proc "contextless" (radians: f32) -> glm.mat4 {
 }
 @(require_results)
 mat4_rotate_z :: proc "contextless" (radians: f32) -> glm.mat4 {
-	c := glm.cos(radians)
-	s := glm.sin(radians)
+	c := cos(radians)
+	s := sin(radians)
 
 	return {
 		c,  s, 0, 0,
@@ -101,8 +101,8 @@ mat4_rotate_z :: proc "contextless" (radians: f32) -> glm.mat4 {
 }
 @(require_results)
 mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> glm.mat4 {
-    f    : f32 = glm.tan(fov*0.5)
-    range: f32 = 1.0 / (near - far)
+    f    : f32 = tan(fov*0.5)
+    range: f32 = 1 / (near - far)
 
     return {
 		f/aspect, 0, 0,                    0,
