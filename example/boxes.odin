@@ -91,7 +91,7 @@ boxes_frame :: proc(delta: f32) {
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	mat *= glm.mat4Translate({0, 0, -1000 + scale * 800})
+	mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
 	mat *= mat4_rotate_x(rotation.x)
 	mat *= mat4_rotate_y(rotation.y)
 
