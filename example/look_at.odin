@@ -7,7 +7,7 @@ import gl  "../wasm/webgl"
 @(private="file") ALL_VERTICES :: ALL_PYRAMID_VERTICES + CUBE_VERTICES
 
 @(private="file") look_at_state: struct {
-	rotation: [2]f32,
+	rotation: f32,
 	u_matrix: i32,
 	vao:      VAO,
 }
@@ -36,7 +36,7 @@ import gl  "../wasm/webgl"
 	WHITE, WHITE, WHITE, // 11
 }
 
-@(private="file") HEIGHT :: 60
+@(private="file") HEIGHT :: 80
 @(private="file") RADIUS :: 260
 @(private="file") AMOUNT :: 10
 
@@ -95,10 +95,7 @@ look_at_frame :: proc(delta: f32) {
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	rotation += 0.01 * delta * (window_size.yx / 2 - mouse_pos.yx) / window_size.yx
-
 	camera_mat: Mat4 = 1
-	camera_mat *= mat4_rotate_y(-rotation.y)
 	camera_mat *= mat4_translate({0, 0, 800 - 700 * (scale/1.2)})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
@@ -110,20 +107,26 @@ look_at_frame :: proc(delta: f32) {
 	)
 	view_mat *= camera_mat
 
-	cupe_pos: Vec = {0, 120, RADIUS}
+	rotation  += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
+	elevation := 160 + 300 * (window_size.y / 2 - mouse_pos.y) / window_size.y
+
+	cube_pos: Vec
+	cube_pos.y = elevation
+	cube_pos.x = RADIUS * cos(rotation)
+	cube_pos.z = RADIUS * sin(rotation)
 
 	for i in 0..<AMOUNT {
 		/* Draw pyramid looking at the cube */
 
 		angle := 2*PI * f32(i)/f32(AMOUNT)
 		x: f32 = RADIUS * cos(angle)
-		y: f32 = -60
+		y: f32 = -80
 		z: f32 = RADIUS * sin(angle)
 
 		mat := view_mat
 		mat *= mat4_look_at(
 			eye    = {x, y, z},
-			target = cupe_pos,
+			target = cube_pos,
 			up     = {0, 1, 0},
 		)
 		mat *= mat4_rotate_x(PI/2)
@@ -132,7 +135,7 @@ look_at_frame :: proc(delta: f32) {
 	}
 
 	{ /* Draw cube */
-		mat := view_mat * mat4_translate(cupe_pos)
+		mat := view_mat * mat4_translate(cube_pos)
 		gl.UniformMatrix4fv(u_matrix, mat)
 		gl.DrawArrays(gl.TRIANGLES, ALL_PYRAMID_VERTICES, CUBE_VERTICES)
 	}
