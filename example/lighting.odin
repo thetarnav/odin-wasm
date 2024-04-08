@@ -3,12 +3,6 @@ package example
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-lighting_state: struct {
-	cube_rotation: f32,
-	ring_rotation: f32,
-	u_matrix:      i32,
-	vao:           VAO,
-}
 
 @(private="file") SEGMENT_TRIANGLES :: 2 * 3
 @(private="file") SEGMENT_VERTICES  :: SEGMENT_TRIANGLES * 3
@@ -24,6 +18,12 @@ lighting_state: struct {
 @(private="file") RING_LENGTH :: 40
 @(private="file") RING_SPACE  :: 30
 
+lighting_state: struct {
+	cube_rotation: f32,
+	ring_rotation: f32,
+	u_matrix:      i32,
+	vao:           VAO,
+}
 
 lighting_start :: proc(program: gl.Program) {
 	using lighting_state
@@ -157,13 +157,11 @@ lighting_frame :: proc(delta: f32) {
 
 	/* Draw rings */
 	ring_rotation += 0.002 * delta
-
+	
 	for ri in 0..<RINGS {
 		ring_mat := view_mat
-		ring_mat *= mat4_rotate_x(PI/2)
-		ring_mat *= mat4_rotate_x(ring_rotation / f32(ri+1))
-		ring_mat *= mat4_rotate_y(ring_rotation / f32(RINGS-ri))
-		ring_mat *= mat4_rotate_z(ring_rotation / f32(RINGS-ri))
+		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(ri)) + ring_rotation/4)
+		ring_mat *= mat4_rotate_x(ring_rotation)
 
 		gl.UniformMatrix4fv(u_matrix, ring_mat)
 		gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES + ri*RING_VERTICES, RING_VERTICES)
