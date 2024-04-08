@@ -35,6 +35,8 @@ const Example_Kind = /** @type {const} */ ({
 	Lighting : 4,
 	Texture  : 5,
 })
+/** @type {Example_Kind[]} */
+const example_kinds = Object.values(Example_Kind)
 
 /** @type {Record<Example_Kind, string>} */
 const example_kind_href_hashes = {
@@ -45,27 +47,29 @@ const example_kind_href_hashes = {
 	[Example_Kind.Lighting] : "#lighting",
 	[Example_Kind.Texture]  : "#texture",
 }
-/** @type {[Example_Kind, string][]} */
-const example_kind_href_hashes_entries = /** @type {*} */(Object.entries(example_kind_href_hashes))
 
 /** @type {Example_Kind} */
 let example_kind = Example_Kind.Boxes
 
-for (const [kind, hash] of example_kind_href_hashes_entries) {
+for (const kind of example_kinds) {
+	const hash = example_kind_href_hashes[kind]
 	if (location.hash === hash) {
 		example_kind = kind
+		break
 	}
+}
 
+for (const kind of example_kinds) {
+	const hash = example_kind_href_hashes[kind]
 	const anchor = document.querySelector(`a[href="${hash}"]`)
 	if (!anchor) continue
 
 	anchor.addEventListener("click", event => {
 		event.preventDefault()
 		location.hash = hash
-		location.reload()
 	})
 
-	if (location.hash === hash) {
+	if (example_kind === kind) {
 		anchor.classList.add("active")
 	}
 }
@@ -130,9 +134,10 @@ if (IS_DEV) {
 Main
 */
 
-exports._start()
+exports._start() // Calls main
 const odin_ctx = exports.default_context_ptr()
-exports._end()
+/* _end() should be called when the program is done */
+// exports._end()
 
 const ok = exports.start(odin_ctx, example_kind)
 if (!ok) throw Error("Failed to start example")

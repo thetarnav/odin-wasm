@@ -49,7 +49,7 @@ to show the front-face.
 	0,      0,   SIDE/2,
 }
 
-@(private="file") pyramid_state: struct {
+pyramid_state: struct {
 	rotation: [2]f32,
 	u_matrix: i32,
 	vao:      VAO,

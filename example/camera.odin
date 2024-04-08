@@ -6,12 +6,6 @@ import gl  "../wasm/webgl"
 @(private="file") ALL_PYRAMID_VERTICES :: AMOUNT * PYRAMID_VERTICES
 @(private="file") ALL_VERTICES :: ALL_PYRAMID_VERTICES + CUBE_VERTICES
 
-@(private="file") camera_state: struct {
-	rotation: f32,
-	u_matrix: i32,
-	vao:      VAO,
-}
-
 @(private="file") pyramid_colors: [PYRAMID_VERTICES]RGBA = {
 	BLUE,   BLUE,   BLUE,   // 0
 	BLUE,   BLUE,   BLUE,   // 1
@@ -21,19 +15,10 @@ import gl  "../wasm/webgl"
 	ORANGE, ORANGE, ORANGE, // 5
 }
 
-@(private="file") cube_colors: [CUBE_VERTICES]RGBA = {
-	WHITE, WHITE, WHITE, // 0
-	WHITE, WHITE, WHITE, // 1
-	WHITE, WHITE, WHITE, // 2
-	WHITE, WHITE, WHITE, // 3
-	WHITE, WHITE, WHITE, // 4
-	WHITE, WHITE, WHITE, // 5
-	WHITE, WHITE, WHITE, // 6
-	WHITE, WHITE, WHITE, // 7
-	WHITE, WHITE, WHITE, // 8
-	WHITE, WHITE, WHITE, // 9
-	WHITE, WHITE, WHITE, // 10
-	WHITE, WHITE, WHITE, // 11
+camera_state: struct {
+	rotation: f32,
+	u_matrix: i32,
+	vao:      VAO,
 }
 
 @(private="file") HEIGHT :: 80
@@ -74,6 +59,7 @@ camera_start :: proc(program: gl.Program) {
 	/* Cube */
 	cube_positions := get_cube_positions(0, HEIGHT)
 	copy(positions[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES], cube_positions[:])
+	cube_colors := WHITE_CUBE_COLORS
 	copy(colors[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES], cube_colors[:])
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
