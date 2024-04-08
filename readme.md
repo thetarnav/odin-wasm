@@ -12,9 +12,9 @@
 
 The implementation is mostly the same as the original, here are the differences:
 
--   ESM - it was written to be used in a modern JS environment, assuming that the user will use a bundler like [Webpack](https://webpack.js.org/) or [Rollup](https://rollupjs.org/) to bundle the code, and tree-shake the unused parts.
--   JSDoc - the original bindings are not documented, so I added JSDoc to the bindings to make it easier to use them.
--   [Improvements to getting window position and size](https://github.com/thetarnav/odin-wasm/commit/abd015822d0667ae7ebec7c0b7d4508a489b9c44#diff-70784127da28e4d9d43c91e03af22f56c23f45ec12af76e4deed68c37f7776e4)
+- ESM - it was written to be used in a modern JS environment, assuming that the user will use a bundler like [Webpack](https://webpack.js.org/) or [Rollup](https://rollupjs.org/) to bundle the code, and tree-shake the unused parts.
+- JSDoc - the original bindings are not documented, so I added JSDoc to the bindings to make it easier to use them.
+- [Improvements to getting window position and size](https://github.com/thetarnav/odin-wasm/commit/abd015822d0667ae7ebec7c0b7d4508a489b9c44#diff-70784127da28e4d9d43c91e03af22f56c23f45ec12af76e4deed68c37f7776e4)
 
 ### 2. Odin + WASM example
 
@@ -32,9 +32,9 @@ There are some convenience scripts in [`main.js`](https://github.com/thetarnav/o
 
 ### Dependencies
 
--   [Odin](https://odin-lang.org/docs/install/) (and [LLVM](https://apt.llvm.org/))
--   [Node 20](https://nodejs.org/)
--   [Chrome Devtools Support](https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb): for debugging *(optional)*
+- [Odin](https://odin-lang.org/docs/install/) (and [LLVM](https://apt.llvm.org/))
+- [Node 20](https://nodejs.org/)
+- [Chrome Devtools Support](https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb): for debugging *(optional)*
 
 ### OLS
 
@@ -46,3 +46,13 @@ Add `js_wasm32` target to `ols.json` if you want to use [OLS](https://github.com
 	"enable_format": false
 }
 ```
+
+### Scripts
+
+Take look at [`package.json`](https://github.com/thetarnav/odin-wasm/tree/main/package.json) for all the available scripts.
+
+The most important ones are:
+
+- `npm run dev` - starts the server and watches for changes
+- `npm run build` - builds the example to `dist/`
+- `npm run preview` - starts a server to preview the built example
