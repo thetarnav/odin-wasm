@@ -20,8 +20,8 @@ dot     :: glm.dot
 cross   :: glm.cross
 
 copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
-	clone := src
-	copy(dst, clone[:])
+	src := src
+	copy(dst, src[:])
 }
 
 cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
@@ -29,12 +29,12 @@ cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
 	return {D(v.x), D(v.y)}
 }
 
-vec2_to_vec3 :: #force_inline proc "contextless" (v: $T/[2]f32, z: f32 = 0) -> glm.vec3 {
+vec2_to_vec3 :: #force_inline proc "contextless" (v: $T/[2]f32, z: f32 = 0) -> Vec {
 	return {v.x, v.y, z}
 }
 
 @(require_results)
-mat3_translate :: proc "contextless" (v: [2]f32) -> glm.mat3 {
+mat3_translate :: proc "contextless" (v: [2]f32) -> Mat3 {
 	return {
 		1, 0, v.x,
 		0, 1, v.y,
@@ -42,7 +42,7 @@ mat3_translate :: proc "contextless" (v: [2]f32) -> glm.mat3 {
    	}
 }
 @(require_results)
-mat3_scale :: proc "contextless" (v: [2]f32) -> glm.mat3 {
+mat3_scale :: proc "contextless" (v: [2]f32) -> Mat3 {
 	return {
 		v.x, 0,   0,
 		0,   v.y, 0,
@@ -50,9 +50,9 @@ mat3_scale :: proc "contextless" (v: [2]f32) -> glm.mat3 {
    	}
 }
 @(require_results)
-mat3_rotate :: proc "contextless" (angle: f32) -> glm.mat3 {
-	c := glm.cos(angle)
-	s := glm.sin(angle)
+mat3_rotate :: proc "contextless" (angle: f32) -> Mat3 {
+	c := cos(angle)
+	s := sin(angle)
 	return {
 		 c, s, 0,
 		-s, c, 0,
@@ -60,7 +60,7 @@ mat3_rotate :: proc "contextless" (angle: f32) -> glm.mat3 {
 	}
 }
 @(require_results)
-mat3_projection :: proc "contextless" (size: [2]f32) -> glm.mat3 {
+mat3_projection :: proc "contextless" (size: [2]f32) -> Mat3 {
 	return {
 		2/size.x, 0,       -1,
 		0,       -2/size.y, 1,
@@ -72,9 +72,9 @@ mat4_translate :: glm.mat4Translate
 mat4_inverse :: glm.inverse_mat4
 
 @(require_results)
-mat4_rotate_x :: proc "contextless" (radians: f32) -> glm.mat4 {
-	c := glm.cos(radians)
-	s := glm.sin(radians)
+mat4_rotate_x :: proc "contextless" (radians: f32) -> Mat4 {
+	c := cos(radians)
+	s := sin(radians)
 
 	return {
 		1, 0, 0, 0,
@@ -84,7 +84,7 @@ mat4_rotate_x :: proc "contextless" (radians: f32) -> glm.mat4 {
 	}
 }
 @(require_results)
-mat4_rotate_y :: proc "contextless" (radians: f32) -> glm.mat4 {
+mat4_rotate_y :: proc "contextless" (radians: f32) -> Mat4 {
 	c := cos(radians)
 	s := sin(radians)
 
@@ -96,7 +96,7 @@ mat4_rotate_y :: proc "contextless" (radians: f32) -> glm.mat4 {
 	}
 }
 @(require_results)
-mat4_rotate_z :: proc "contextless" (radians: f32) -> glm.mat4 {
+mat4_rotate_z :: proc "contextless" (radians: f32) -> Mat4 {
 	c := cos(radians)
 	s := sin(radians)
 
@@ -108,7 +108,7 @@ mat4_rotate_z :: proc "contextless" (radians: f32) -> glm.mat4 {
 	}
 }
 @(require_results)
-mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> glm.mat4 {
+mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> Mat4 {
     f    : f32 = tan(fov*0.5)
     range: f32 = 1 / (near - far)
 
