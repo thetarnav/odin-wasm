@@ -7,38 +7,29 @@ TODO:
 
 */
 
-import fs from "node:fs"
-import fsp from "node:fs/promises"
-import path from "node:path"
-import url from "node:url"
-import http from "node:http"
-import process from "node:process"
-import child_process from "node:child_process"
-import * as chokidar from "chokidar"
-import * as ws from "ws"
-import * as rollup from "rollup"
-import * as swc from "@swc/core"
+import * as fs            from "node:fs"
+import * as fsp           from "node:fs/promises"
+import * as path          from "node:path"
+import * as url           from "node:url"
+import * as http          from "node:http"
+import * as process       from "node:process"
+import * as child_process from "node:child_process"
+import * as chokidar      from "chokidar"
+import * as ws            from "ws"
+import * as rollup        from "rollup"
+import * as swc           from "@swc/core"
 
 import {
-	DIST_DIRNAME,
-	CONFIG_FILENAME,
-	HTTP_PORT,
-	MESSAGE_RELOAD,
-	PACKAGE_DIRNAME,
-	PLAYGROUND_DIRNAME,
-	WASM_PATH,
-	WEB_SOCKET_PORT,
-	CONFIG_OUT_FILENAME,
-	WASM_FILENAME,
-	PUBLIC_DIRNAME,
+	DIST_DIRNAME, CONFIG_FILENAME, HTTP_PORT, MESSAGE_RELOAD, PACKAGE_DIRNAME, PLAYGROUND_DIRNAME,
+	WASM_PATH, WEB_SOCKET_PORT, CONFIG_OUT_FILENAME, WASM_FILENAME, PUBLIC_DIRNAME,
 } from "./config.js"
 
-const dirname = path.dirname(url.fileURLToPath(import.meta.url))
+const dirname         = path.dirname(url.fileURLToPath(import.meta.url))
 const playground_path = path.join(dirname, PLAYGROUND_DIRNAME)
-const dist_path = path.join(dirname, DIST_DIRNAME)
-const config_path = path.join(dirname, CONFIG_FILENAME)
+const dist_path       = path.join(dirname, DIST_DIRNAME)
+const config_path     = path.join(dirname, CONFIG_FILENAME)
 const config_path_out = path.join(playground_path, CONFIG_OUT_FILENAME)
-const public_path = path.join(playground_path, PUBLIC_DIRNAME)
+const public_path     = path.join(playground_path, PUBLIC_DIRNAME)
 
 const DEBUG_ODIN_ARGS = ["-debug"]
 const RELESE_ODIN_ARGS = [
@@ -54,12 +45,9 @@ const RELESE_ODIN_ARGS = [
 
 /** @enum {(typeof Command)[keyof typeof Command]} */
 const Command = /** @type {const} */ ({
-	/* Start a dev server */
-	Server: "server",
-	/* Start a static server that serves the dist dir */
-	Preview: "preview",
-	/* Build the example page */
-	Build: "build",
+	Server : "server",  // Start a dev server
+	Preview: "preview", // Start a static server that serves the dist dir
+	Build  : "build",   // Build the example page
 })
 
 /** @type {Record<Command, (args: string[]) => void>} */
@@ -347,29 +335,18 @@ function sendToAllClients(/** @type {ws.WebSocketServer} */ wss, /** @type {Buff
 /** @returns {string} */
 function mimeType(/** @type {string} */ ext) {
 	switch (ext) {
-		case "html":
-			return "text/html; charset=UTF-8"
-		case "js":
-		case "mjs":
-			return "application/javascript"
-		case "json":
-			return "application/json"
-		case "wasm":
-			return "application/wasm"
-		case "css":
-			return "text/css"
-		case "png":
-			return "image/png"
-		case "jpg":
-			return "image/jpg"
-		case "gif":
-			return "image/gif"
-		case "ico":
-			return "image/x-icon"
-		case "svg":
-			return "image/svg+xml"
-		default:
-			return "application/octet-stream"
+	case "html": return "text/html; charset=UTF-8"
+	case "js":
+	case "mjs":  return "application/javascript"
+	case "json": return "application/json"
+	case "wasm": return "application/wasm"
+	case "css":  return "text/css"
+	case "png":  return "image/png"
+	case "jpg":  return "image/jpg"
+	case "gif":  return "image/gif"
+	case "ico":  return "image/x-icon"
+	case "svg":  return "image/svg+xml"
+	default:     return "application/octet-stream"
 	}
 }
 
@@ -404,13 +381,13 @@ function childProcessToPromise(/** @type {child_process.ChildProcess} */ child) 
 	})
 }
 
-// /**
-//  * @param   {number}        ms
-//  * @returns {Promise<void>}
-//  */
-// function sleep(ms) {
-// 	return new Promise(resolve => setTimeout(resolve, ms))
-// }
+/**
+ * @param   {number}        ms
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 /** @returns {string} */
 function toWebFilepath(/** @type {string} */ path) {
@@ -470,6 +447,5 @@ function shiftLines(/** @type {string} */ str, /** @type {number} */ lines) {
 		str = str.substring(str.indexOf("\n") + 1)
 		lines--
 	}
-
 	return str
 }
