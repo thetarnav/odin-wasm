@@ -161,8 +161,8 @@ lighting_frame :: proc(delta: f32) {
 	for ri in 0..<RINGS {
 		ring_mat := view_mat
 		ring_mat *= mat4_rotate_x(PI/2)
-		ring_mat *= mat4_rotate_z(PI/2)
 		ring_mat *= mat4_rotate_x(ring_rotation / f32(ri+1))
+		ring_mat *= mat4_rotate_y(ring_rotation / f32(RINGS-ri))
 		ring_mat *= mat4_rotate_z(ring_rotation / f32(RINGS-ri))
 
 		gl.UniformMatrix4fv(u_matrix, ring_mat)
