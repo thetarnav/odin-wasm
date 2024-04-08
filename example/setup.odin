@@ -11,7 +11,7 @@ canvas_res:  [2]i32
 canvas_pos:  [2]f32
 canvas_size: [2]f32
 window_size: [2]f32
-mouse_pos:   [2]f32
+mouse_pos:   [2]f32 // Absolute mouse position
 mouse_rel:   [2]f32 // Relative mouse position -0.5 to 0.5
 dpr: f32
 aspect_ratio: f32
@@ -23,6 +23,7 @@ Example_Kind :: enum {
 	Pyramid,
 	Boxes,
 	Camera,
+	Lighting,
 	Texture,
 }
 example: Example_Kind
@@ -39,25 +40,31 @@ demos: [Example_Kind]Demo_Interface = {
 		setup      = rectangle_start,
 		frame      = rectangle_frame,
 	},
-	.Pyramid   = {
+	.Pyramid = {
 		vs_sources = {#load("./pyramid_vs.glsl", string)},
 		fs_sources = {#load("./fs_simple.glsl", string)},
 		setup      = pyramid_start,
 		frame      = pyramid_frame,
 	},
-	.Boxes     = {
+	.Boxes = {
 		vs_sources = {#load("./boxes_vs.glsl", string)},
 		fs_sources = {#load("./fs_simple.glsl", string)},
 		setup      = boxes_start,
 		frame      = boxes_frame,
 	},
-	.Camera   = {
+	.Camera = {
 		vs_sources = {#load("./boxes_vs.glsl", string)},
 		fs_sources = {#load("./fs_simple.glsl", string)},
 		setup      = camera_start,
 		frame      = camera_frame,
 	},
-	.Texture   = {
+	.Lighting = {
+		vs_sources = {#load("./boxes_vs.glsl", string)},
+		fs_sources = {#load("./fs_simple.glsl", string)},
+		setup      = lighting_start,
+		frame      = lighting_frame,
+	},
+	.Texture = {
 		vs_sources = {#load("./boxes_vs.glsl", string)},
 		fs_sources = {#load("./fs_simple.glsl", string)},
 		setup      = texture_start,
@@ -88,14 +95,15 @@ main :: proc() {
 }
 
 on_mouse_move :: proc(e: dom.Event) {
-	mouse_pos = cast_vec2(f32, e.data.mouse.client)
+	mouse_pos = cast_vec2(f32, e.mouse.client)
 	mouse_rel = (mouse_pos - window_size / 2) / window_size
 }
 on_wheel :: proc(e: dom.Event) {
-	scale -= f32(e.data.wheel.delta.y) * 0.001
+	scale -= f32(e.wheel.delta.y) * 0.001
 	scale = clamp(scale, 0, 1)
 }
-@export on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
+@export
+on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
 	window_size  = {vw, vh}
 	canvas_size  = {cw, ch}
 	canvas_pos   = {cx, cy}
