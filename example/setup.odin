@@ -12,6 +12,7 @@ canvas_pos:  [2]f32
 canvas_size: [2]f32
 window_size: [2]f32
 mouse_pos:   [2]f32
+mouse_rel:   [2]f32 // Relative mouse position -0.5 to 0.5
 dpr: f32
 aspect_ratio: f32
 
@@ -113,6 +114,7 @@ main :: proc() {
 
 on_mouse_move :: proc(e: dom.Event) {
 	mouse_pos = cast_vec2(f32, e.data.mouse.client)
+	mouse_rel = (mouse_pos - window_size / 2) / window_size
 }
 on_wheel :: proc(e: dom.Event) {
 	scale -= f32(e.data.wheel.delta.y) * 0.001

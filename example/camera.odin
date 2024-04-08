@@ -99,16 +99,15 @@ camera_frame :: proc(delta: f32) {
 	camera_mat *= mat4_translate({0, 0, 800 - 700 * (scale/1.2)})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
-	view_mat: Mat4 = 1
-	view_mat = glm.mat4PerspectiveInfinite(
+	view_mat := glm.mat4PerspectiveInfinite(
 		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
 	view_mat *= camera_mat
 
-	rotation  += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
-	elevation := 160 + 300 * (window_size.y / 2 - mouse_pos.y) / window_size.y
+	rotation  += 0.01 * delta * mouse_rel.x
+	elevation := 300 * -(mouse_rel.y - 0.5)
 
 	cube_pos: Vec
 	cube_pos.y = elevation
@@ -119,8 +118,8 @@ camera_frame :: proc(delta: f32) {
 		/* Draw pyramid looking at the cube */
 
 		angle := 2*PI * f32(i)/f32(AMOUNT)
-		x: f32 = RADIUS * cos(angle)
 		y: f32 = -80
+		x: f32 = RADIUS * cos(angle)
 		z: f32 = RADIUS * sin(angle)
 
 		mat := view_mat

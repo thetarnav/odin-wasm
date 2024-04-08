@@ -150,7 +150,7 @@ const dpr = window.devicePixelRatio || 1
 
 function updateCanvasSize() {
 	const rect = canvas.getBoundingClientRect()
-	canvas.width = rect.width * dpr
+	canvas.width  = rect.width * dpr
 	canvas.height = rect.height * dpr
 	exports.on_window_resize(
 		window.innerWidth,

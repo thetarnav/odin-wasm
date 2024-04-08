@@ -50,12 +50,9 @@ to show the front-face.
 }
 
 @(private="file") state: struct {
-	rotation_y: f32,
-	rotation_x: f32,
-	a_position: i32,
-	a_color:    i32,
-	u_matrix:   i32,
-	vao:        VAO,
+	rotation: [2]f32,
+	u_matrix: i32,
+	vao:      VAO,
 }
 
 pyramid_start :: proc(program: gl.Program) {
@@ -64,9 +61,9 @@ pyramid_start :: proc(program: gl.Program) {
 	vao = gl.CreateVertexArray()
 	gl.BindVertexArray(vao)
 
-	a_position = gl.GetAttribLocation (program, "a_position")
-	a_color    = gl.GetAttribLocation (program, "a_color")
-	u_matrix   = gl.GetUniformLocation(program, "u_matrix")
+	a_position := gl.GetAttribLocation (program, "a_position")
+	a_color    := gl.GetAttribLocation (program, "a_color")
+	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -94,8 +91,7 @@ pyramid_frame :: proc(delta: f32) {
 	gl.ClearColor(0, 0.01, 0.02, 0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
-	rotation_y += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
-	rotation_x += 0.01 * delta * (window_size.y / 2 - mouse_pos.y) / window_size.y
+	rotation -= 0.01 * delta * mouse_rel.yx
 
 	mat := glm.mat4Ortho3d(
 		left   = 0,
@@ -107,8 +103,8 @@ pyramid_frame :: proc(delta: f32) {
 	)
 	mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
 	mat *= glm.mat4Scale(scale*2 + 0.4)
-	mat *= mat4_rotate_y(rotation_y)
-	mat *= mat4_rotate_x(-rotation_x)
+	mat *= mat4_rotate_y(-rotation.y)
+	mat *= mat4_rotate_x(rotation.x)
 	mat *= glm.mat4Translate({0, -H / 2, 0})
 
 	gl.UniformMatrix4fv(u_matrix, mat)

@@ -28,11 +28,9 @@ import gl "../wasm/webgl"
 }
 
 @(private="file") state: struct {
-	rotation:   f32,
-	a_position: i32,
-	a_color:    i32,
-	u_matrix:   i32,
-	vao:        VAO,
+	rotation: f32,
+	u_matrix: i32,
+	vao:      VAO,
 }
 
 rectangle_start :: proc(program: gl.Program) {
@@ -46,9 +44,9 @@ rectangle_start :: proc(program: gl.Program) {
 	vao = gl.CreateVertexArray()
 	gl.BindVertexArray(vao) // need to bind VAO before binding buffers
 
-	a_position = gl.GetAttribLocation (program, "a_position")
-	a_color    = gl.GetAttribLocation (program, "a_color")
-	u_matrix   = gl.GetUniformLocation(program, "u_matrix")
+	a_position := gl.GetAttribLocation (program, "a_position")
+	a_color    := gl.GetAttribLocation (program, "a_color")
+	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -74,7 +72,7 @@ rectangle_frame :: proc(delta: f32) {
 	gl.ClearColor(0, 0.01, 0.02, 0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
-	rotation += 0.01 * delta * (window_size.x / 2 - mouse_pos.x) / window_size.x
+	rotation -= 0.01 * delta * mouse_rel.x
 
 	mat: Mat3 = 1
 	mat *= mat3_projection(canvas_size)

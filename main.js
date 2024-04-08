@@ -7,17 +7,17 @@ TODO:
 
 */
 
-import * as fs            from "node:fs"
-import * as fsp           from "node:fs/promises"
-import * as path          from "node:path"
-import * as url           from "node:url"
-import * as http          from "node:http"
-import * as process       from "node:process"
-import * as child_process from "node:child_process"
-import * as chokidar      from "chokidar"
-import * as ws            from "ws"
-import * as rollup        from "rollup"
-import * as swc           from "@swc/core"
+import fs            from "node:fs"
+import fsp           from "node:fs/promises"
+import path          from "node:path"
+import url           from "node:url"
+import http          from "node:http"
+import process       from "node:process"
+import child_process from "node:child_process"
+import * as chokidar from "chokidar"
+import * as ws       from "ws"
+import * as rollup   from "rollup"
+import * as swc      from "@swc/core"
 
 import {
 	DIST_DIRNAME, CONFIG_FILENAME, HTTP_PORT, MESSAGE_RELOAD, PACKAGE_DIRNAME, PLAYGROUND_DIRNAME,

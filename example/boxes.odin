@@ -83,7 +83,7 @@ boxes_frame :: proc(delta: f32) {
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	rotation += 0.01 * delta * (window_size.yx / 2 - mouse_pos.yx) / window_size.yx
+	rotation -= 0.01 * delta * mouse_rel.yx
 
 	mat: Mat4 = 1
 	mat *= glm.mat4PerspectiveInfinite(
