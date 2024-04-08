@@ -6,8 +6,8 @@ import gl  "../wasm/webgl"
 lighting_state: struct {
 	cube_rotation: f32,
 	ring_rotation: f32,
-	u_matrix: i32,
-	vao:      VAO,
+	u_matrix:      i32,
+	vao:           VAO,
 }
 
 @(private="file") SEGMENT_TRIANGLES :: 2 * 3
