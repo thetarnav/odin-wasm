@@ -4,23 +4,25 @@ import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
 lighting_state: struct {
-	rotation: f32,
+	cube_rotation: f32,
+	ring_rotation: f32,
 	u_matrix: i32,
 	vao:      VAO,
 }
 
 @(private="file") SEGMENT_TRIANGLES :: 2 * 3
 @(private="file") SEGMENT_VERTICES  :: SEGMENT_TRIANGLES * 3
-@(private="file") RING_SEGMENTS     :: 12
+@(private="file") RING_SEGMENTS     :: 64
 @(private="file") RING_TRIANGLES    :: RING_SEGMENTS * SEGMENT_TRIANGLES
 @(private="file") RING_VERTICES     :: RING_TRIANGLES * 3
-@(private="file") ALL_VERTICES      :: CUBE_VERTICES + RING_VERTICES
+@(private="file") RINGS             :: 3
+@(private="file") ALL_VERTICES      :: CUBE_VERTICES + 3 * RING_VERTICES
 
 @(private="file") CUBE_HEIGHT :: 80
 @(private="file") CUBE_RADIUS :: 300
 @(private="file") RING_HEIGHT :: 30
-@(private="file") RING_WIDTH  :: 40
-@(private="file") RING_RADIUS :: 260
+@(private="file") RING_LENGTH :: 40
+@(private="file") RING_SPACE  :: 30
 
 
 lighting_start :: proc(program: gl.Program) {
@@ -51,56 +53,60 @@ lighting_start :: proc(program: gl.Program) {
 	copy_array(colors[:], WHITE_CUBE_COLORS)
 
 	/* Ring */
-	ring_positions := positions[CUBE_VERTICES:]
-	ring_colors    := colors[CUBE_VERTICES:]
-	
-	for i in 0..<RING_SEGMENTS {
-		theta0 := 2*PI * f32(i+1) / f32(RING_SEGMENTS)
-		theta1 := 2*PI * f32(i  ) / f32(RING_SEGMENTS)
+	for ri in 0..<RINGS {
+		ring_positions := positions[CUBE_VERTICES + ri*RING_VERTICES:]
+		ring_colors    := colors   [CUBE_VERTICES + ri*RING_VERTICES:]
 
-		out_x0 := RING_RADIUS * cos(theta0)
-		out_z0 := RING_RADIUS * sin(theta0)
-		out_x1 := RING_RADIUS * cos(theta1)
-		out_z1 := RING_RADIUS * sin(theta1)
+		radius := CUBE_RADIUS - CUBE_HEIGHT/2 - RING_SPACE - (RING_LENGTH + RING_SPACE) * f32(ri)
 
-		in_x0 := (RING_RADIUS - RING_WIDTH) * cos(theta0)
-		in_z0 := (RING_RADIUS - RING_WIDTH) * sin(theta0)
-		in_x1 := (RING_RADIUS - RING_WIDTH) * cos(theta1)
-		in_z1 := (RING_RADIUS - RING_WIDTH) * sin(theta1)
+		for si in 0..<RING_SEGMENTS {
+			theta0 := 2*PI * f32(si+1) / f32(RING_SEGMENTS)
+			theta1 := 2*PI * f32(si  ) / f32(RING_SEGMENTS)
 
-		copy(ring_positions[i*SEGMENT_VERTICES:], []Vec{
-			{out_x0, -RING_HEIGHT/2, out_z0},
-			{out_x1, -RING_HEIGHT/2, out_z1},
-			{out_x1,  RING_HEIGHT/2, out_z1},
-			{out_x0, -RING_HEIGHT/2, out_z0},
-			{out_x1,  RING_HEIGHT/2, out_z1},
-			{out_x0,  RING_HEIGHT/2, out_z0},
-	
-			{out_x0,  RING_HEIGHT/2, out_z0},
-			{out_x1,  RING_HEIGHT/2, out_z1},
-			{in_x0 ,  0            , in_z0 },
-			{in_x0 ,  0            , in_z0 },
-			{out_x1,  RING_HEIGHT/2, out_z1},
-			{in_x1 ,  0            , in_z1 },
+			out_x0 := radius * cos(theta0)
+			out_z0 := radius * sin(theta0)
+			out_x1 := radius * cos(theta1)
+			out_z1 := radius * sin(theta1)
 
-			{in_x0 ,  0            , in_z0 },
-			{in_x1 ,  0            , in_z1 },
-			{out_x1, -RING_HEIGHT/2, out_z1},
-			{in_x0 ,  0            , in_z0 },
-			{out_x1, -RING_HEIGHT/2, out_z1},
-			{out_x0, -RING_HEIGHT/2, out_z0},
-		})
+			in_x0 := (radius - RING_LENGTH) * cos(theta0)
+			in_z0 := (radius - RING_LENGTH) * sin(theta0)
+			in_x1 := (radius - RING_LENGTH) * cos(theta1)
+			in_z1 := (radius - RING_LENGTH) * sin(theta1)
 
-		copy(ring_colors[i*SEGMENT_VERTICES:], []RGBA{
-			RED, RED, RED,
-			RED, RED, RED,
-	
-			BLUE, BLUE, BLUE,
-			BLUE, BLUE, BLUE,
+			copy(ring_positions[si*SEGMENT_VERTICES:], []Vec{
+				{out_x0, -RING_HEIGHT/2, out_z0},
+				{out_x1, -RING_HEIGHT/2, out_z1},
+				{out_x1,  RING_HEIGHT/2, out_z1},
+				{out_x0, -RING_HEIGHT/2, out_z0},
+				{out_x1,  RING_HEIGHT/2, out_z1},
+				{out_x0,  RING_HEIGHT/2, out_z0},
 
-			GREEN, GREEN, GREEN,
-			GREEN, GREEN, GREEN,
-		})	
+				{out_x0,  RING_HEIGHT/2, out_z0},
+				{out_x1,  RING_HEIGHT/2, out_z1},
+				{in_x0 ,  0            , in_z0 },
+				{in_x0 ,  0            , in_z0 },
+				{out_x1,  RING_HEIGHT/2, out_z1},
+				{in_x1 ,  0            , in_z1 },
+
+				{in_x0 ,  0            , in_z0 },
+				{in_x1 ,  0            , in_z1 },
+				{out_x1, -RING_HEIGHT/2, out_z1},
+				{in_x0 ,  0            , in_z0 },
+				{out_x1, -RING_HEIGHT/2, out_z1},
+				{out_x0, -RING_HEIGHT/2, out_z0},
+			})
+
+			copy(ring_colors[si*SEGMENT_VERTICES:], []RGBA{
+				RED, RED, RED,
+				RED, RED, RED,
+
+				BLUE, BLUE, BLUE,
+				BLUE, BLUE, BLUE,
+
+				YELLOW, YELLOW, YELLOW,
+				YELLOW, YELLOW, YELLOW,
+			})
+		}
 	}
 
 
@@ -134,24 +140,32 @@ lighting_frame :: proc(delta: f32) {
 	)
 	view_mat *= camera_mat
 
-	rotation  += 0.01 * delta * mouse_rel.x
-	elevation := -100 + 300 * -(mouse_rel.y - 0.5)
+	/* Draw cube */
+	cube_rotation += 0.01 * delta * mouse_rel.x
 
 	cube_pos: Vec
-	cube_pos.y = elevation
-	cube_pos.x = CUBE_RADIUS * cos(rotation)
-	cube_pos.z = CUBE_RADIUS * sin(rotation)
+	cube_pos.y = 500 * -mouse_rel.y
+	cube_pos.x = CUBE_RADIUS * cos(cube_rotation)
+	cube_pos.z = CUBE_RADIUS * sin(cube_rotation)
 
-	/* Draw cube */
 	cube_mat := view_mat
 	cube_mat *= mat4_translate(cube_pos)
-	cube_mat *= mat4_rotate_y(rotation)
+	cube_mat *= mat4_rotate_y(cube_rotation)
+
 	gl.UniformMatrix4fv(u_matrix, cube_mat)
 	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES)
 
-	/* Draw ring */
-	ring_mat := view_mat
-	ring_mat *= mat4_rotate_x(rotation)
-	gl.UniformMatrix4fv(u_matrix, ring_mat)
-	gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES, RING_VERTICES)
+	/* Draw rings */
+	ring_rotation += 0.002 * delta
+
+	for ri in 0..<RINGS {
+		ring_mat := view_mat
+		ring_mat *= mat4_rotate_x(PI/2)
+		ring_mat *= mat4_rotate_z(PI/2)
+		ring_mat *= mat4_rotate_x(ring_rotation / f32(ri+1))
+		ring_mat *= mat4_rotate_z(ring_rotation / f32(RINGS-ri))
+
+		gl.UniformMatrix4fv(u_matrix, ring_mat)
+		gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES + ri*RING_VERTICES, RING_VERTICES)
+	}
 }
