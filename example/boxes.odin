@@ -3,18 +3,7 @@ package example
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-@(private="file") BOX_HEIGHT :: 60
-
-@(private="file") BOXES_ROWS   :: 3
-@(private="file") BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
-
-@(private="file") boxes_state: struct {
-	rotation:   [2]f32,
-	u_matrix:   i32,
-	vao:        VAO,
-}
-
-@(private="file") cube_colors: [CUBE_VERTICES]RGBA = {
+@(private="file") CUBE_COLORS: [CUBE_VERTICES]RGBA : {
 	GREEN,  GREEN,  GREEN,  // 0
 	GREEN,  GREEN,  GREEN,  // 1
 	YELLOW, YELLOW, YELLOW, // 2
@@ -27,6 +16,17 @@ import gl  "../wasm/webgl"
 	ORANGE, ORANGE, ORANGE, // 9
 	PURPLE, PURPLE, PURPLE, // 10
 	PURPLE, PURPLE, PURPLE, // 11
+}
+
+@(private="file") BOX_HEIGHT :: 60
+
+@(private="file") BOXES_ROWS   :: 3
+@(private="file") BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
+
+@(private="file") boxes_state: struct {
+	rotation:   [2]f32,
+	u_matrix:   i32,
+	vao:        VAO,
 }
 
 boxes_start :: proc(program: gl.Program) {
@@ -60,8 +60,8 @@ boxes_start :: proc(program: gl.Program) {
 			},
 			h   = BOX_HEIGHT,
 		)
-		copy(positions[i*CUBE_VERTICES:][:CUBE_VERTICES], cube_positions[:])
-		copy(colors[i*CUBE_VERTICES:][:CUBE_VERTICES], cube_colors[:])
+		copy_array(positions[i*CUBE_VERTICES:], cube_positions)
+		copy_array(colors[i*CUBE_VERTICES:], CUBE_COLORS)
 	}
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)

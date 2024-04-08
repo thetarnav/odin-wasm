@@ -19,6 +19,11 @@ tan     :: glm.tan
 dot     :: glm.dot
 cross   :: glm.cross
 
+copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
+	clone := src
+	copy(dst, clone[:])
+}
+
 cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
 	where intrinsics.type_is_numeric(S) && intrinsics.type_is_numeric(D) {
 	return {D(v.x), D(v.y)}

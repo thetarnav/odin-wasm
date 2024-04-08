@@ -6,7 +6,7 @@ import gl  "../wasm/webgl"
 @(private="file") ALL_PYRAMID_VERTICES :: AMOUNT * PYRAMID_VERTICES
 @(private="file") ALL_VERTICES :: ALL_PYRAMID_VERTICES + CUBE_VERTICES
 
-@(private="file") pyramid_colors: [PYRAMID_VERTICES]RGBA = {
+@(private="file") PYRAMID_COLORS: [PYRAMID_VERTICES]RGBA : {
 	BLUE,   BLUE,   BLUE,   // 0
 	BLUE,   BLUE,   BLUE,   // 1
 	YELLOW, YELLOW, YELLOW, // 2
@@ -22,7 +22,8 @@ camera_state: struct {
 }
 
 @(private="file") HEIGHT :: 80
-@(private="file") RADIUS :: 260
+@(private="file") RING_RADIUS :: 260
+@(private="file") CUBE_RADIUS :: 220
 @(private="file") AMOUNT :: 10
 
 camera_start :: proc(program: gl.Program) {
@@ -51,16 +52,13 @@ camera_start :: proc(program: gl.Program) {
 	for i in 0..<AMOUNT {
 		// Position of the pyramids is 0
 		// because they will be moved with the matrix
-		pyramid_positions := get_pyramid_positions(0, HEIGHT)
-		copy(positions[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES], pyramid_positions[:])
-		copy(colors[i*PYRAMID_VERTICES:][:PYRAMID_VERTICES], pyramid_colors[:])
+		copy_array(positions[i*PYRAMID_VERTICES:], get_pyramid_positions(0, HEIGHT))
+		copy_array(colors[i*PYRAMID_VERTICES:], PYRAMID_COLORS)
 	}
 
 	/* Cube */
-	cube_positions := get_cube_positions(0, HEIGHT)
-	copy(positions[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES], cube_positions[:])
-	cube_colors := WHITE_CUBE_COLORS
-	copy(colors[ALL_PYRAMID_VERTICES:][:CUBE_VERTICES], cube_colors[:])
+	copy_array(positions[ALL_PYRAMID_VERTICES:], get_cube_positions(0, HEIGHT))
+	copy_array(colors[ALL_PYRAMID_VERTICES:], WHITE_CUBE_COLORS)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
@@ -97,16 +95,16 @@ camera_frame :: proc(delta: f32) {
 
 	cube_pos: Vec
 	cube_pos.y = elevation
-	cube_pos.x = (RADIUS-40) * cos(rotation)
-	cube_pos.z = (RADIUS-40) * sin(rotation)
+	cube_pos.x = CUBE_RADIUS * cos(rotation)
+	cube_pos.z = CUBE_RADIUS * sin(rotation)
 
 	for i in 0..<AMOUNT {
 		/* Draw pyramid looking at the cube */
 
 		angle := 2*PI * f32(i)/f32(AMOUNT)
 		y: f32 = -80
-		x: f32 = RADIUS * cos(angle)
-		z: f32 = RADIUS * sin(angle)
+		x: f32 = RING_RADIUS * cos(angle)
+		z: f32 = RING_RADIUS * sin(angle)
 
 		mat := view_mat
 		mat *= mat4_look_at(
