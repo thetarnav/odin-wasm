@@ -23,6 +23,7 @@ Example_Kind :: enum {
 	Pyramid,
 	Boxes,
 	Camera,
+	Texture,
 }
 example: Example_Kind
 
@@ -56,6 +57,12 @@ demos: [Example_Kind]Demo_Interface = {
 		setup      = camera_start,
 		frame      = camera_frame,
 	},
+	.Texture   = {
+		vs_sources = {#load("./boxes_vs.glsl", string)},
+		fs_sources = {#load("./fs_simple.glsl", string)},
+		setup      = texture_start,
+		frame      = texture_frame,
+	},
 }
 
 frame_arena_buffer: [1024]byte
@@ -78,6 +85,22 @@ main :: proc() {
 	window_size = cast_vec2(f32, dom.get_window_inner_size())
 	canvas_size = window_size - 200
 	mouse_pos   = window_size / 2
+}
+
+on_mouse_move :: proc(e: dom.Event) {
+	mouse_pos = cast_vec2(f32, e.data.mouse.client)
+	mouse_rel = (mouse_pos - window_size / 2) / window_size
+}
+on_wheel :: proc(e: dom.Event) {
+	scale -= f32(e.data.wheel.delta.y) * 0.001
+	scale = clamp(scale, 0, 1)
+}
+@export on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
+	window_size  = {vw, vh}
+	canvas_size  = {cw, ch}
+	canvas_pos   = {cx, cy}
+	canvas_res   = cast_vec2(i32, canvas_size * dpr)
+	aspect_ratio = canvas_size.x / canvas_size.y
 }
 
 @export start :: proc "contextless" (
@@ -112,25 +135,7 @@ main :: proc() {
 	return true
 }
 
-on_mouse_move :: proc(e: dom.Event) {
-	mouse_pos = cast_vec2(f32, e.data.mouse.client)
-	mouse_rel = (mouse_pos - window_size / 2) / window_size
-}
-on_wheel :: proc(e: dom.Event) {
-	scale -= f32(e.data.wheel.delta.y) * 0.001
-	scale = clamp(scale, 0, 1)
-}
-@(export)
-on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
-	window_size  = {vw, vh}
-	canvas_size  = {cw, ch}
-	canvas_pos   = {cx, cy}
-	canvas_res   = cast_vec2(i32, canvas_size * dpr)
-	aspect_ratio = canvas_size.x / canvas_size.y
-}
-
-@(export)
-frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
+@export frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
 	context = ctx^
 	context.temp_allocator = mem.arena_allocator(&frame_arena)
 	defer free_all(context.temp_allocator)

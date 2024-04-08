@@ -6,7 +6,7 @@ import gl  "../wasm/webgl"
 @(private="file") ALL_PYRAMID_VERTICES :: AMOUNT * PYRAMID_VERTICES
 @(private="file") ALL_VERTICES :: ALL_PYRAMID_VERTICES + CUBE_VERTICES
 
-@(private="file") camera_state: struct {
+@(private="file") texture_state: struct {
 	rotation: f32,
 	u_matrix: i32,
 	vao:      VAO,
@@ -40,8 +40,8 @@ import gl  "../wasm/webgl"
 @(private="file") RADIUS :: 260
 @(private="file") AMOUNT :: 10
 
-camera_start :: proc(program: gl.Program) {
-	using camera_state
+texture_start :: proc(program: gl.Program) {
+	using texture_state
 
 	vao = gl.CreateVertexArray()
 	gl.BindVertexArray(vao)
@@ -85,8 +85,8 @@ camera_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
-camera_frame :: proc(delta: f32) {
-	using camera_state
+texture_frame :: proc(delta: f32) {
+	using texture_state
 
 	gl.BindVertexArray(vao)
 
