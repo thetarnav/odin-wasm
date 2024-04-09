@@ -20,15 +20,15 @@ import gl  "../wasm/webgl"
 @(private="file") RING_SPACE  :: 30
 
 lighting_state: struct {
-	cube_angle:  f32,
-	ring_angle:  f32,
-	u_view:      i32,
-	u_local:     i32,
-	u_light_dir: i32,
-	u_color:     i32,
-	vao:         VAO,
-	positions:   [ALL_VERTICES]Vec,
-	normals:     [ALL_VERTICES]Vec,
+	cube_angle:    f32,
+	ring_angle:    f32,
+	u_view:        i32,
+	u_local:       i32,
+	u_light_dir:   i32,
+	u_light_color: i32,
+	vao:           VAO,
+	positions:     [ALL_VERTICES]Vec,
+	normals:       [ALL_VERTICES]Vec,
 }
 
 
@@ -39,26 +39,33 @@ lighting_start :: proc(program: gl.Program) {
 	gl.BindVertexArray(vao)
 
 	a_position := gl.GetAttribLocation(program, "a_position")
-	a_color    := gl.GetAttribLocation(program, "a_normal")
+	a_normal   := gl.GetAttribLocation(program, "a_normal")
+	a_color    := gl.GetAttribLocation(program, "a_color")
 
-	u_view      = gl.GetUniformLocation(program, "u_view")
-	u_local     = gl.GetUniformLocation(program, "u_local")
-	u_light_dir = gl.GetUniformLocation(program, "u_light_dir")
-	u_color     = gl.GetUniformLocation(program, "u_color")
+	u_view        = gl.GetUniformLocation(program, "u_view")
+	u_local       = gl.GetUniformLocation(program, "u_local")
+	u_light_dir   = gl.GetUniformLocation(program, "u_light_dir")
+	u_light_color = gl.GetUniformLocation(program, "u_light_color")
 
 	gl.EnableVertexAttribArray(a_position)
+	gl.EnableVertexAttribArray(a_normal)
 	gl.EnableVertexAttribArray(a_color)
 
 	positions_buffer := gl.CreateBuffer()
 	normals_buffer   := gl.CreateBuffer()
+	colors_buffer    := gl.CreateBuffer()
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
+
+	colors: [ALL_VERTICES]RGBA
 	
 	/* Cube */
 	copy_array(positions[:], get_cube_positions(0, CUBE_HEIGHT))
-	copy_array(normals[:], get_cube_normals())
+	cube_normals: [CUBE_VERTICES]Vec = 1
+	copy_array(normals[:], cube_normals)
+	copy_array(colors[:], WHITE_CUBE_COLORS)
 
 	/* Ring
 	
@@ -74,8 +81,11 @@ lighting_start :: proc(program: gl.Program) {
 	ramp bottom
 	*/
 
-	rings_normals   := normals[CUBE_VERTICES:]
+	rings_normals   := normals  [CUBE_VERTICES:]
 	rings_positions := positions[CUBE_VERTICES:]
+
+	rings_colors: [RINGS_VERTICES]RGBA = PURPLE_DARK
+	copy_array(colors[CUBE_VERTICES:], rings_colors)
 
 	for ri in 0..<RINGS {
 		ring_positions := rings_positions[ri*RING_VERTICES:]
@@ -134,9 +144,13 @@ lighting_start :: proc(program: gl.Program) {
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, normals_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, normals[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_color, 3, gl.FLOAT, false, 0, 0)
+	gl.VertexAttribPointer(a_normal, 3, gl.FLOAT, false, 0, 0)
 
-	gl.Uniform4fv(u_color, {1, 1, 1, 1})
+	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
+	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
+	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
+
+	gl.Uniform4fv(u_light_color, rgba_to_vec4(ORANGE))
 }
 
 lighting_frame :: proc(delta: f32) {

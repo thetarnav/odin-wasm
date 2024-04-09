@@ -1,6 +1,6 @@
 package example
 
-import "core:intrinsics"
+import "base:intrinsics"
 import glm "core:math/linalg/glsl"
 import gl "../wasm/webgl"
 
@@ -18,6 +18,7 @@ sin     :: glm.sin
 tan     :: glm.tan
 dot     :: glm.dot
 cross   :: glm.cross
+
 
 copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
 	src := src
@@ -153,6 +154,11 @@ BLUE  : RGBA : {0, 80, 190, 255}
 RED   : RGBA : {230, 20, 0, 255}
 ORANGE: RGBA : {250, 160, 50, 255}
 PURPLE: RGBA : {160, 100, 200, 255}
+PURPLE_DARK: RGBA : {80, 30, 30, 255}
+
+rgba_to_vec4 :: proc "contextless" (rgba: RGBA) -> glm.vec4 {
+	return {f32(rgba.r)/255, f32(rgba.g)/255, f32(rgba.b)/255, f32(rgba.a)/255}
+}
 
 CUBE_TRIANGLES :: 6 * 2
 CUBE_VERTICES  :: CUBE_TRIANGLES * 3
@@ -207,57 +213,56 @@ CUBE_POSITIONS: [CUBE_VERTICES]Vec : {
 	{1, 1, 0},
 }
 
+CUBE_NORMALS: [CUBE_VERTICES]Vec : {
+	{0, -1, 0}, // 0
+	{0, -1, 0},
+	{0, -1, 0},
+	{0, -1, 0}, // 1
+	{0, -1, 0},
+	{0, -1, 0},
+	
+	{0, 0, 1}, // 2
+	{0, 0, 1},
+	{0, 0, 1},
+	{0, 0, 1}, // 3
+	{0, 0, 1},
+	{0, 0, 1},
+	
+	{-1, 0, 0}, // 4
+	{-1, 0, 0},
+	{-1, 0, 0},
+	{-1, 0, 0}, // 5
+	{-1, 0, 0},
+	{-1, 0, 0},
+	
+	{1, 0, 0}, // 6
+	{1, 0, 0},
+	{1, 0, 0},
+	{1, 0, 0}, // 7
+	{1, 0, 0},
+	{1, 0, 0},
+	
+	{0, 0, -1}, // 8
+	{0, 0, -1},
+	{0, 0, -1},
+	{0, 0, -1}, // 9
+	{0, 0, -1},
+	{0, 0, -1},
+	
+	{0, 1, 0}, // 10
+	{0, 1, 0},
+	{0, 1, 0},
+	{0, 1, 0}, // 11
+	{0, 1, 0},
+	{0, 1, 0},
+}
+
 get_cube_positions :: proc(pos: Vec = 0, h: f32 = 1) -> [CUBE_VERTICES]Vec {
 	positions := CUBE_POSITIONS
 	for &vec in positions {
 		vec = pos + (vec - {0.5, 0.5, 0.5}) * h
 	}
 	return positions
-}
-get_cube_normals :: proc() -> [CUBE_VERTICES]Vec {
-	return {
-		{0, -1, 0}, // 0
-		{0, -1, 0},
-		{0, -1, 0},
-		{0, -1, 0}, // 1
-		{0, -1, 0},
-		{0, -1, 0},
-
-		{0, 0, 1}, // 2
-		{0, 0, 1},
-		{0, 0, 1},
-		{0, 0, 1}, // 3
-		{0, 0, 1},
-		{0, 0, 1},
-
-		{-1, 0, 0}, // 4
-		{-1, 0, 0},
-		{-1, 0, 0},
-		{-1, 0, 0}, // 5
-		{-1, 0, 0},
-		{-1, 0, 0},
-
-		{1, 0, 0}, // 6
-		{1, 0, 0},
-		{1, 0, 0},
-		{1, 0, 0}, // 7
-		{1, 0, 0},
-		{1, 0, 0},
-
-		{0, 0, -1}, // 8
-		{0, 0, -1},
-		{0, 0, -1},
-		{0, 0, -1}, // 9
-		{0, 0, -1},
-		{0, 0, -1},
-
-		{0, 1, 0}, // 10
-		{0, 1, 0},
-		{0, 1, 0},
-		{0, 1, 0}, // 11
-		{0, 1, 0},
-		{0, 1, 0},
-	}
 }
 
 WHITE_CUBE_COLORS: [CUBE_VERTICES]RGBA : {

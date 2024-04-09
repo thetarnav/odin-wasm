@@ -3,11 +3,12 @@
 // to pick one. mediump is a good default
 precision highp float;
 
-// the varied normal passed from the vertex shader
+// varring passed from the vertex shader
 in vec3 v_normal;
+in vec4 v_color;
 
 uniform vec3 u_light_dir;
-uniform vec4 u_color;
+uniform vec4 u_light_color;
 
 // we need to declare an output for the fragment shader
 // equvalent of gl_FragColor in GLSL 100
@@ -23,9 +24,5 @@ void main() {
 	// of the normal to the light's reverse direction
 	float light = dot(normal, u_light_dir);
 
-	out_color = u_color;
-
-	// Lets multiply just the color portion (not the alpha)
-	// by the light
-	out_color.rgb *= light;
+	out_color = mix(v_color, u_light_color, light);
 }
