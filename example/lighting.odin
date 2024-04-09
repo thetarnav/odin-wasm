@@ -20,15 +20,15 @@ import gl  "../wasm/webgl"
 @(private="file") RING_SPACE  :: 30
 
 lighting_state: struct {
-	cube_rotation: f32,
-	ring_rotation: f32,
-	u_matrix:      i32,
-	u_world:	   i32,
-	u_light_dir:   i32,
-	u_color:       i32,
-	vao:           VAO,
-	positions:     [ALL_VERTICES]Vec,
-	normals:       [ALL_VERTICES]Vec,
+	cube_angle:  f32,
+	ring_angle:  f32,
+	u_view:      i32,
+	u_local:     i32,
+	u_light_dir: i32,
+	u_color:     i32,
+	vao:         VAO,
+	positions:   [ALL_VERTICES]Vec,
+	normals:     [ALL_VERTICES]Vec,
 }
 
 
@@ -41,8 +41,8 @@ lighting_start :: proc(program: gl.Program) {
 	a_position := gl.GetAttribLocation(program, "a_position")
 	a_color    := gl.GetAttribLocation(program, "a_normal")
 
-	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
-	u_world     = gl.GetUniformLocation(program, "u_world")
+	u_view      = gl.GetUniformLocation(program, "u_view")
+	u_local     = gl.GetUniformLocation(program, "u_local")
 	u_light_dir = gl.GetUniformLocation(program, "u_light_dir")
 	u_color     = gl.GetUniformLocation(program, "u_color")
 
@@ -160,20 +160,21 @@ lighting_frame :: proc(delta: f32) {
 	)
 	view_mat *= camera_mat
 
+	gl.UniformMatrix4fv(u_view, view_mat)
+
 	/* Draw cube */
-	cube_rotation += 0.01 * delta * mouse_rel.x
+	cube_angle += 0.01 * delta * mouse_rel.x
 
 	cube_pos: Vec
 	cube_pos.y = 500 * -mouse_rel.y
-	cube_pos.x = CUBE_RADIUS * cos(cube_rotation)
-	cube_pos.z = CUBE_RADIUS * sin(cube_rotation)
+	cube_pos.x = CUBE_RADIUS * cos(cube_angle)
+	cube_pos.z = CUBE_RADIUS * sin(cube_angle)
 
 	cube_mat: Mat4 = 1
 	cube_mat *= mat4_translate(cube_pos)
-	cube_mat *= mat4_rotate_y(cube_rotation)
+	cube_mat *= mat4_rotate_y(cube_angle)
 
-	gl.UniformMatrix4fv(u_matrix, view_mat * cube_mat)
-	gl.UniformMatrix4fv(u_world, cube_mat)
+	gl.UniformMatrix4fv(u_local, cube_mat)
 	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES)
 
 	/* Draw light from cube */
@@ -181,15 +182,14 @@ lighting_frame :: proc(delta: f32) {
 	gl.Uniform3fv(u_light_dir, light_dir)
 
 	/* Draw rings */
-	ring_rotation += 0.002 * delta
+	ring_angle += 0.002 * delta
 	
 	for i in 0..<RINGS {
 		ring_mat: Mat4 = 1
-		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(i)) + ring_rotation/4)
-		ring_mat *= mat4_rotate_x(ring_rotation)
+		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(i)) + ring_angle/4)
+		ring_mat *= mat4_rotate_x(ring_angle)
 
-		gl.UniformMatrix4fv(u_matrix, view_mat * ring_mat)
-		gl.UniformMatrix4fv(u_world, ring_mat)
+		gl.UniformMatrix4fv(u_local, ring_mat)
 		gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES + i*RING_VERTICES, RING_VERTICES)
 	}
 }

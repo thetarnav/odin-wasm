@@ -14,18 +14,18 @@ uniform vec4 u_color;
 out vec4 out_color;
 
 void main() {
-  // because v_normal is a varying it's interpolated
-  // so it will not be a uint vector. Normalizing it
-  // will make it a unit vector again
-  vec3 normal = normalize(v_normal);
+	// because v_normal is a varying it's interpolated
+	// so it will not be a uint vector. Normalizing it
+	// will make it a unit vector again
+	vec3 normal = normalize(v_normal);
 
-  // compute the light by taking the dot product
-  // of the normal to the light's reverse direction
-  float light = dot(normal, u_light_dir);
+	// compute the light by taking the dot product
+	// of the normal to the light's reverse direction
+	float light = dot(normal, u_light_dir);
 
-  out_color = u_color;
+	out_color = u_color;
 
-  // Lets multiply just the color portion (not the alpha)
-  // by the light
-  out_color.rgb *= light;
+	// Lets multiply just the color portion (not the alpha)
+	// by the light
+	out_color.rgb *= light;
 }
