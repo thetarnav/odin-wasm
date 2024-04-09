@@ -57,21 +57,21 @@ lighting_start :: proc(program: gl.Program) {
 		ring_positions := positions[CUBE_VERTICES + ri*RING_VERTICES:]
 		ring_colors    := colors   [CUBE_VERTICES + ri*RING_VERTICES:]
 
-		radius := CUBE_RADIUS - CUBE_HEIGHT/2 - RING_SPACE - (RING_LENGTH + RING_SPACE) * f32(ri)
+		radius := CUBE_RADIUS - CUBE_HEIGHT/2 - RING_SPACE - f32(ri) * (RING_LENGTH + RING_SPACE)
 
 		for si in 0..<RING_SEGMENTS {
 			theta0 := 2*PI * f32(si+1) / f32(RING_SEGMENTS)
 			theta1 := 2*PI * f32(si  ) / f32(RING_SEGMENTS)
 
-			out_x0 := radius * cos(theta0)
-			out_z0 := radius * sin(theta0)
-			out_x1 := radius * cos(theta1)
-			out_z1 := radius * sin(theta1)
+			out_x0 := cos(theta0) * radius
+			out_z0 := sin(theta0) * radius
+			out_x1 := cos(theta1) * radius
+			out_z1 := sin(theta1) * radius
 
-			in_x0 := (radius - RING_LENGTH) * cos(theta0)
-			in_z0 := (radius - RING_LENGTH) * sin(theta0)
-			in_x1 := (radius - RING_LENGTH) * cos(theta1)
-			in_z1 := (radius - RING_LENGTH) * sin(theta1)
+			in_x0  := cos(theta0) * (radius - RING_LENGTH)
+			in_z0  := sin(theta0) * (radius - RING_LENGTH)
+			in_x1  := cos(theta1) * (radius - RING_LENGTH)
+			in_z1  := sin(theta1) * (radius - RING_LENGTH)
 
 			copy(ring_positions[si*SEGMENT_VERTICES:], []Vec{
 				{out_x0, -RING_HEIGHT/2, out_z0},
@@ -158,12 +158,12 @@ lighting_frame :: proc(delta: f32) {
 	/* Draw rings */
 	ring_rotation += 0.002 * delta
 	
-	for ri in 0..<RINGS {
+	for i in 0..<RINGS {
 		ring_mat := view_mat
-		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(ri)) + ring_rotation/4)
+		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(i)) + ring_rotation/4)
 		ring_mat *= mat4_rotate_x(ring_rotation)
 
 		gl.UniformMatrix4fv(u_matrix, ring_mat)
-		gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES + ri*RING_VERTICES, RING_VERTICES)
+		gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES + i*RING_VERTICES, RING_VERTICES)
 	}
 }
