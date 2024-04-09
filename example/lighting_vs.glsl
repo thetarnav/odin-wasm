@@ -15,9 +15,12 @@ void main() {
 	// project the position
 	gl_Position = u_view * u_local * a_position;
 
-	// orient the normals and pass to the fragment shader
-	// mat3(u_local) is the upper 3x3 of the local matrix
-	// it transforms the normal's orientation
-	// as opposed to the translation
-	v_normal = mat3(u_local) * a_normal;
+	/*
+	orient the normals and pass to the fragment shader
+
+	mat3() is the upper 3x3 - orientation, no translation
+
+	transpose() + inverse() is to make it work with non-uniform scaling
+	*/
+	v_normal = mat3(transpose(inverse(u_local))) * a_normal;
 }
