@@ -23,11 +23,12 @@ lighting_state: struct {
 	cube_rotation: f32,
 	ring_rotation: f32,
 	u_matrix:      i32,
+	u_world:	   i32,
 	u_light_dir:   i32,
 	u_color:       i32,
 	vao:           VAO,
 	positions:     [ALL_VERTICES]Vec,
-	normals:       [RINGS_VERTICES]Vec,
+	normals:       [ALL_VERTICES]Vec,
 }
 
 
@@ -41,6 +42,7 @@ lighting_start :: proc(program: gl.Program) {
 	a_color    := gl.GetAttribLocation(program, "a_normal")
 
 	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
+	u_world     = gl.GetUniformLocation(program, "u_world")
 	u_light_dir = gl.GetUniformLocation(program, "u_light_dir")
 	u_color     = gl.GetUniformLocation(program, "u_color")
 
@@ -53,25 +55,28 @@ lighting_start :: proc(program: gl.Program) {
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	rings_normals   := normals[:]
-	rings_positions := positions[CUBE_VERTICES:]
-
+	
 	/* Cube */
 	copy_array(positions[:], get_cube_positions(0, CUBE_HEIGHT))
+	copy_array(normals[:], get_cube_normals())
 
 	/* Ring
 	
 	_____________ <- RING_LENGTH
-	v           v
-	            @ <|
-	        @@@@@  |
+	v  ramp top v
+	     |      @ <|
+	     v  @@@@@  |
 	    @@@@@@@@@  |
-	@@@@@@@@@@@@@  |<- RING_HEIGHT
+	@@@@@@@@@@@@@  |<- RING_HEIGHT = SIDE
 	    @@@@@@@@@  |
 	        @@@@@  |
-	            @ <|
-
+	        ^   @ <|
+	ramp bottom
 	*/
+
+	rings_normals   := normals[CUBE_VERTICES:]
+	rings_positions := positions[CUBE_VERTICES:]
+
 	for ri in 0..<RINGS {
 		ring_positions := rings_positions[ri*RING_VERTICES:]
 		ring_normals   := rings_normals  [ri*RING_VERTICES:]
@@ -128,8 +133,8 @@ lighting_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_position, 3, gl.FLOAT, false, 0, 0)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, normals_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, rings_normals[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
+	gl.BufferDataSlice(gl.ARRAY_BUFFER, normals[:], gl.STATIC_DRAW)
+	gl.VertexAttribPointer(a_color, 3, gl.FLOAT, false, 0, 0)
 
 	gl.Uniform4fv(u_color, {1, 1, 1, 1})
 }
@@ -163,11 +168,12 @@ lighting_frame :: proc(delta: f32) {
 	cube_pos.x = CUBE_RADIUS * cos(cube_rotation)
 	cube_pos.z = CUBE_RADIUS * sin(cube_rotation)
 
-	cube_mat := view_mat
+	cube_mat: Mat4 = 1
 	cube_mat *= mat4_translate(cube_pos)
 	cube_mat *= mat4_rotate_y(cube_rotation)
 
-	gl.UniformMatrix4fv(u_matrix, cube_mat)
+	gl.UniformMatrix4fv(u_matrix, view_mat * cube_mat)
+	gl.UniformMatrix4fv(u_world, cube_mat)
 	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES)
 
 	/* Draw light from cube */
@@ -178,11 +184,12 @@ lighting_frame :: proc(delta: f32) {
 	ring_rotation += 0.002 * delta
 	
 	for i in 0..<RINGS {
-		ring_mat := view_mat
+		ring_mat: Mat4 = 1
 		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(i)) + ring_rotation/4)
 		ring_mat *= mat4_rotate_x(ring_rotation)
 
-		gl.UniformMatrix4fv(u_matrix, ring_mat)
+		gl.UniformMatrix4fv(u_matrix, view_mat * ring_mat)
+		gl.UniformMatrix4fv(u_world, ring_mat)
 		gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES + i*RING_VERTICES, RING_VERTICES)
 	}
 }
