@@ -249,3 +249,20 @@ get_pyramid_positions :: proc(pos: Vec = 0, h: f32 = 1) -> [PYRAMID_VERTICES]Vec
 		{x,   y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z},
 	}
 }
+
+normals_from_positions :: proc(dst, src: []Vec) {
+	assert(len(dst) >= len(src))
+	assert(len(src) % 3 == 0)
+
+	for i in 0..<len(src)/3 {
+		a := src[i*3+0]
+		b := src[i*3+1]
+		c := src[i*3+2]
+
+		normal := glm.normalize(cross(b - a, c - a))
+
+		dst[i*3+0] = normal
+		dst[i*3+1] = normal
+		dst[i*3+2] = normal
+	}
+}

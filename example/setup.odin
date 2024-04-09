@@ -59,8 +59,8 @@ demos: [Example_Kind]Demo_Interface = {
 		frame      = camera_frame,
 	},
 	.Lighting = {
-		vs_sources = {#load("./boxes_vs.glsl", string)},
-		fs_sources = {#load("./fs_simple.glsl", string)},
+		vs_sources = {#load("./lighting_vs.glsl", string)},
+		fs_sources = {#load("./lighting_fs.glsl", string)},
 		setup      = lighting_start,
 		frame      = lighting_frame,
 	},
