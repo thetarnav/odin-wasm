@@ -1,14 +1,15 @@
+//+private file
 package example
 
 import gl "../wasm/webgl"
 
-@(private="file") TRIANGLES :: 2
-@(private="file") VERTICES  :: TRIANGLES * 3
-@(private="file") BOX_W: f32 : 160
-@(private="file") BOX_H: f32 : 100
-@(private="file") box_size: [2]f32 = {BOX_W, BOX_H}
+TRIANGLES :: 2
+VERTICES  :: TRIANGLES * 3
+BOX_W: f32 : 160
+BOX_H: f32 : 100
+box_size: [2]f32 = {BOX_W, BOX_H}
 
-@(private="file") colors: [VERTICES*4]u8 = {
+colors: [VERTICES*4]u8 = {
 	60,  210, 0,   255, // G
 	210, 210, 0,   255, // Y
 	0,   80,  190, 255, // B
@@ -17,7 +18,7 @@ import gl "../wasm/webgl"
 	210, 210, 0,   255, // Y
 	0,   80,  190, 255, // B
 }
-@(private="file") positions: [VERTICES*2]f32 = {
+positions: [VERTICES*2]f32 = {
 	0,     0,
 	BOX_W, 0,
 	0,     BOX_H,
@@ -27,12 +28,13 @@ import gl "../wasm/webgl"
 	0,     BOX_H,
 }
 
-@(private="file") state: struct {
+state: struct {
 	rotation: f32,
 	u_matrix: i32,
 	vao:      VAO,
 }
 
+@(private="package")
 rectangle_start :: proc(program: gl.Program) {
 	using state
 
@@ -63,6 +65,7 @@ rectangle_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
+@(private="package")
 rectangle_frame :: proc(delta: f32) {
 	using state
 

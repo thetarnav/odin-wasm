@@ -1,9 +1,10 @@
+//+private file
 package example
 
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-@(private="file") CUBE_COLORS: [CUBE_VERTICES]RGBA : {
+CUBE_COLORS: [CUBE_VERTICES]RGBA : {
 	GREEN,  GREEN,  GREEN,  // 0
 	GREEN,  GREEN,  GREEN,  // 1
 	YELLOW, YELLOW, YELLOW, // 2
@@ -18,17 +19,18 @@ import gl  "../wasm/webgl"
 	PURPLE, PURPLE, PURPLE, // 11
 }
 
-@(private="file") BOX_HEIGHT :: 60
+BOX_HEIGHT :: 60
 
-@(private="file") BOXES_ROWS   :: 3
-@(private="file") BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
+BOXES_ROWS   :: 3
+BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
 
-@(private="file") boxes_state: struct {
+boxes_state: struct {
 	rotation:   [2]f32,
 	u_matrix:   i32,
 	vao:        VAO,
 }
 
+@(private="package")
 boxes_start :: proc(program: gl.Program) {
 	using boxes_state
 
@@ -73,6 +75,7 @@ boxes_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
+@(private="package")
 boxes_frame :: proc(delta: f32) {
 	using boxes_state
 

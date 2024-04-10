@@ -1,23 +1,24 @@
+//+private file
 package example
 
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
 
-@(private="file") SEGMENT_TRIANGLES :: 2 * 3
-@(private="file") SEGMENT_VERTICES  :: SEGMENT_TRIANGLES * 3
-@(private="file") RING_SEGMENTS     :: 32
-@(private="file") RING_TRIANGLES    :: RING_SEGMENTS * SEGMENT_TRIANGLES
-@(private="file") RING_VERTICES     :: RING_TRIANGLES * 3
-@(private="file") RINGS             :: 3
-@(private="file") RINGS_VERTICES    :: RINGS * RING_VERTICES
-@(private="file") ALL_VERTICES      :: CUBE_VERTICES + RINGS_VERTICES
+SEGMENT_TRIANGLES :: 2 * 3
+SEGMENT_VERTICES  :: SEGMENT_TRIANGLES * 3
+RING_SEGMENTS     :: 32
+RING_TRIANGLES    :: RING_SEGMENTS * SEGMENT_TRIANGLES
+RING_VERTICES     :: RING_TRIANGLES * 3
+RINGS             :: 3
+RINGS_VERTICES    :: RINGS * RING_VERTICES
+ALL_VERTICES      :: CUBE_VERTICES + RINGS_VERTICES
 
-@(private="file") CUBE_HEIGHT :: 80
-@(private="file") CUBE_RADIUS :: 300
-@(private="file") RING_HEIGHT :: 30
-@(private="file") RING_LENGTH :: 40
-@(private="file") RING_SPACE  :: 30
+CUBE_HEIGHT :: 80
+CUBE_RADIUS :: 300
+RING_HEIGHT :: 30
+RING_LENGTH :: 40
+RING_SPACE  :: 30
 
 lighting_state: struct {
 	cube_angle:    f32,
@@ -31,7 +32,7 @@ lighting_state: struct {
 	normals:       [ALL_VERTICES]Vec,
 }
 
-
+@(private="package")
 lighting_start :: proc(program: gl.Program) {
 	using lighting_state
 
@@ -84,8 +85,9 @@ lighting_start :: proc(program: gl.Program) {
 	rings_normals   := normals  [CUBE_VERTICES:]
 	rings_positions := positions[CUBE_VERTICES:]
 
-	rings_colors: [RINGS_VERTICES]RGBA = PURPLE_DARK
-	copy_array(colors[CUBE_VERTICES:], rings_colors)
+	for &color in colors[CUBE_VERTICES:] {
+		color = PURPLE_DARK
+	}
 
 	for ri in 0..<RINGS {
 		ring_positions := rings_positions[ri*RING_VERTICES:]
@@ -153,6 +155,7 @@ lighting_start :: proc(program: gl.Program) {
 	gl.Uniform4fv(u_light_color, rgba_to_vec4(ORANGE))
 }
 
+@(private="package")
 lighting_frame :: proc(delta: f32) {
 	using lighting_state
 

@@ -1,3 +1,4 @@
+//+private file
 package example
 
 import "core:math"
@@ -5,16 +6,16 @@ import glm "core:math/linalg/glsl"
 
 import gl "../wasm/webgl"
 
-@(private="file") TRIANGLES :: 4
-@(private="file") VERTICES  :: TRIANGLES * 3
-@(private="file") SIDE      :: 200
-@(private="file") H         :: math.SQRT_TWO * SIDE / 2
+TRIANGLES :: 4
+VERTICES  :: TRIANGLES * 3
+SIDE      :: 200
+H         :: math.SQRT_TWO * SIDE / 2
 
 /*
 Points should be in counter-clockwise order
 to show the front-face.
 */
-@(private="file") colors: [VERTICES*4]u8 = {
+colors: [VERTICES*4]u8 = {
 	60,  210, 0,   255, // G
 	210, 210, 0,   255, // Y
 	0,   80,  190, 255, // B
@@ -31,7 +32,7 @@ to show the front-face.
 	230, 20,  0,   255, // R
 	60,  210, 0,   255, // G
 }
-@(private="file") positions: [VERTICES*3]f32 = {
+positions: [VERTICES*3]f32 = {
 	 0,      0,   SIDE/2,
 	 SIDE/2, H,   0,
 	-SIDE/2, H,   0,
@@ -55,6 +56,7 @@ pyramid_state: struct {
 	vao:      VAO,
 }
 
+@(private="package")
 pyramid_start :: proc(program: gl.Program) {
 	using pyramid_state
 
@@ -82,6 +84,7 @@ pyramid_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
+@(private="package")
 pyramid_frame :: proc(delta: f32) {
 	using pyramid_state
 	

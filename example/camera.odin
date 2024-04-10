@@ -1,12 +1,13 @@
+//+private file
 package example
 
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-@(private="file") ALL_PYRAMID_VERTICES :: AMOUNT * PYRAMID_VERTICES
-@(private="file") ALL_VERTICES :: ALL_PYRAMID_VERTICES + CUBE_VERTICES
+ALL_PYRAMID_VERTICES :: AMOUNT * PYRAMID_VERTICES
+ALL_VERTICES :: ALL_PYRAMID_VERTICES + CUBE_VERTICES
 
-@(private="file") PYRAMID_COLORS: [PYRAMID_VERTICES]RGBA : {
+PYRAMID_COLORS: [PYRAMID_VERTICES]RGBA : {
 	BLUE,   BLUE,   BLUE,   // 0
 	BLUE,   BLUE,   BLUE,   // 1
 	YELLOW, YELLOW, YELLOW, // 2
@@ -21,11 +22,12 @@ camera_state: struct {
 	vao:      VAO,
 }
 
-@(private="file") HEIGHT :: 80
-@(private="file") RING_RADIUS :: 260
-@(private="file") CUBE_RADIUS :: 220
-@(private="file") AMOUNT :: 10
+HEIGHT :: 80
+RING_RADIUS :: 260
+CUBE_RADIUS :: 220
+AMOUNT :: 10
 
+@(private="package")
 camera_start :: proc(program: gl.Program) {
 	using camera_state
 
@@ -69,6 +71,7 @@ camera_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
+@(private="package")
 camera_frame :: proc(delta: f32) {
 	using camera_state
 
