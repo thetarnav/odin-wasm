@@ -164,7 +164,7 @@ lighting_frame :: proc(delta: f32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	camera_mat: Mat4 = 1
-	camera_mat *= mat4_translate({0, 0, 800 - 700 * (scale/1.2)})
+	camera_mat *= mat4_translate({0, 0, 800 - 800 * scale})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
 	view_mat := glm.mat4PerspectiveInfinite(
