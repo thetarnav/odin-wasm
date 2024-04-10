@@ -46,8 +46,8 @@ positions: [VERTICES*3]f32 = {
 	 SIDE/2, H,   0,
 
 	-SIDE/2, H,   0,
-	0,      0,  -SIDE/2,
-	0,      0,   SIDE/2,
+	 0,      0,  -SIDE/2,
+	 0,      0,   SIDE/2,
 }
 
 pyramid_state: struct {

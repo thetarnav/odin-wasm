@@ -7,8 +7,7 @@ import gl  "../wasm/webgl"
 
 SEGMENT_TRIANGLES :: 2 * 3
 SEGMENT_VERTICES  :: SEGMENT_TRIANGLES * 3
-RING_SEGMENTS     :: 32
-RING_TRIANGLES    :: RING_SEGMENTS * SEGMENT_TRIANGLES
+RING_TRIANGLES    :: (16 + 32 + 48) * SEGMENT_TRIANGLES
 RING_VERTICES     :: RING_TRIANGLES * 3
 RINGS             :: 3
 RINGS_VERTICES    :: RINGS * RING_VERTICES
@@ -20,21 +19,18 @@ RING_HEIGHT :: 30
 RING_LENGTH :: 40
 RING_SPACE  :: 30
 
-lighting_state: struct {
-	cube_angle:    f32,
-	ring_angle:    f32,
-	u_view:        i32,
-	u_local:       i32,
-	u_light_dir:   i32,
-	u_light_color: i32,
-	vao:           VAO,
-	positions:     [ALL_VERTICES]Vec,
-	normals:       [ALL_VERTICES]Vec,
-}
+cube_angle:    f32
+ring_angle:    f32
+u_view:        i32
+u_local:       i32
+u_light_dir:   i32
+u_light_color: i32
+vao:           VAO
+positions:     [ALL_VERTICES]Vec
+normals:       [ALL_VERTICES]Vec
 
 @(private="package")
 lighting_start :: proc(program: gl.Program) {
-	using lighting_state
 
 	vao = gl.CreateVertexArray()
 	gl.BindVertexArray(vao)
@@ -94,10 +90,11 @@ lighting_start :: proc(program: gl.Program) {
 		ring_normals   := rings_normals  [ri*RING_VERTICES:]
 
 		radius := CUBE_RADIUS - CUBE_HEIGHT/2 - RING_SPACE - f32(ri) * (RING_LENGTH + RING_SPACE)
+		segments := (RINGS - ri) * 16
 
-		for si in 0..<RING_SEGMENTS {
-			theta0 := 2*PI * f32(si+1) / f32(RING_SEGMENTS)
-			theta1 := 2*PI * f32(si  ) / f32(RING_SEGMENTS)
+		for si in 0..<segments {
+			theta0 := 2*PI * f32(si+1) / f32(segments)
+			theta1 := 2*PI * f32(si  ) / f32(segments)
 
 			out_x0 := cos(theta0) * radius
 			out_z0 := sin(theta0) * radius
@@ -157,8 +154,6 @@ lighting_start :: proc(program: gl.Program) {
 
 @(private="package")
 lighting_frame :: proc(delta: f32) {
-	using lighting_state
-
 	gl.BindVertexArray(vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
