@@ -19,6 +19,7 @@ u_view       : i32
 u_local      : i32
 u_light_pos  : i32
 u_light_color: i32
+u_eye_pos	 : i32
 vao          : VAO
 positions    : [ALL_VERTICES]Vec
 normals      : [ALL_VERTICES]Vec
@@ -38,6 +39,7 @@ light_point_start :: proc(program: gl.Program) {
 	u_local       = gl.GetUniformLocation(program, "u_local")
 	u_light_pos   = gl.GetUniformLocation(program, "u_light_pos")
 	u_light_color = gl.GetUniformLocation(program, "u_light_color")
+	u_eye_pos     = gl.GetUniformLocation(program, "u_eye_pos")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_normal)
@@ -89,8 +91,10 @@ light_point_frame :: proc(delta: f32) {
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
+	camera_pos := Vec{0, 0, 500 - 500 * (scale-0.5)}
+
 	camera_mat: Mat4 = 1
-	camera_mat *= mat4_translate({0, 0, 500 - 500 * (scale-0.5)})
+	camera_mat *= mat4_translate(camera_pos)
 	camera_mat = glm.inverse_mat4(camera_mat)
 
 	view_mat := glm.mat4PerspectiveInfinite(
@@ -100,9 +104,6 @@ light_point_frame :: proc(delta: f32) {
 	)
 	view_mat *= camera_mat
 
-	gl.UniformMatrix4fv(u_view, view_mat)
-
-	/* Draw cube */
 	cube_angle += 0.01 * delta * mouse_rel.x
 
 	cube_pos: Vec
@@ -113,12 +114,15 @@ light_point_frame :: proc(delta: f32) {
 	cube_mat: Mat4 = 1
 	cube_mat *= mat4_translate(cube_pos)
 	cube_mat *= mat4_rotate_y(cube_angle)
+	
 
+	gl.Uniform3fv(u_light_pos, cube_pos)
+	gl.Uniform3fv(u_eye_pos, camera_pos)
+	gl.UniformMatrix4fv(u_view, view_mat)
+
+	/* Draw cube */
 	gl.UniformMatrix4fv(u_local, cube_mat)
 	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES)
-
-	/* Draw light from cube */
-	gl.Uniform3fv(u_light_pos, cube_pos)
 
 	/* Draw sphere */
 	ball_angle += 0.0002 * delta
