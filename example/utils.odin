@@ -26,6 +26,12 @@ copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
 	copy(dst, src[:])
 }
 
+copy_pattern :: #force_inline proc "contextless" (dst: []$S, src: []S) {
+	for i in 0..<len(dst)/len(src) {
+		copy(dst[i*len(src):][:len(src)], src)
+	}
+}
+
 cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
 	where intrinsics.type_is_numeric(S) && intrinsics.type_is_numeric(D) {
 	return {D(v.x), D(v.y)}
@@ -150,10 +156,11 @@ mat4_look_at :: proc "contextless" (eye, target, up: Vec3) -> Mat4 {
 
 WHITE : RGBA : {255, 255, 255, 255}
 GREEN : RGBA : {60, 210, 0, 255}
-YELLOW: RGBA : {210, 210, 0, 255}
+YELLOW: RGBA : {210, 200, 0, 255}
 BLUE  : RGBA : {0, 80, 190, 255}
+CYAN  : RGBA : {0, 210, 210, 255}
 RED   : RGBA : {230, 20, 0, 255}
-ORANGE: RGBA : {250, 160, 50, 255}
+ORANGE: RGBA : {250, 150, 50, 255}
 PURPLE: RGBA : {160, 100, 200, 255}
 PURPLE_DARK: RGBA : {80, 30, 30, 255}
 
@@ -298,6 +305,100 @@ get_pyramid_positions :: proc(pos: Vec = 0, h: f32 = 1) -> [PYRAMID_VERTICES]Vec
 		{x+h, y, z},   {x+h/2, y+h, z+h/2}, {x+h, y, z+h},
 		{x+h, y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z+h},
 		{x,   y, z+h}, {x+h/2, y+h, z+h/2}, {x,   y, z},
+	}
+}
+
+get_sphere_base_triangle :: proc(positions, normals: []Vec, radius: f32, segments: int) {
+	// TODO: merge top and bottom segment triangles
+	si := 0 // segment index
+	for vi in 0..<segments { // vertical
+		va0   := PI * (f32(vi)  ) / f32(segments)
+		va1   := PI * (f32(vi)+1) / f32(segments)
+		hmove := 0.5 * f32(vi%2)
+
+		for hi in 0..<segments { // horizontal
+			ha0 := 2*PI * (f32(hi)-0.5 + hmove) / f32(segments)
+			ha1 := 2*PI * (f32(hi)     + hmove) / f32(segments)
+			ha2 := 2*PI * (f32(hi)+0.5 + hmove) / f32(segments)
+			ha3 := 2*PI * (f32(hi)+1   + hmove) / f32(segments)
+
+			// Vertices
+			v0 := Vec{cos(ha0)*sin(va1), cos(va1), sin(ha0)*sin(va1)}
+			v1 := Vec{cos(ha1)*sin(va0), cos(va0), sin(ha1)*sin(va0)}
+			v2 := Vec{cos(ha2)*sin(va1), cos(va1), sin(ha2)*sin(va1)}
+			v3 := Vec{cos(ha3)*sin(va0), cos(va0), sin(ha3)*sin(va0)}
+
+			// Normals
+			n0 := normalize(v0)
+			n1 := normalize(v1)
+			n2 := normalize(v2)
+			n3 := normalize(v3)
+
+			// Triangle 1
+			positions[si+0] = v0 * radius
+			positions[si+1] = v1 * radius
+			positions[si+2] = v2 * radius
+
+			normals  [si+0] = n0
+			normals  [si+1] = n1
+			normals  [si+2] = n2
+
+			// Triangle 2
+			positions[si+3] = v1 * radius
+			positions[si+4] = v3 * radius
+			positions[si+5] = v2 * radius
+
+			normals  [si+3] = n1
+			normals  [si+4] = n3
+			normals  [si+5] = n2
+
+			si += 6
+		}
+	}
+}
+
+get_sphere_base_rectangle :: proc(positions, normals: []Vec, radius: f32, segments: int) {
+	// TODO: merge top and bottom segment triangles
+	si := 0 // segment index
+	for vi in 0..<segments { // vertical
+		for hi in 0..<segments { // horizontal
+			va0 :=   PI * f32(vi+0) / f32(segments)
+			va1 :=   PI * f32(vi+1) / f32(segments)
+			ha0 := 2*PI * f32(hi+0) / f32(segments)
+			ha1 := 2*PI * f32(hi+1) / f32(segments)
+			
+			// Vertices
+			v0 := Vec{cos(ha0)*sin(va1), cos(va1), sin(ha0)*sin(va1)}
+			v1 := Vec{cos(ha0)*sin(va0), cos(va0), sin(ha0)*sin(va0)}
+			v2 := Vec{cos(ha1)*sin(va1), cos(va1), sin(ha1)*sin(va1)}
+			v3 := Vec{cos(ha1)*sin(va0), cos(va0), sin(ha1)*sin(va0)}
+
+			// Normals
+			n0 := normalize(v0)
+			n1 := normalize(v1)
+			n2 := normalize(v2)
+			n3 := normalize(v3)
+
+			// Triangle 1
+			positions[si+0] = v0 * radius
+			positions[si+1] = v1 * radius
+			positions[si+2] = v2 * radius
+
+			normals  [si+0] = n0
+			normals  [si+1] = n1
+			normals  [si+2] = n2
+
+			// Triangle 2
+			positions[si+3] = v1 * radius
+			positions[si+4] = v3 * radius
+			positions[si+5] = v2 * radius
+
+			normals  [si+3] = n1
+			normals  [si+4] = n3
+			normals  [si+5] = n2
+
+			si += 6
+		}
 	}
 }
 

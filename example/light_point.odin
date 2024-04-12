@@ -62,57 +62,8 @@ light_point_start :: proc(program: gl.Program) {
 	ball_normals   := normals  [CUBE_VERTICES:]
 	ball_colors    := colors   [CUBE_VERTICES:]
 
-	// TODO: merge top and bottom segment triangles
-	si := 0 // segment index
-	for vi in 0..<BALL_SEGMENTS { // vertical
-		for hi in 0..<BALL_SEGMENTS { // horizontal
-			va0 :=   PI * f32(vi+0) / f32(BALL_SEGMENTS)
-			va1 :=   PI * f32(vi+1) / f32(BALL_SEGMENTS)
-			ha0 := 2*PI * f32(hi+0) / f32(BALL_SEGMENTS)
-			ha1 := 2*PI * f32(hi+1) / f32(BALL_SEGMENTS)
-			
-			// Vertices
-			v0 := Vec{cos(ha0)*sin(va1), cos(va1), sin(ha0)*sin(va1)}
-			v1 := Vec{cos(ha0)*sin(va0), cos(va0), sin(ha0)*sin(va0)}
-			v2 := Vec{cos(ha1)*sin(va1), cos(va1), sin(ha1)*sin(va1)}
-			v3 := Vec{cos(ha1)*sin(va0), cos(va0), sin(ha1)*sin(va0)}
-
-			// Normals
-			n0 := normalize(v0)
-			n1 := normalize(v1)
-			n2 := normalize(v2)
-			n3 := normalize(v3)
-
-			// Triangle 1
-			ball_positions[si+0] = v0 * BALL_RADIUS
-			ball_positions[si+1] = v1 * BALL_RADIUS
-			ball_positions[si+2] = v2 * BALL_RADIUS
-
-			ball_normals  [si+0] = n0
-			ball_normals  [si+1] = n1
-			ball_normals  [si+2] = n2
-
-			ball_colors   [si+0] = RED
-			ball_colors   [si+1] = GREEN
-			ball_colors   [si+2] = BLUE
-
-			// Triangle 2
-			ball_positions[si+3] = v1 * BALL_RADIUS
-			ball_positions[si+4] = v3 * BALL_RADIUS
-			ball_positions[si+5] = v2 * BALL_RADIUS
-
-			ball_normals  [si+3] = n1
-			ball_normals  [si+4] = n3
-			ball_normals  [si+5] = n2
-
-			ball_colors   [si+3] = GREEN
-			ball_colors   [si+4] = WHITE
-			ball_colors   [si+5] = BLUE
-
-			si += 6
-		}
-	}
-	
+	get_sphere_base_triangle(ball_positions, ball_normals, BALL_RADIUS, BALL_SEGMENTS)
+	copy_pattern(ball_colors, []RGBA{PURPLE, CYAN, CYAN, PURPLE, CYAN, PURPLE})
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
@@ -126,7 +77,7 @@ light_point_start :: proc(program: gl.Program) {
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 
-	gl.Uniform4fv(u_light_color, rgba_to_vec4(ORANGE))
+	gl.Uniform4fv(u_light_color, rgba_to_vec4(WHITE))
 }
 
 @(private="package")
@@ -171,7 +122,7 @@ light_point_frame :: proc(delta: f32) {
 	gl.Uniform3fv(u_light_dir, light_dir)
 
 	/* Draw sphere */
-	ball_angle += 0.001 * delta
-	gl.UniformMatrix4fv(u_local, mat4_rotate_y(ball_angle))
+	ball_angle += 0.0002 * delta
+	gl.UniformMatrix4fv(u_local, mat4_rotate_y(ball_angle) * mat4_rotate_x(ball_angle))
 	gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES, BALL_VERTICES)
 }
