@@ -62,6 +62,7 @@ light_point_start :: proc(program: gl.Program) {
 	ball_normals   := normals  [CUBE_VERTICES:]
 	ball_colors    := colors   [CUBE_VERTICES:]
 
+	// TODO: merge top and bottom segment triangles
 	si := 0
 	for i in 0..<BALL_SEGMENTS {
 		for j in 0..<BALL_SEGMENTS {
@@ -152,7 +153,7 @@ light_point_frame :: proc(delta: f32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	camera_mat: Mat4 = 1
-	camera_mat *= mat4_translate({0, 0, 800 - 800 * scale})
+	camera_mat *= mat4_translate({0, 0, 500 - 500 * (scale-0.5)})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
 	view_mat := glm.mat4PerspectiveInfinite(
@@ -184,7 +185,7 @@ light_point_frame :: proc(delta: f32) {
 	gl.Uniform3fv(u_light_dir, light_dir)
 
 	/* Draw sphere */
-	ball_angle += 0.002 * delta
+	ball_angle += 0.001 * delta
 	gl.UniformMatrix4fv(u_local, mat4_rotate_y(ball_angle))
 	gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES, BALL_VERTICES)
 }
