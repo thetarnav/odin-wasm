@@ -5,22 +5,16 @@ import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
 
-SEGMENT_TRIANGLES :: 2 * 3
-SEGMENT_VERTICES  :: SEGMENT_TRIANGLES * 3
-RING_TRIANGLES    :: (16 + 32 + 48) * SEGMENT_TRIANGLES
-RING_VERTICES     :: RING_TRIANGLES * 3
-RINGS             :: 3
-RINGS_VERTICES    :: RINGS * RING_VERTICES
-ALL_VERTICES      :: CUBE_VERTICES + RINGS_VERTICES
+BALL_SEGMENTS :: 16
+BALL_VERTICES :: BALL_SEGMENTS * BALL_SEGMENTS * 6
+ALL_VERTICES  :: CUBE_VERTICES + BALL_VERTICES
 
 CUBE_HEIGHT :: 80
 CUBE_RADIUS :: 300
-RING_HEIGHT :: 30
-RING_LENGTH :: 40
-RING_SPACE  :: 30
+BALL_RADIUS :: 200
 
 cube_angle:    f32
-ring_angle:    f32
+ball_angle:    f32
 u_view:        i32
 u_local:       i32
 u_light_dir:   i32
@@ -28,6 +22,7 @@ u_light_color: i32
 vao:           VAO
 positions:     [ALL_VERTICES]Vec
 normals:       [ALL_VERTICES]Vec
+colors:        [ALL_VERTICES]RGBA
 
 @(private="package")
 light_point_start :: proc(program: gl.Program) {
@@ -56,86 +51,81 @@ light_point_start :: proc(program: gl.Program) {
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
 
-	colors: [ALL_VERTICES]RGBA
-
 	/* Cube */
 	copy_array(positions[:], get_cube_positions(0, CUBE_HEIGHT))
 	cube_normals: [CUBE_VERTICES]Vec = 1
 	copy_array(normals[:], cube_normals)
 	copy_array(colors[:], WHITE_CUBE_COLORS)
 
-	/* Ring
+	/* Sphere */
+	ball_positions := positions[CUBE_VERTICES:]
+	ball_normals   := normals  [CUBE_VERTICES:]
+	ball_colors    := colors   [CUBE_VERTICES:]
 
-	_____________ <- RING_LENGTH
-	v  ramp top v
-	     |      @ <|
-	     v  @@@@@  |
-	    @@@@@@@@@  |
-	@@@@@@@@@@@@@  |<- RING_HEIGHT = SIDE
-	    @@@@@@@@@  |
-	        @@@@@  |
-	        ^   @ <|
-	ramp bottom
-	*/
+	si := 0
+	for i in 0..<BALL_SEGMENTS {
+		for j in 0..<BALL_SEGMENTS {
+			a := 2*PI * f32(i) / f32(BALL_SEGMENTS)
+			b :=   PI * f32(j) / f32(BALL_SEGMENTS)
 
-	rings_normals   := normals  [CUBE_VERTICES:]
-	rings_positions := positions[CUBE_VERTICES:]
-
-	for &color in colors[CUBE_VERTICES:] {
-		color = PURPLE_DARK
-	}
-
-	for ri in 0..<RINGS {
-		ring_positions := rings_positions[ri*RING_VERTICES:]
-		ring_normals   := rings_normals  [ri*RING_VERTICES:]
-
-		radius := CUBE_RADIUS - CUBE_HEIGHT/2 - RING_SPACE - f32(ri) * (RING_LENGTH + RING_SPACE)
-		segments := (RINGS - ri) * 16
-
-		for si in 0..<segments {
-			theta0 := 2*PI * f32(si+1) / f32(segments)
-			theta1 := 2*PI * f32(si  ) / f32(segments)
-
-			out_x0 := cos(theta0) * radius
-			out_z0 := sin(theta0) * radius
-			out_x1 := cos(theta1) * radius
-			out_z1 := sin(theta1) * radius
-
-			in_x0  := cos(theta0) * (radius - RING_LENGTH)
-			in_z0  := sin(theta0) * (radius - RING_LENGTH)
-			in_x1  := cos(theta1) * (radius - RING_LENGTH)
-			in_z1  := sin(theta1) * (radius - RING_LENGTH)
-
-			positions: []Vec = {
-				/* Side */
-				{out_x0, -RING_HEIGHT/2, out_z0},
-				{out_x1, -RING_HEIGHT/2, out_z1},
-				{out_x1,  RING_HEIGHT/2, out_z1},
-				{out_x0, -RING_HEIGHT/2, out_z0},
-				{out_x1,  RING_HEIGHT/2, out_z1},
-				{out_x0,  RING_HEIGHT/2, out_z0},
-
-				/* Ramp Top */
-				{out_x0,  RING_HEIGHT/2, out_z0},
-				{out_x1,  RING_HEIGHT/2, out_z1},
-				{in_x0 ,  0            , in_z0 },
-				{in_x0 ,  0            , in_z0 },
-				{out_x1,  RING_HEIGHT/2, out_z1},
-				{in_x1 ,  0            , in_z1 },
-
-				/* Ramp Bottom */
-				{in_x0 ,  0            , in_z0 },
-				{in_x1 ,  0            , in_z1 },
-				{out_x1, -RING_HEIGHT/2, out_z1},
-				{in_x0 ,  0            , in_z0 },
-				{out_x1, -RING_HEIGHT/2, out_z1},
-				{out_x0, -RING_HEIGHT/2, out_z0},
+			// Vertices
+			v0 := Vec{
+				cos(a) * sin(b + PI / f32(BALL_SEGMENTS)),
+				cos(b + PI / f32(BALL_SEGMENTS)),
+				sin(a) * sin(b + PI / f32(BALL_SEGMENTS)),
+			}
+			v1 := Vec{
+				cos(a) * sin(b),
+				cos(b),
+				sin(a) * sin(b),
+			}
+			v2 := Vec{
+				cos(a + 2*PI / f32(BALL_SEGMENTS)) * sin(b + PI / f32(BALL_SEGMENTS)),
+				cos(b + PI / f32(BALL_SEGMENTS)),
+				sin(a + 2*PI / f32(BALL_SEGMENTS)) * sin(b + PI / f32(BALL_SEGMENTS)),
+			}
+			v3 := Vec{
+				cos(a + 2*PI / f32(BALL_SEGMENTS)) * sin(b),
+				cos(b),
+				sin(a + 2*PI / f32(BALL_SEGMENTS)) * sin(b),
 			}
 
-			copy(ring_positions[si*SEGMENT_VERTICES:], positions)
-			normals_from_positions(ring_normals[si*SEGMENT_VERTICES:], positions)
+			// Normals
+			n0 := normalize(v0)
+			n1 := normalize(v1)
+			n2 := normalize(v2)
+			n3 := normalize(v3)
+
+			// Triangle 1
+			ball_positions[si+0] = v0 * BALL_RADIUS
+			ball_positions[si+1] = v1 * BALL_RADIUS
+			ball_positions[si+2] = v2 * BALL_RADIUS
+
+			ball_normals  [si+0] = n0
+			ball_normals  [si+1] = n1
+			ball_normals  [si+2] = n2
+
+			ball_colors   [si+0] = RED
+			ball_colors   [si+1] = GREEN
+			ball_colors   [si+2] = BLUE
+
+			// Triangle 2
+			ball_positions[si+3] = v1 * BALL_RADIUS
+			ball_positions[si+4] = v3 * BALL_RADIUS
+			ball_positions[si+5] = v2 * BALL_RADIUS
+
+			ball_normals  [si+3] = n1
+			ball_normals  [si+4] = n3
+			ball_normals  [si+5] = n2
+
+			ball_colors   [si+3] = GREEN
+			ball_colors   [si+4] = WHITE
+			ball_colors   [si+5] = BLUE
+
+			si += 6
 		}
 	}
+	
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
@@ -193,15 +183,8 @@ light_point_frame :: proc(delta: f32) {
 	light_dir := glm.normalize(cube_pos)
 	gl.Uniform3fv(u_light_dir, light_dir)
 
-	/* Draw rings */
-	ring_angle += 0.002 * delta
-
-	for i in 0..<RINGS {
-		ring_mat: Mat4 = 1
-		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(i)) + ring_angle/4)
-		ring_mat *= mat4_rotate_x(ring_angle)
-
-		gl.UniformMatrix4fv(u_local, ring_mat)
-		gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES + i*RING_VERTICES, RING_VERTICES)
-	}
+	/* Draw sphere */
+	ball_angle += 0.002 * delta
+	gl.UniformMatrix4fv(u_local, mat4_rotate_y(ball_angle))
+	gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES, BALL_VERTICES)
 }

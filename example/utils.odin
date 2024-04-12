@@ -12,12 +12,13 @@ Mat3 :: glm.mat3
 Mat4 :: glm.mat4
 RGBA :: distinct [4]u8
 
-radians :: glm.radians_f32
-cos     :: glm.cos
-sin     :: glm.sin
-tan     :: glm.tan
-dot     :: glm.dot
-cross   :: glm.cross
+radians   :: glm.radians_f32
+cos       :: glm.cos
+sin       :: glm.sin
+tan       :: glm.tan
+dot       :: glm.dot
+cross     :: glm.cross
+normalize :: glm.normalize
 
 
 copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
@@ -122,8 +123,8 @@ mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> Mat4 {
 }
 @(require_results)
 mat4_look_at :: proc "contextless" (eye, target, up: Vec3) -> Mat4 {
-	// f  := glm.normalize(target - eye)
-	// s  := glm.normalize(cross(f, up))
+	// f  := normalize(target - eye)
+	// s  := normalize(cross(f, up))
 	// u  := cross(s, f)
 	// fe := dot(f, eye)
 	
@@ -134,9 +135,9 @@ mat4_look_at :: proc "contextless" (eye, target, up: Vec3) -> Mat4 {
 	// 	0,    0,    0,    1,
 	// }
 
-	z := glm.normalize(eye - target)
-	x := glm.normalize(cross(up, z))
-	y := glm.normalize(cross(z, x))
+	z := normalize(eye - target)
+	x := normalize(cross(up, z))
+	y := normalize(cross(z, x))
 
 	return {
 		x.x, y.x, z.x, eye.x,
@@ -309,7 +310,7 @@ normals_from_positions :: proc(dst, src: []Vec) {
 		b := src[i*3+1]
 		c := src[i*3+2]
 
-		normal := glm.normalize(cross(b - a, c - a))
+		normal := normalize(cross(b - a, c - a))
 
 		dst[i*3+0] = normal
 		dst[i*3+1] = normal

@@ -28,6 +28,7 @@ u_light_color: i32
 vao:           VAO
 positions:     [ALL_VERTICES]Vec
 normals:       [ALL_VERTICES]Vec
+colors:        [ALL_VERTICES]RGBA
 
 @(private="package")
 lighting_start :: proc(program: gl.Program) {
@@ -54,9 +55,6 @@ lighting_start :: proc(program: gl.Program) {
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
-
-
-	colors: [ALL_VERTICES]RGBA
 	
 	/* Cube */
 	copy_array(positions[:], get_cube_positions(0, CUBE_HEIGHT))
