@@ -13,16 +13,16 @@ CUBE_HEIGHT :: 80
 CUBE_RADIUS :: 300
 BALL_RADIUS :: 200
 
-cube_angle:    f32
-ball_angle:    f32
-u_view:        i32
-u_local:       i32
-u_light_dir:   i32
+cube_angle   : f32
+ball_angle   : f32
+u_view       : i32
+u_local      : i32
+u_light_pos  : i32
 u_light_color: i32
-vao:           VAO
-positions:     [ALL_VERTICES]Vec
-normals:       [ALL_VERTICES]Vec
-colors:        [ALL_VERTICES]RGBA
+vao          : VAO
+positions    : [ALL_VERTICES]Vec
+normals      : [ALL_VERTICES]Vec
+colors       : [ALL_VERTICES]RGBA
 
 @(private="package")
 light_point_start :: proc(program: gl.Program) {
@@ -36,7 +36,7 @@ light_point_start :: proc(program: gl.Program) {
 
 	u_view        = gl.GetUniformLocation(program, "u_view")
 	u_local       = gl.GetUniformLocation(program, "u_local")
-	u_light_dir   = gl.GetUniformLocation(program, "u_light_dir")
+	u_light_pos   = gl.GetUniformLocation(program, "u_light_pos")
 	u_light_color = gl.GetUniformLocation(program, "u_light_color")
 
 	gl.EnableVertexAttribArray(a_position)
@@ -118,8 +118,7 @@ light_point_frame :: proc(delta: f32) {
 	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES)
 
 	/* Draw light from cube */
-	light_dir := glm.normalize(cube_pos)
-	gl.Uniform3fv(u_light_dir, light_dir)
+	gl.Uniform3fv(u_light_pos, cube_pos)
 
 	/* Draw sphere */
 	ball_angle += 0.0002 * delta

@@ -5,7 +5,7 @@ precision highp float;
 in vec3 v_normal;
 in vec4 v_color;
 
-uniform vec3 u_light_dir;
+uniform vec3 u_light_dir; // reversed (dir to light)
 uniform vec4 u_light_color;
 
 // we need to declare an output for the fragment shader

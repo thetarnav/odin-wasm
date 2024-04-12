@@ -66,8 +66,8 @@ demos: [Example_Kind]Demo_Interface = {
 		frame      = lighting_frame,
 	},
 	.Light_Point = {
-		vs_sources = {#load("./lighting_vs.glsl", string)},
-		fs_sources = {#load("./lighting_fs.glsl", string)},
+		vs_sources = {#load("./light_point_vs.glsl", string)},
+		fs_sources = {#load("./light_point_fs.glsl", string)},
 		setup      = light_point_start,
 		frame      = light_point_frame,
 	},
