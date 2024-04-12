@@ -1,6 +1,4 @@
 #version 300 es
-// fragment shaders don't have a default precision so we need
-// to pick one. mediump is a good default
 precision highp float;
 
 // varring passed from the vertex shader
