@@ -91,18 +91,18 @@ lighting_start :: proc(program: gl.Program) {
 		segments := (RINGS - ri) * 16
 
 		for si in 0..<segments {
-			theta0 := 2*PI * f32(si+1) / f32(segments)
-			theta1 := 2*PI * f32(si  ) / f32(segments)
+			a := 2*PI * f32(si+1) / f32(segments)
+			b := 2*PI * f32(si  ) / f32(segments)
 
-			out_x0 := cos(theta0) * radius
-			out_z0 := sin(theta0) * radius
-			out_x1 := cos(theta1) * radius
-			out_z1 := sin(theta1) * radius
+			out_x0 := cos(a) * radius
+			out_z0 := sin(a) * radius
+			out_x1 := cos(b) * radius
+			out_z1 := sin(b) * radius
 
-			in_x0  := cos(theta0) * (radius - RING_LENGTH)
-			in_z0  := sin(theta0) * (radius - RING_LENGTH)
-			in_x1  := cos(theta1) * (radius - RING_LENGTH)
-			in_z1  := sin(theta1) * (radius - RING_LENGTH)
+			in_x0  := cos(a) * (radius-RING_LENGTH)
+			in_z0  := sin(a) * (radius-RING_LENGTH)
+			in_x1  := cos(b) * (radius-RING_LENGTH)
+			in_z1  := sin(b) * (radius-RING_LENGTH)
 
 			positions: []Vec = {
 				/* Side */

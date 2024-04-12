@@ -63,33 +63,19 @@ light_point_start :: proc(program: gl.Program) {
 	ball_colors    := colors   [CUBE_VERTICES:]
 
 	// TODO: merge top and bottom segment triangles
-	si := 0
-	for i in 0..<BALL_SEGMENTS {
-		for j in 0..<BALL_SEGMENTS {
-			a := 2*PI * f32(i) / f32(BALL_SEGMENTS)
-			b :=   PI * f32(j) / f32(BALL_SEGMENTS)
-
+	si := 0 // segment index
+	for vi in 0..<BALL_SEGMENTS { // vertical
+		for hi in 0..<BALL_SEGMENTS { // horizontal
+			va0 :=   PI * f32(vi+0) / f32(BALL_SEGMENTS)
+			va1 :=   PI * f32(vi+1) / f32(BALL_SEGMENTS)
+			ha0 := 2*PI * f32(hi+0) / f32(BALL_SEGMENTS)
+			ha1 := 2*PI * f32(hi+1) / f32(BALL_SEGMENTS)
+			
 			// Vertices
-			v0 := Vec{
-				cos(a) * sin(b + PI / f32(BALL_SEGMENTS)),
-				cos(b + PI / f32(BALL_SEGMENTS)),
-				sin(a) * sin(b + PI / f32(BALL_SEGMENTS)),
-			}
-			v1 := Vec{
-				cos(a) * sin(b),
-				cos(b),
-				sin(a) * sin(b),
-			}
-			v2 := Vec{
-				cos(a + 2*PI / f32(BALL_SEGMENTS)) * sin(b + PI / f32(BALL_SEGMENTS)),
-				cos(b + PI / f32(BALL_SEGMENTS)),
-				sin(a + 2*PI / f32(BALL_SEGMENTS)) * sin(b + PI / f32(BALL_SEGMENTS)),
-			}
-			v3 := Vec{
-				cos(a + 2*PI / f32(BALL_SEGMENTS)) * sin(b),
-				cos(b),
-				sin(a + 2*PI / f32(BALL_SEGMENTS)) * sin(b),
-			}
+			v0 := Vec{cos(ha0)*sin(va1), cos(va1), sin(ha0)*sin(va1)}
+			v1 := Vec{cos(ha0)*sin(va0), cos(va0), sin(ha0)*sin(va0)}
+			v2 := Vec{cos(ha1)*sin(va1), cos(va1), sin(ha1)*sin(va1)}
+			v3 := Vec{cos(ha1)*sin(va0), cos(va0), sin(ha1)*sin(va0)}
 
 			// Normals
 			n0 := normalize(v0)
