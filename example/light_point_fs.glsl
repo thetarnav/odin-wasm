@@ -18,10 +18,15 @@ void main() {
 	vec3 surface_to_eye   = normalize(v_surface_to_eye);
 	vec3 half_vector      = normalize(surface_to_light + surface_to_eye);
 
-	// v_normal and v_surface_to_light are interpolated
-	float light    = dot(normal, surface_to_light);
-	float specular = dot(normal, half_vector);
+	float u_shininess = 100.0;
 
-	out_color = mix(v_color, u_light_color, specular);
-	out_color.rgb *= light * 0.5 + 0.5;
+	// compute the light by taking the dot product
+	// of the normal to the light's reverse direction
+	float light = dot(normal, surface_to_light);
+
+	out_color = mix(v_color, u_light_color, light);
+
+	out_color.rgb += (light >= 0.0)
+		? pow(dot(normal, half_vector), u_shininess)
+		: 0.0;
 }
