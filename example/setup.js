@@ -28,26 +28,26 @@ Example selection
 
 /** @enum {(typeof Example_Kind)[keyof typeof Example_Kind]} */
 const Example_Kind = /** @type {const} */ ({
-	Rectangle  : 0,
-	Pyramid    : 1,
-	Boxes      : 2,
-	Camera     : 3,
-	Lighting   : 4,
-	Light_Point: 5,
-	Texture    : 6,
+	Rectangle: 0,
+	Pyramid  : 1,
+	Boxes    : 2,
+	Camera   : 3,
+	Lighting : 4,
+	Specular : 5,
+	Texture  : 6,
 })
 /** @type {Example_Kind[]} */
 const example_kinds = Object.values(Example_Kind)
 
 /** @type {Record<Example_Kind, string>} */
 const example_kind_href_hashes = {
-	[Example_Kind.Rectangle]  : "#rectangle",
-	[Example_Kind.Pyramid]    : "#pyramid",
-	[Example_Kind.Boxes]      : "#boxes",
-	[Example_Kind.Camera]     : "#camera",
-	[Example_Kind.Lighting]   : "#lighting",
-	[Example_Kind.Light_Point]: "#light-point",
-	[Example_Kind.Texture]    : "#texture",
+	[Example_Kind.Rectangle]: "#rectangle",
+	[Example_Kind.Pyramid]  : "#pyramid",
+	[Example_Kind.Boxes]    : "#boxes",
+	[Example_Kind.Camera]   : "#camera",
+	[Example_Kind.Lighting] : "#lighting",
+	[Example_Kind.Specular] : "#specular",
+	[Example_Kind.Texture]  : "#texture",
 }
 
 /** @type {Example_Kind} */
@@ -88,19 +88,19 @@ Wasm instance
  * @property {Example_Start           } start
  * @property {Example_Frame           } frame
  * @property {Example_On_Window_Resize} on_window_resize
- * 
+ *
  * @typedef {wasm.OdinExports & Example_Exports} Wasm_Exports
- * 
+ *
  * @callback Example_Start
  * @param   {wasm.rawptr } ctx_ptr
  * @param   {Example_Kind} example_type
  * @returns {wasm.bool   }
- * 
+ *
  * @callback Example_Frame
  * @param   {wasm.rawptr} ctx_ptr
  * @param   {wasm.f32   } delta
  * @returns {void       }
- * 
+ *
  * @callback Example_On_Window_Resize
  * @param   {wasm.f32} window_w
  * @param   {wasm.f32} window_h

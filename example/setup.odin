@@ -24,7 +24,7 @@ Example_Kind :: enum {
 	Boxes,
 	Camera,
 	Lighting,
-	Light_Point,
+	Specular,
 	Texture,
 }
 example: Example_Kind
@@ -65,11 +65,11 @@ demos: [Example_Kind]Demo_Interface = {
 		setup      = lighting_start,
 		frame      = lighting_frame,
 	},
-	.Light_Point = {
-		vs_sources = {#load("./light_point_vs.glsl", string)},
-		fs_sources = {#load("./light_point_fs.glsl", string)},
-		setup      = light_point_start,
-		frame      = light_point_frame,
+	.Specular = {
+		vs_sources = {#load("./specular_vs.glsl", string)},
+		fs_sources = {#load("./specular_fs.glsl", string)},
+		setup      = specular_start,
+		frame      = specular_frame,
 	},
 	.Texture = {
 		vs_sources = {#load("./boxes_vs.glsl", string)},

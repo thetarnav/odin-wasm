@@ -26,7 +26,7 @@ normals      : [ALL_VERTICES]Vec
 colors       : [ALL_VERTICES]RGBA
 
 @(private="package")
-light_point_start :: proc(program: gl.Program) {
+specular_start :: proc(program: gl.Program) {
 
 	vao = gl.CreateVertexArray()
 	gl.BindVertexArray(vao)
@@ -83,7 +83,7 @@ light_point_start :: proc(program: gl.Program) {
 }
 
 @(private="package")
-light_point_frame :: proc(delta: f32) {
+specular_frame :: proc(delta: f32) {
 	gl.BindVertexArray(vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
@@ -114,7 +114,7 @@ light_point_frame :: proc(delta: f32) {
 	cube_mat: Mat4 = 1
 	cube_mat *= mat4_translate(cube_pos)
 	cube_mat *= mat4_rotate_y(cube_angle)
-	
+
 
 	gl.Uniform3fv(u_light_pos, cube_pos)
 	gl.Uniform3fv(u_eye_pos, camera_pos)
