@@ -19,50 +19,52 @@ JOINT_VERTICES  :: 3 * JOINT_TRIANGLES
 get_joint :: proc(from, to: Vec) -> [JOINT_VERTICES]Vec {
 	W :: 20
 
-	mid: Vec = (from + to) / 2
+	length := glm.length(to - from)
+	w      := min(W, length/3)
+
+	mid: Vec = from*(1.0/3.0) + to*(2.0/3.0)
 	normal: Vec = normalize(to - from)
-	move_x : Vec = cross(normal, Vec{1, 0, 0}) * W
-	move_y : Vec = cross(normal, Vec{0, 1, 0}) * W
-	move_z : Vec = cross(normal, Vec{0, 0, 1}) * W
+	move_x : Vec = vec3_rotate_by_axis_angle(normal, Vec{1, 0, 0}, PI/2) * w
+	move_y : Vec = vec3_rotate_by_axis_angle(normal, Vec{0, 0, 1}, PI/2) * w
 	
 	// TODO this is not correct
 	
 	return {
 		from,
 		mid + move_y,
-		mid + move_z + move_x,
+		mid + move_x,
 	
 		from,
-		mid - move_z + move_x,
+		mid - move_x,
 		mid + move_y,
 	
 		from,
-		mid + move_z + move_x,
+		mid + move_x,
 		mid - move_y,
 	
 		from,
 		mid - move_y,
-		mid - move_z + move_x,
+		mid - move_x,
 
-		mid + move_z + move_x,
+		mid + move_x,
 		mid + move_y,
 		to,
 
 		mid + move_y,
-		mid - move_z + move_x,
+		mid - move_x,
 		to,
 
-		mid - move_z + move_x,
+		mid - move_x,
 		mid - move_y,
 		to,
 
 		mid - move_y,
-		mid + move_z + move_x,
+		mid + move_x,
 		to,
 	}
 }
 
-GUY_JOINTS   :: 3
+GUY_JOINTS   :: 6
 GUY_VERTICES :: GUY_JOINTS * JOINT_VERTICES
 ALL_VERTICES :: CUBE_VERTICES + GUY_VERTICES
 
@@ -128,11 +130,23 @@ spotlight_start :: proc(program: gl.Program) {
 	))
 	copy_array(guy_positions[JOINT_VERTICES*1:], get_joint(
 		{0,            LEG_HEIGHT, 0},
-		{-GUY_WIDTH/2, 0,          20},
+		{-GUY_WIDTH/2, 0,         -20},
 	))
 	copy_array(guy_positions[JOINT_VERTICES*2:], get_joint(
-		{0, LEG_HEIGHT,   0},
 		{0, LEG_HEIGHT*2, 0},
+		{0, LEG_HEIGHT*0.9,   0},
+	))
+	copy_array(guy_positions[JOINT_VERTICES*3:], get_joint(
+		{0, LEG_HEIGHT*2.1, -25},
+		{0, LEG_HEIGHT*1.9,   0},
+	))
+	copy_array(guy_positions[JOINT_VERTICES*4:], get_joint(
+		{0,            LEG_HEIGHT*1.9,   0},
+		{-GUY_WIDTH/2, LEG_HEIGHT*1.1,       0},
+	))
+	copy_array(guy_positions[JOINT_VERTICES*5:], get_joint(
+		{GUY_WIDTH/1.5, LEG_HEIGHT*2.5,  -5},
+		{0,             LEG_HEIGHT*1.9,   0},
 	))
 
 	normals_from_positions(guy_normals, positions[CUBE_VERTICES:])

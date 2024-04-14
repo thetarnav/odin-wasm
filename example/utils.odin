@@ -153,6 +153,32 @@ mat4_look_at :: proc "contextless" (eye, target, up: Vec3) -> Mat4 {
 	}
 }
 
+// Rotates a vector around an axis
+@(require_results)
+vec3_rotate_by_axis_angle :: proc "contextless" (v, axis: Vec, angle: f32) -> Vec {
+	axis, angle := axis, angle
+
+	axis = normalize(axis)
+
+	angle *= 0.5
+	a := sin(angle)
+	b := axis.x*a
+	c := axis.y*a
+	d := axis.z*a
+	a = cos(angle)
+	w := Vec{b, c, d}
+
+	wv := cross(w, v)
+	wwv := cross(w, wv)
+
+	a *= 2
+	wv *= a
+
+	wwv *= 2
+
+	return v + wv + wwv
+}
+
 
 WHITE : RGBA : {255, 255, 255, 255}
 GREEN : RGBA : {60, 210, 0, 255}
