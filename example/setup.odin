@@ -25,6 +25,7 @@ Example_Kind :: enum {
 	Camera,
 	Lighting,
 	Specular,
+	Spotlight,
 	Texture,
 }
 example: Example_Kind
@@ -70,6 +71,12 @@ demos: [Example_Kind]Demo_Interface = {
 		fs_sources = {#load("./specular_fs.glsl", string)},
 		setup      = specular_start,
 		frame      = specular_frame,
+	},
+	.Spotlight = {
+		vs_sources = {#load("./spotlight_vs.glsl", string)},
+		fs_sources = {#load("./spotlight_fs.glsl", string)},
+		setup      = spotlight_start,
+		frame      = spotlight_frame,
 	},
 	.Texture = {
 		vs_sources = {#load("./boxes_vs.glsl", string)},

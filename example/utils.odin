@@ -26,7 +26,7 @@ copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
 	copy(dst, src[:])
 }
 
-copy_pattern :: #force_inline proc "contextless" (dst: []$S, src: []S) {
+copy_pattern :: #force_inline proc "contextless" (dst: []$S, src: []S) #no_bounds_check {
 	for i in 0..<len(dst)/len(src) {
 		copy(dst[i*len(src):][:len(src)], src)
 	}
