@@ -17,15 +17,13 @@ JOINT_TRIANGLES :: 8
 JOINT_VERTICES  :: 3 * JOINT_TRIANGLES
 
 get_joint :: proc(from, to: Vec) -> [JOINT_VERTICES]Vec {
-	W :: 20
+	length: f32 = glm.length(to - from)
+	w     : f32 = min(20, length/3)
 
-	length := glm.length(to - from)
-	w      := min(W, length/3)
-
-	mid: Vec = from*(1.0/3.0) + to*(2.0/3.0)
+	mid   : Vec = from*(1.0/3.0) + to*(2.0/3.0)
 	normal: Vec = normalize(to - from)
-	move_x : Vec = vec3_rotate_by_axis_angle(normal, Vec{1, 0, 0}, PI/2) * w
-	move_y : Vec = vec3_rotate_by_axis_angle(normal, Vec{0, 0, 1}, PI/2) * w
+	move_x: Vec = vec3_rotate_by_axis_angle(normal, Vec{1, 0, 0}, PI/2) * w
+	move_y: Vec = vec3_rotate_by_axis_angle(normal, Vec{0, 0, 1}, PI/2) * w
 	
 	// TODO this is not correct
 	
