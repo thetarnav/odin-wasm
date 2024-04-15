@@ -17,16 +17,22 @@ JOINT_TRIANGLES :: 8
 JOINT_VERTICES  :: 3 * JOINT_TRIANGLES
 
 get_joint :: proc(from, to: Vec) -> [JOINT_VERTICES]Vec {
+	
+	mid: Vec = from*(1.0/3.0) + to*(2.0/3.0)
+	
+	from, to := from, to
+	if from.y < to.y {
+		from, to = to, from
+	}
+
 	length: f32 = glm.length(to - from)
 	w     : f32 = min(20, length/3)
-
-	mid   : Vec = from*(1.0/3.0) + to*(2.0/3.0)
+	
 	normal: Vec = normalize(to - from)
 	move_x: Vec = vec3_rotate_by_axis_angle(normal, Vec{1, 0, 0}, PI/2) * w
 	move_y: Vec = vec3_rotate_by_axis_angle(normal, Vec{0, 0, 1}, PI/2) * w
 	
 	// TODO this is not correct
-	
 	return {
 		from,
 		mid + move_y,
@@ -131,24 +137,24 @@ spotlight_start :: proc(program: gl.Program) {
 		{-GUY_WIDTH/2, 0,         -20},
 	))
 	copy_array(guy_positions[JOINT_VERTICES*2:], get_joint(
-		{0, LEG_HEIGHT*2, 0},
-		{0, LEG_HEIGHT*0.9,   0},
+		{0, LEG_HEIGHT*2,   0},
+		{0, LEG_HEIGHT*0.9, 0},
 	))
 	copy_array(guy_positions[JOINT_VERTICES*3:], get_joint(
 		{0, LEG_HEIGHT*2.1, -25},
 		{0, LEG_HEIGHT*1.9,   0},
 	))
 	copy_array(guy_positions[JOINT_VERTICES*4:], get_joint(
-		{0,            LEG_HEIGHT*1.9,   0},
-		{-GUY_WIDTH/2, LEG_HEIGHT*1.1,       0},
+		{0,            LEG_HEIGHT*1.9, 0},
+		{-GUY_WIDTH/2, LEG_HEIGHT*1.1, 0},
 	))
 	copy_array(guy_positions[JOINT_VERTICES*5:], get_joint(
-		{GUY_WIDTH/1.5, LEG_HEIGHT*2.5,  -5},
-		{0,             LEG_HEIGHT*1.9,   0},
+		{0,             LEG_HEIGHT*1.9,  0},
+		{GUY_WIDTH/1.5, LEG_HEIGHT*2.5, -5},
 	))
 
 	normals_from_positions(guy_normals, positions[CUBE_VERTICES:])
-	slice.fill(guy_colors, RGBA{0, 0, 255, 255})
+	slice.fill(guy_colors, BLUE)
 
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)

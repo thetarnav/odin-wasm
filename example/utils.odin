@@ -2,7 +2,7 @@ package example
 
 import "base:intrinsics"
 import glm "core:math/linalg/glsl"
-import gl "../wasm/webgl"
+import gl  "../wasm/webgl"
 
 PI   :: glm.PI
 VAO  :: gl.VertexArrayObject
