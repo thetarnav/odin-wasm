@@ -113,8 +113,8 @@ spotlight_start :: proc(program: gl.Program) {
 		{-GUY_WIDTH/2, GUY_HEIGHT*1.1, 0},
 	))
 	copy_array(guy_positions[JOINT_VERTICES*5:], get_joint(
-		{0,             GUY_HEIGHT*1.9,  0},
-		{GUY_WIDTH/1.5, GUY_HEIGHT*2.5, -5},
+		{0,           GUY_HEIGHT*1.9,  0},
+		{GUY_WIDTH/2, GUY_HEIGHT*2.7, -5},
 	))
 
 	normals_from_positions(guy_normals, guy_positions)
@@ -162,13 +162,12 @@ spotlight_frame :: proc(delta: f32) {
 	view_mat *= camera_mat
 
 	cube_pos: Vec
-	cube_pos.x = CUBE_RADIUS * cos(camera_angle)
-	cube_pos.z = CUBE_RADIUS * sin(camera_angle)
+	cube_pos.x = CUBE_RADIUS
+	cube_pos.z = CUBE_RADIUS
 	cube_pos.y = CUBE_HEIGHT/2
 
 	cube_mat: Mat4 = 1
 	cube_mat *= mat4_translate(cube_pos)
-	cube_mat *= mat4_rotate_y(camera_angle)
 
 
 	gl.Uniform3fv(u_light_pos, cube_pos)
