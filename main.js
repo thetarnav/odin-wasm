@@ -60,7 +60,8 @@ Example:
 	node main.js -odin:-debug
 	npm run dev -- -odin:-debug
 */
-for (const arg of process.argv.slice(2)) {
+for (let i = 2; i < process.argv.length; i++) {
+	const arg = process.argv[i]
 	if (arg.startsWith("-odin:")) {
 		const flag = arg.substring(6)
 		ODIN_ARGS_SHARED.push(flag)
