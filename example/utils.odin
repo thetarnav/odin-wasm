@@ -428,6 +428,61 @@ get_sphere_base_rectangle :: proc(positions, normals: []Vec, radius: f32, segmen
 	}
 }
 
+JOINT_TRIANGLES :: 8
+JOINT_VERTICES  :: 3 * JOINT_TRIANGLES
+
+get_joint :: proc(from, to: Vec) -> [JOINT_VERTICES]Vec {
+	
+	mid: Vec = from*(1.0/3.0) + to*(2.0/3.0)
+	
+	from, to := from, to
+	if from.y < to.y {
+		from, to = to, from
+	}
+
+	length: f32 = glm.length(to - from)
+	w     : f32 = min(20, length/3)
+	
+	normal: Vec = normalize(to - from)
+	move_x: Vec = vec3_rotate_by_axis_angle(normal, Vec{1, 0, 0}, PI/2) * w
+	move_y: Vec = vec3_rotate_by_axis_angle(normal, Vec{0, 0, 1}, PI/2) * w
+	
+	// TODO this is not correct
+	return {
+		from,
+		mid + move_y,
+		mid + move_x,
+	
+		from,
+		mid - move_x,
+		mid + move_y,
+	
+		from,
+		mid + move_x,
+		mid - move_y,
+	
+		from,
+		mid - move_y,
+		mid - move_x,
+
+		mid + move_x,
+		mid + move_y,
+		to,
+
+		mid + move_y,
+		mid - move_x,
+		to,
+
+		mid - move_x,
+		mid - move_y,
+		to,
+
+		mid - move_y,
+		mid + move_x,
+		to,
+	}
+}
+
 normals_from_positions :: proc(dst, src: []Vec) {
 	assert(len(dst) >= len(src))
 	assert(len(src) % 3 == 0)
