@@ -5,14 +5,12 @@ in vec3 a_normal;
 in vec4 a_color;
 
 uniform vec3 u_light_pos;
-uniform vec3 u_eye_pos;
 uniform mat4 u_view;
 uniform mat4 u_local;
 
 out vec3 v_normal;
 out vec4 v_color;
 out vec3 v_surface_to_light;
-out vec3 v_surface_to_eye;
 
 void main() {
 	// project the position
@@ -29,7 +27,6 @@ void main() {
 
 	vec3 world_pos = (u_local * a_position).xyz;
 	v_surface_to_light = u_light_pos - world_pos;
-	v_surface_to_eye   = u_eye_pos   - world_pos;
 
 	v_color = a_color;
 }

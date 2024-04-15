@@ -6,33 +6,29 @@ import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
 
-CUBE_HEIGHT :: 80
+CUBE_HEIGHT :: 40
 CUBE_RADIUS :: 300
+GUY_HEIGHT  :: 100
+GUY_WIDTH   :: 70
+PLANE_WIDTH :: 2000
 
-GUY_HEIGHT :: 100
-GUY_WIDTH  :: 70
-
-GUY_JOINTS   :: 6
-GUY_VERTICES :: GUY_JOINTS * JOINT_VERTICES
-
-PLANE_WIDTH :: 1000
-
+GUY_JOINTS     :: 6
+GUY_VERTICES   :: GUY_JOINTS * JOINT_VERTICES
 PLANE_VERTICES :: 6
+ALL_VERTICES   :: PLANE_VERTICES + CUBE_VERTICES + GUY_VERTICES
 
-ALL_VERTICES :: PLANE_VERTICES + CUBE_VERTICES + GUY_VERTICES
+#assert(ALL_VERTICES % 3 == 0)
 
-#assert(GUY_VERTICES % 3 == 0)
-
-camera_angle : f32
-u_view       : i32
-u_local      : i32
-u_light_pos  : i32
-u_light_color: i32
-u_eye_pos	 : i32
-vao          : VAO
-positions    : [ALL_VERTICES]Vec
-normals      : [ALL_VERTICES]Vec
-colors       : [ALL_VERTICES]RGBA
+camera_angle     : f32
+u_view           : i32
+u_local          : i32
+u_light_pos      : i32
+u_light_color    : i32
+u_light_direction: i32
+vao              : VAO
+positions        : [ALL_VERTICES]Vec
+normals          : [ALL_VERTICES]Vec
+colors           : [ALL_VERTICES]RGBA
 
 
 @(private="package")
@@ -45,11 +41,11 @@ spotlight_start :: proc(program: gl.Program) {
 	a_normal   := gl.GetAttribLocation(program, "a_normal")
 	a_color    := gl.GetAttribLocation(program, "a_color")
 
-	u_view        = gl.GetUniformLocation(program, "u_view")
-	u_local       = gl.GetUniformLocation(program, "u_local")
-	u_light_pos   = gl.GetUniformLocation(program, "u_light_pos")
-	u_light_color = gl.GetUniformLocation(program, "u_light_color")
-	u_eye_pos     = gl.GetUniformLocation(program, "u_eye_pos")
+	u_view            = gl.GetUniformLocation(program, "u_view")
+	u_local           = gl.GetUniformLocation(program, "u_local")
+	u_light_pos       = gl.GetUniformLocation(program, "u_light_pos")
+	u_light_color     = gl.GetUniformLocation(program, "u_light_color")
+	u_light_direction = gl.GetUniformLocation(program, "u_light_direction")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_normal)
@@ -141,7 +137,7 @@ spotlight_frame :: proc(delta: f32) {
 	gl.BindVertexArray(vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
-	gl.ClearColor(0, 0.01, 0.02, 0)
+	gl.ClearColor(0, 0, 0, 0)
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -161,17 +157,18 @@ spotlight_frame :: proc(delta: f32) {
 	)
 	view_mat *= camera_mat
 
+	/* Light */
+
 	cube_pos: Vec
 	cube_pos.x = CUBE_RADIUS
 	cube_pos.z = CUBE_RADIUS
-	cube_pos.y = CUBE_HEIGHT/2
+	cube_pos.y = CUBE_HEIGHT*10
 
 	cube_mat: Mat4 = 1
 	cube_mat *= mat4_translate(cube_pos)
 
-
 	gl.Uniform3fv(u_light_pos, cube_pos)
-	gl.Uniform3fv(u_eye_pos, camera_pos)
+	gl.Uniform3fv(u_light_direction, normalize(-cube_pos))
 	gl.UniformMatrix4fv(u_view, view_mat)
 
 	/* Draw plane */

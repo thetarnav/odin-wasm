@@ -55,7 +55,7 @@ lighting_start :: proc(program: gl.Program) {
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
-	
+
 	/* Cube */
 	copy_array(positions[:], get_cube_positions(0, CUBE_HEIGHT))
 	cube_normals: [CUBE_VERTICES]Vec = 1
@@ -63,7 +63,7 @@ lighting_start :: proc(program: gl.Program) {
 	copy_array(colors[:], WHITE_CUBE_COLORS)
 
 	/* Ring
-	
+
 	_____________ <- RING_LENGTH
 	v  ramp top v
 	     |      @ <|
@@ -112,7 +112,7 @@ lighting_start :: proc(program: gl.Program) {
 				{out_x0, -RING_HEIGHT/2, out_z0},
 				{out_x1,  RING_HEIGHT/2, out_z1},
 				{out_x0,  RING_HEIGHT/2, out_z0},
-	
+
 				/* Ramp Top */
 				{out_x0,  RING_HEIGHT/2, out_z0},
 				{out_x1,  RING_HEIGHT/2, out_z1},
@@ -120,7 +120,7 @@ lighting_start :: proc(program: gl.Program) {
 				{in_x0 ,  0            , in_z0 },
 				{out_x1,  RING_HEIGHT/2, out_z1},
 				{in_x1 ,  0            , in_z1 },
-	
+
 				/* Ramp Bottom */
 				{in_x0 ,  0            , in_z0 },
 				{in_x1 ,  0            , in_z1 },
@@ -155,7 +155,7 @@ lighting_frame :: proc(delta: f32) {
 	gl.BindVertexArray(vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
-	gl.ClearColor(0, 0.01, 0.02, 0)
+	gl.ClearColor(0, 0, 0, 0)
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -193,7 +193,7 @@ lighting_frame :: proc(delta: f32) {
 
 	/* Draw rings */
 	ring_angle += 0.002 * delta
-	
+
 	for i in 0..<RINGS {
 		ring_mat: Mat4 = 1
 		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(i)) + ring_angle/4)

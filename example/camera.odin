@@ -78,7 +78,7 @@ camera_frame :: proc(delta: f32) {
 	gl.BindVertexArray(vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
-	gl.ClearColor(0, 0.01, 0.02, 0)
+	gl.ClearColor(0, 0, 0, 0)
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 

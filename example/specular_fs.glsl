@@ -18,7 +18,7 @@ void main() {
 	vec3 surface_to_eye   = normalize(v_surface_to_eye);
 	vec3 half_vector      = normalize(surface_to_light + surface_to_eye);
 
-	float u_shininess = 100.0;
+	float shininess = 100.0;
 
 	// compute the light by taking the dot product
 	// of the normal to the light's reverse direction
@@ -27,6 +27,6 @@ void main() {
 	out_color = mix(v_color, u_light_color, light);
 
 	out_color.rgb += (light >= 0.0)
-		? pow(dot(normal, half_vector), u_shininess)
+		? pow(dot(normal, half_vector), shininess)
 		: 0.0;
 }

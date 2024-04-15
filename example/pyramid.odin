@@ -78,7 +78,7 @@ pyramid_start :: proc(program: gl.Program) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_position, 3, gl.FLOAT, false, 0, 0)
-	
+
 	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
@@ -87,11 +87,11 @@ pyramid_start :: proc(program: gl.Program) {
 @(private="package")
 pyramid_frame :: proc(delta: f32) {
 	using pyramid_state
-	
+
 	gl.BindVertexArray(vao)
-	
+
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
-	gl.ClearColor(0, 0.01, 0.02, 0)
+	gl.ClearColor(0, 0, 0, 0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
 	rotation -= 0.01 * delta * mouse_rel.yx
