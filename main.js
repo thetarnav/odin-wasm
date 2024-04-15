@@ -31,8 +31,19 @@ const config_path     = path.join(dirname, CONFIG_FILENAME)
 const config_path_out = path.join(playground_path, CONFIG_OUT_FILENAME)
 const public_path     = path.join(playground_path, PUBLIC_DIRNAME)
 
-const DEBUG_ODIN_ARGS = ["-debug"]
-const RELESE_ODIN_ARGS = [
+
+/** @type {string[]} */
+const ODIN_ARGS_SHARED = [
+	"build",
+	playground_path,
+	"-out:"+WASM_PATH,
+	"-target:js_wasm32",
+]
+/** @type {string[]} */
+const ODIN_ARGS_DEV    = [
+]
+/** @type {string[]} */
+const ODIN_ARGS_RELESE = [
 	"-vet-unused",
 	"-vet-shadowing",
 	"-vet-style",
@@ -42,6 +53,19 @@ const RELESE_ODIN_ARGS = [
 	"-no-bounds-check",
 	"-obfuscate-source-code-locations",
 ]
+
+/*
+Allow passing odin compiler flags to the script.
+Example:
+	node main.js -odin:-debug
+	npm run dev -- -odin:-debug
+*/
+for (const arg of process.argv.slice(2)) {
+	if (arg.startsWith("-odin:")) {
+		const flag = arg.substring(6)
+		ODIN_ARGS_SHARED.push(flag)
+	}
+}
 
 /** @enum {(typeof Command)[keyof typeof Command]} */
 const Command = /** @type {const} */ ({
@@ -98,7 +122,8 @@ const command_handlers = {
 			/** @type {http.IncomingMessage} */ req,
 			/** @type {http.ServerResponse} */ res,
 		) {
-			if (!req.url || req.method !== "GET") return end404(req, res)
+			const req_time = performance.now()
+			if (!req.url || req.method !== "GET") return end404(req, res, req_time)
 
 			if (req.url === "/" + CONFIG_OUT_FILENAME) {
 				await config_promise
@@ -122,9 +147,9 @@ const command_handlers = {
 				exists = await fileExists(filepath)
 			}
 
-			if (!exists) return end404(req, res)
+			if (!exists) return end404(req, res, req_time)
 
-			streamStatic(req, res, filepath)
+			streamStatic(req, res, filepath, req_time)
 		}
 	},
 	[Command.Preview]() {
@@ -136,18 +161,20 @@ const command_handlers = {
 		 * @returns {Promise<void>}
 		 */
 		async function requestListener(req, res) {
+			const req_time = performance.now()
+
 			// /* Simulate delay */
 			// await sleep(300)
 
-			if (!req.url || req.method !== "GET") return end404(req, res)
+			if (!req.url || req.method !== "GET") return end404(req, res, req_time)
 
 			const relative_filepath = toWebFilepath(req.url)
 			const filepath = path.join(dist_path, relative_filepath)
 			const exists = await fileExists(filepath)
 
-			if (!exists) return end404(req, res)
+			if (!exists) return end404(req, res, req_time)
 
-			streamStatic(req, res, filepath)
+			streamStatic(req, res, filepath, req_time)
 		}
 
 		void process.on("SIGINT", () => {
@@ -242,8 +269,7 @@ const JSC_CONFIG = {
  * @returns {Promise<number>}            exit code
  */
 function buildWASM(is_release) {
-	const args = ["build", playground_path, "-out:" + WASM_PATH, "-target:js_wasm32"]
-	args.push.apply(args, is_release ? RELESE_ODIN_ARGS : DEBUG_ODIN_ARGS)
+	const args = ODIN_ARGS_SHARED.concat(is_release ? ODIN_ARGS_RELESE : ODIN_ARGS_DEV)
 
 	const child = child_process.execFile("odin", args, {cwd: dirname})
 	child.stderr?.on("data", data => {
@@ -289,22 +315,22 @@ function makeHttpServer(requestListener) {
 /**
  * @param   {http.IncomingMessage} req
  * @param   {http.ServerResponse}  res
+ * @param   {number}               req_time
  * @returns {void}
  */
-function end404(req, res) {
+function end404(req, res, req_time) {
 	void res.writeHead(404)
 	void res.end()
-	// eslint-disable-next-line no-console
-	console.log(`${req.method} ${req.url} 404`)
+	log_request(req, res, req_time)
 }
 
 /**
  * @param   {http.IncomingMessage} req
  * @param   {http.ServerResponse}  res
  * @param   {string}               filepath
- * @returns {void}
- */
-function streamStatic(req, res, filepath) {
+ * @param   {number}               req_time
+ * @returns {void}                 */
+function streamStatic(req, res, filepath, req_time) {
 	const ext = toExt(filepath)
 	const mime_type = mimeType(ext)
 	void res.writeHead(200, {"Content-Type": mime_type})
@@ -312,8 +338,16 @@ function streamStatic(req, res, filepath) {
 	const stream = fs.createReadStream(filepath)
 	void stream.pipe(res)
 
-	// eslint-disable-next-line no-console
-	console.log(`${req.method} ${req.url} 200`)
+	log_request(req, res, req_time)
+}
+
+/**
+ * @param   {http.IncomingMessage} req
+ * @param   {http.ServerResponse } res
+ * @param   {number}               req_time
+ * @returns {void} */
+function log_request(req, res, req_time) {
+	console.log(`${req.method} ${res.statusCode} ${Math.round(performance.now() - req_time)}ms ${req.url}`)
 }
 
 /** @returns {never} */
