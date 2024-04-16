@@ -1,6 +1,7 @@
 //+private file
 package example
 
+import "core:slice"
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
@@ -60,7 +61,7 @@ lighting_start :: proc(program: gl.Program) {
 	copy_array(positions[:], get_cube_positions(0, CUBE_HEIGHT))
 	cube_normals: [CUBE_VERTICES]Vec = 1
 	copy_array(normals[:], cube_normals)
-	copy_array(colors[:], WHITE_CUBE_COLORS)
+	slice.fill(colors[:], WHITE)
 
 	/* Ring
 

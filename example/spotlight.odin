@@ -15,7 +15,7 @@ PLANE_WIDTH :: 2000
 GUY_JOINTS     :: 6
 GUY_VERTICES   :: GUY_JOINTS * JOINT_VERTICES
 PLANE_VERTICES :: 6
-ALL_VERTICES   :: PLANE_VERTICES + CUBE_VERTICES + GUY_VERTICES
+ALL_VERTICES   :: PLANE_VERTICES + CUBE_VERTICES*2 + GUY_VERTICES
 
 #assert(ALL_VERTICES % 3 == 0)
 
@@ -58,11 +58,14 @@ spotlight_start :: proc(program: gl.Program) {
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
+	vi := 0
+
 	/* Plane */
 
-	plane_positions := positions[:PLANE_VERTICES]
-	plane_normals   := normals  [:PLANE_VERTICES]
-	plane_colors    := colors   [:PLANE_VERTICES]
+	plane_positions := positions[vi:][:PLANE_VERTICES]
+	plane_normals   := normals  [vi:][:PLANE_VERTICES]
+	plane_colors    := colors   [vi:][:PLANE_VERTICES]
+	vi += PLANE_VERTICES
 
 	plane_positions[0] = {-PLANE_WIDTH/2, 0, -PLANE_WIDTH/2}
 	plane_positions[1] = { PLANE_WIDTH/2, 0,  PLANE_WIDTH/2}
@@ -74,19 +77,31 @@ spotlight_start :: proc(program: gl.Program) {
 	slice.fill(plane_normals, Vec{0, 1, 0})
 	slice.fill(plane_colors, BLACK)
 
-	/* Cube */
-	cube_positions := positions[PLANE_VERTICES:][:CUBE_VERTICES]
-	cube_normals   := normals  [PLANE_VERTICES:][:CUBE_VERTICES]
-	cube_colors    := colors   [PLANE_VERTICES:][:CUBE_VERTICES]
+	/* Cube RED */
+	cube_red_positions := positions[vi:][:CUBE_VERTICES]
+	cube_red_normals   := normals  [vi:][:CUBE_VERTICES]
+	cube_red_colors    := colors   [vi:][:CUBE_VERTICES]
+	vi += CUBE_VERTICES
 
-	copy_array(cube_positions, get_cube_positions(0, CUBE_HEIGHT))
-	slice.fill(cube_normals, 1)
-	copy_array(cube_colors, WHITE_CUBE_COLORS)
+	copy_array(cube_red_positions, get_cube_positions(0, CUBE_HEIGHT))
+	slice.fill(cube_red_normals, 1)
+	slice.fill(cube_red_colors, RED)
+
+	/* Cube BLUE */
+	cube_blue_positions := positions[vi:][:CUBE_VERTICES]
+	cube_blue_normals   := normals  [vi:][:CUBE_VERTICES]
+	cube_blue_colors    := colors   [vi:][:CUBE_VERTICES]
+	vi += CUBE_VERTICES
+
+	copy_array(cube_blue_positions, get_cube_positions(0, CUBE_HEIGHT))
+	slice.fill(cube_blue_normals, 1)
+	slice.fill(cube_blue_colors, BLUE)
 
 	/* Guy */
-	guy_positions := positions[PLANE_VERTICES+CUBE_VERTICES:]
-	guy_normals   := normals  [PLANE_VERTICES+CUBE_VERTICES:]
-	guy_colors    := colors   [PLANE_VERTICES+CUBE_VERTICES:]
+	guy_positions := positions[vi:][:GUY_VERTICES]
+	guy_normals   := normals  [vi:][:GUY_VERTICES]
+	guy_colors    := colors   [vi:][:GUY_VERTICES]
+	vi += GUY_VERTICES
 
 	copy_array(guy_positions[JOINT_VERTICES*0:], get_joint(
 		{0,           GUY_HEIGHT, 0},
@@ -159,27 +174,39 @@ spotlight_frame :: proc(delta: f32) {
 
 	/* Light */
 
-	cube_pos: Vec
-	cube_pos.x = CUBE_RADIUS
-	cube_pos.z = CUBE_RADIUS
-	cube_pos.y = CUBE_HEIGHT*10
+	cube_red_pos: Vec
+	cube_red_pos.x = CUBE_RADIUS
+	cube_red_pos.z = CUBE_RADIUS
+	cube_red_pos.y = CUBE_HEIGHT*10
 
-	cube_mat: Mat4 = 1
-	cube_mat *= mat4_translate(cube_pos)
+	cube_blue_pos: Vec
+	cube_blue_pos.x = -CUBE_RADIUS
+	cube_blue_pos.z = -CUBE_RADIUS
+	cube_blue_pos.y = CUBE_HEIGHT*10
 
-	gl.Uniform3fv(u_light_pos, cube_pos)
-	gl.Uniform3fv(u_light_direction, normalize(-cube_pos))
+	gl.Uniform3fv(u_light_pos, cube_red_pos)
+	gl.Uniform3fv(u_light_direction, normalize(-cube_red_pos))
 	gl.UniformMatrix4fv(u_view, view_mat)
 
+	vi := 0
+	
 	/* Draw plane */
 	gl.UniformMatrix4fv(u_local, 1)
-	gl.DrawArrays(gl.TRIANGLES, 0, PLANE_VERTICES)
+	gl.DrawArrays(gl.TRIANGLES, vi, PLANE_VERTICES)
+	vi += PLANE_VERTICES
 
-	/* Draw cube */
-	gl.UniformMatrix4fv(u_local, cube_mat)
-	gl.DrawArrays(gl.TRIANGLES, PLANE_VERTICES, CUBE_VERTICES)
+	/* Draw cube RED */
+	gl.UniformMatrix4fv(u_local, mat4_translate(cube_red_pos))
+	gl.DrawArrays(gl.TRIANGLES, vi, CUBE_VERTICES)
+	vi += CUBE_VERTICES
+
+	/* Draw cube BLUE */
+	gl.UniformMatrix4fv(u_local, mat4_translate(cube_blue_pos))
+	gl.DrawArrays(gl.TRIANGLES, vi, CUBE_VERTICES)
+	vi += CUBE_VERTICES
 
 	/* Draw guy */
 	gl.UniformMatrix4fv(u_local, 1)
-	gl.DrawArrays(gl.TRIANGLES, PLANE_VERTICES+CUBE_VERTICES, GUY_VERTICES)
+	gl.DrawArrays(gl.TRIANGLES, vi, GUY_VERTICES)
+	vi += GUY_VERTICES
 }

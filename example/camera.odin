@@ -1,6 +1,7 @@
 //+private file
 package example
 
+import "core:slice"
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
@@ -60,7 +61,7 @@ camera_start :: proc(program: gl.Program) {
 
 	/* Cube */
 	copy_array(positions[ALL_PYRAMID_VERTICES:], get_cube_positions(0, HEIGHT))
-	copy_array(colors[ALL_PYRAMID_VERTICES:], WHITE_CUBE_COLORS)
+	slice.fill(colors[ALL_PYRAMID_VERTICES:], WHITE)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
