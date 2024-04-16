@@ -23,6 +23,8 @@ void main() {
 		light = dot(normal, surface_to_light);
 	}
 
-	// out_color = mix(vec4(v_color.rgb, 0), u_light_color, light);
-	out_color = v_color * u_light_color * light;
+	// out_color = mix(v_color, u_light_color, light);
+	// out_color = out_color * light;
+	out_color = v_color * light;
+	out_color = mix(out_color, u_light_color, light);
 }

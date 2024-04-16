@@ -72,7 +72,7 @@ spotlight_start :: proc(program: gl.Program) {
 	plane_positions[5] = { PLANE_WIDTH/2, 0,  PLANE_WIDTH/2}
 
 	slice.fill(plane_normals, Vec{0, 1, 0})
-	slice.fill(plane_colors, PURPLE_DARK)
+	slice.fill(plane_colors, BLACK)
 
 	/* Cube */
 	cube_positions := positions[PLANE_VERTICES:][:CUBE_VERTICES]
@@ -129,7 +129,7 @@ spotlight_start :: proc(program: gl.Program) {
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 
-	gl.Uniform4fv(u_light_color, rgba_to_vec4(WHITE))
+	gl.Uniform4fv(u_light_color, rgba_to_vec4(RED))
 }
 
 @(private="package")

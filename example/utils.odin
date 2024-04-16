@@ -189,6 +189,7 @@ RED   : RGBA : {230, 20, 0, 255}
 ORANGE: RGBA : {250, 150, 50, 255}
 PURPLE: RGBA : {160, 100, 200, 255}
 PURPLE_DARK: RGBA : {80, 30, 30, 255}
+BLACK : RGBA : {0, 0, 0, 255}
 
 rgba_to_vec4 :: proc "contextless" (rgba: RGBA) -> glm.vec4 {
 	return {f32(rgba.r)/255, f32(rgba.g)/255, f32(rgba.b)/255, f32(rgba.a)/255}
