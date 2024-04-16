@@ -344,11 +344,29 @@ function streamStatic(req, res, filepath, req_time) {
 
 /**
  * @param   {http.IncomingMessage} req
- * @param   {http.ServerResponse } res
+ * @param   {http.ServerResponse}  res
  * @param   {number}               req_time
  * @returns {void} */
 function log_request(req, res, req_time) {
-	console.log(`${req.method} ${res.statusCode} ${Math.round(performance.now() - req_time)}ms ${req.url}`)
+	let txt = req.method ?? "NULL"
+	txt += " "
+	txt += res.statusCode === 200
+		? "\x1b[32m" // green
+		: "\x1b[31m" // red
+	txt += res.statusCode
+	txt += "\x1b[0m"
+	txt += " "
+	const time = Math.round(performance.now() - req_time)
+	txt +=
+		  time < 100 ? "\x1b[32m" // green
+		: time < 500 ? "\x1b[33m" // yellow
+		:              "\x1b[31m" // red
+	txt += time
+	txt += "ms"
+	txt += "\x1b[0m"
+	txt += " "
+	txt += req.url ?? "NULL"
+	console.log(txt)
 }
 
 /** @returns {never} */
