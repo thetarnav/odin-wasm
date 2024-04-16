@@ -2,15 +2,15 @@
 
 in vec4 a_position;
 in vec3 a_normal;
-in vec4 a_color;
 
-uniform vec3 u_light_pos;
+uniform vec3 u_light_one_pos;
+uniform vec3 u_light_two_pos;
 uniform mat4 u_view;
 uniform mat4 u_local;
 
 out vec3 v_normal;
-out vec4 v_color;
-out vec3 v_surface_to_light;
+out vec3 v_surface_to_light_one;
+out vec3 v_surface_to_light_two;
 
 void main() {
 	// project the position
@@ -26,7 +26,6 @@ void main() {
 	v_normal = mat3(transpose(inverse(u_local))) * a_normal;
 
 	vec3 world_pos = (u_local * a_position).xyz;
-	v_surface_to_light = u_light_pos - world_pos;
-
-	v_color = a_color;
+	v_surface_to_light_one = u_light_one_pos - world_pos;
+	v_surface_to_light_two = u_light_two_pos - world_pos;
 }
