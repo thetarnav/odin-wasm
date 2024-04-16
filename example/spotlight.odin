@@ -101,26 +101,32 @@ spotlight_start :: proc(program: gl.Program) {
 	copy_array(guy_positions[JOINT_VERTICES*0:], get_joint(
 		{0,           GUY_HEIGHT, 0},
 		{GUY_WIDTH/2, 0,          20},
+		w = 14,
 	))
 	copy_array(guy_positions[JOINT_VERTICES*1:], get_joint(
 		{0,            GUY_HEIGHT, 0},
 		{-GUY_WIDTH/2, 0,         -20},
+		w = 14,
 	))
 	copy_array(guy_positions[JOINT_VERTICES*2:], get_joint(
 		{0, GUY_HEIGHT*2,   0},
 		{0, GUY_HEIGHT*0.9, 0},
+		w = 14,
 	))
 	copy_array(guy_positions[JOINT_VERTICES*3:], get_joint(
 		{0, GUY_HEIGHT*2.1, -25},
 		{0, GUY_HEIGHT*1.9,   0},
+		w = 14,
 	))
 	copy_array(guy_positions[JOINT_VERTICES*4:], get_joint(
 		{0,            GUY_HEIGHT*1.9, 0},
 		{-GUY_WIDTH/2, GUY_HEIGHT*1.1, 0},
+		w = 14,
 	))
 	copy_array(guy_positions[JOINT_VERTICES*5:], get_joint(
 		{0,           GUY_HEIGHT*1.9,  0},
 		{GUY_WIDTH/2, GUY_HEIGHT*2.7, -5},
+		w = 14,
 	))
 
 	normals_from_positions(guy_normals, guy_positions)
