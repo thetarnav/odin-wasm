@@ -13,13 +13,16 @@ GUY_WIDTH   :: 70
 PLANE_WIDTH :: 2000
 
 GUY_JOINT_POSITIONS :: [?]struct {from: Vec, to: Vec} {
-	{{0, 0,   0}, {0, 100, 0}},
-	{{0, 100, 0}, {0, 200, 0}},
-	{{0, 100, 0}, {100, 100, 0}},
-	{{0, 100, 0}, {100, 100, 0}},
-	{{0, 100, 0}, {-100, 100, 0}},
-	{{0, 100, 0}, {0, 100, 100}},
-	{{0, 100, 0}, {0, 100, -100}},
+	{{  0,  40,  0}, {  0, 120,  20}},
+	{{  0, 120, 20}, {  0, 130,  30}},
+	{{  0,  40,  0}, { 30,   5,  40}},
+	{{  0,  40,  0}, {-30,   5,  40}},
+	{{ 30,   5, 40}, { 20,   0, -40}},
+	{{-30,   5, 40}, {-20,   0, -40}},
+	{{  0, 120, 20}, { 35, 140,  25}},
+	{{  0, 120, 20}, {-35, 140,  25}},
+	{{ 35, 140, 25}, { 30, 190,  25}},
+	{{-35, 140, 25}, {-30, 190,  25}},
 }
 
 GUY_JOINTS     :: len(GUY_JOINT_POSITIONS)
@@ -142,7 +145,7 @@ spotlight_frame :: proc(delta: f32) {
 	camera_mat: Mat4 = 1
 	camera_mat *= mat4_rotate_y(camera_angle)
 	camera_mat *= mat4_translate(camera_pos)
-	camera_mat *= mat4_look_at(camera_pos, {0, GUY_HEIGHT, 0}, {0, 1, 0})
+	camera_mat *= mat4_look_at(camera_pos, {0, 50, 0}, {0, 1, 0})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
 	view_mat := glm.mat4PerspectiveInfinite(

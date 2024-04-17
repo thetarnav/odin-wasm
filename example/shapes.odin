@@ -237,16 +237,34 @@ JOINT_VERTICES  :: 3 * JOINT_TRIANGLES
 
 get_joint :: proc(from, to: Vec, w: f32) -> [JOINT_VERTICES]Vec {
 	
-	mid: Vec = from*(1.0/3.0) + to*(2.0/3.0)
+	mid := from*(1.0/3.0) + to*(2.0/3.0)
 	
 	from, to := from, to
-	if from.y < to.y || from.x > to.x || from.z < to.z {
-		from, to = to, from
-	}
 	
-	normal: Vec = normalize(to - from)
-	normal_x := vec3_transform(normal, mat4_rotate_x(PI/2) * mat4_rotate_y(PI/2))
-	normal_z := vec3_transform(normal, mat4_rotate_z(PI/2) * mat4_rotate_y(PI/2))
+	normal := normalize(to - from)
+
+	mat_x: Mat4
+	mat_z: Mat4
+
+	if normal.x > 0.5 || normal.x < -0.5 {
+		mat_x = mat4_rotate_y(PI/2)
+		mat_z = mat4_rotate_z(PI/2)
+	} else {
+		mat_x = mat4_rotate_x(PI/2)
+		if normal.z > 0.5 || normal.z < -0.5 {
+			mat_z = mat4_rotate_y(PI/2)
+		} else {
+			mat_z = mat4_rotate_z(PI/2)
+			if normal.y > 0.5 || normal.y < -0.5 {
+				mat_z = mat4_rotate_z(PI/2)
+			} else {
+				mat_z = mat4_rotate_x(PI/2)
+			}
+		}
+	}
+
+	normal_x := vec3_transform(normal, mat_x)
+	normal_z := vec3_transform(normal, mat_z)
 
 	move_x: Vec = normal_x * w
 	move_z: Vec = normal_z * w
