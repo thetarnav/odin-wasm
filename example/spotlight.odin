@@ -12,7 +12,17 @@ GUY_HEIGHT  :: 100
 GUY_WIDTH   :: 70
 PLANE_WIDTH :: 2000
 
-GUY_JOINTS     :: 6
+GUY_JOINT_POSITIONS :: [?]struct {from: Vec, to: Vec} {
+	{{0, 0,   0}, {0, 100, 0}},
+	{{0, 100, 0}, {0, 200, 0}},
+	{{0, 100, 0}, {100, 100, 0}},
+	{{0, 100, 0}, {100, 100, 0}},
+	{{0, 100, 0}, {-100, 100, 0}},
+	{{0, 100, 0}, {0, 100, 100}},
+	{{0, 100, 0}, {0, 100, -100}},
+}
+
+GUY_JOINTS     :: len(GUY_JOINT_POSITIONS)
 GUY_VERTICES   :: GUY_JOINTS * JOINT_VERTICES
 PLANE_VERTICES :: 6
 ALL_VERTICES   :: PLANE_VERTICES + CUBE_VERTICES*2 + GUY_VERTICES
@@ -98,36 +108,9 @@ spotlight_start :: proc(program: gl.Program) {
 	guy_normals   := normals  [vi:][:GUY_VERTICES]
 	vi += GUY_VERTICES
 
-	copy_array(guy_positions[JOINT_VERTICES*0:], get_joint(
-		{0,           GUY_HEIGHT, 0},
-		{GUY_WIDTH/2, 0,          20},
-		w = 14,
-	))
-	copy_array(guy_positions[JOINT_VERTICES*1:], get_joint(
-		{0,            GUY_HEIGHT, 0},
-		{-GUY_WIDTH/2, 0,         -20},
-		w = 14,
-	))
-	copy_array(guy_positions[JOINT_VERTICES*2:], get_joint(
-		{0, GUY_HEIGHT*2,   0},
-		{0, GUY_HEIGHT*0.9, 0},
-		w = 14,
-	))
-	copy_array(guy_positions[JOINT_VERTICES*3:], get_joint(
-		{0, GUY_HEIGHT*2.1, -25},
-		{0, GUY_HEIGHT*1.9,   0},
-		w = 14,
-	))
-	copy_array(guy_positions[JOINT_VERTICES*4:], get_joint(
-		{0,            GUY_HEIGHT*1.9, 0},
-		{-GUY_WIDTH/2, GUY_HEIGHT*1.1, 0},
-		w = 14,
-	))
-	copy_array(guy_positions[JOINT_VERTICES*5:], get_joint(
-		{0,           GUY_HEIGHT*1.9,  0},
-		{GUY_WIDTH/2, GUY_HEIGHT*2.7, -5},
-		w = 14,
-	))
+	for joint, ji in GUY_JOINT_POSITIONS {
+		copy_array(guy_positions[JOINT_VERTICES*ji:], get_joint(joint.from, joint.to, w = 14))
+	}
 
 	normals_from_positions(guy_normals, guy_positions)
 
@@ -171,13 +154,14 @@ spotlight_frame :: proc(delta: f32) {
 
 	/* Light */
 
-	cube_red_angle: f32 = PI/2
+	cube_red_angle : f32 = PI/2 + PI/6
+	cube_blue_angle: f32 = PI/2 - PI/6
+
 	cube_red_pos: Vec
 	cube_red_pos.x = CUBE_RADIUS * cos(cube_red_angle)
 	cube_red_pos.z = CUBE_RADIUS * sin(cube_red_angle)
 	cube_red_pos.y = CUBE_HEIGHT*8
 
-	cube_blue_angle: f32 = PI/4
 	cube_blue_pos: Vec
 	cube_blue_pos.x = CUBE_RADIUS * cos(cube_blue_angle)
 	cube_blue_pos.z = CUBE_RADIUS * sin(cube_blue_angle)
