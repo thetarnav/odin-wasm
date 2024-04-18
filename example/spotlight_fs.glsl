@@ -21,7 +21,7 @@ float step(a, b) {
 	return a < b ? 1.0 : 0.0;
 }
 
-smoothsetp(a, b, x) {
+smoothstep(a, b, x) {
 	float t = clamp((x - a) / (b - a), 0.0, 1.0);
 	return t * t * (3.0 - 2.0 * t); // ease in and out
 }
