@@ -12,17 +12,17 @@ GUY_HEIGHT  :: 100
 GUY_WIDTH   :: 70
 PLANE_WIDTH :: 2000
 
-GUY_JOINT_POSITIONS :: [?]struct {from: Vec, to: Vec} {
-	{{  0,  40,  0}, {  0, 120,  20}},
-	{{  0, 120, 20}, {  0, 130,  30}},
-	{{  0,  40,  0}, { 30,   5,  40}},
-	{{  0,  40,  0}, {-30,   5,  40}},
-	{{ 30,   5, 40}, { 20,   0, -40}},
-	{{-30,   5, 40}, {-20,   0, -40}},
-	{{  0, 120, 20}, { 35, 135,  30}},
-	{{  0, 120, 20}, {-35, 135,  30}},
-	{{ 35, 135, 30}, { 30, 185,  40}},
-	{{-35, 135, 30}, {-30, 185,  40}},
+GUY_JOINT_POSITIONS :: [?]struct {from: Vec, to: Vec, w: f32} {
+	{{  0,  40,  0}, {  0, 120,  20}, 16},
+	{{  0, 120, 20}, {  0, 130,  30}, 16},
+	{{  0,  40,  0}, { 30,   5,  40}, 14},
+	{{  0,  40,  0}, {-30,   5,  40}, 14},
+	{{ 30,   5, 40}, { 20,   0, -40}, 10},
+	{{-30,   5, 40}, {-20,   0, -40}, 10},
+	{{  0, 120, 20}, { 35, 135,  30}, 10},
+	{{  0, 120, 20}, {-35, 135,  30}, 10},
+	{{ 35, 135, 30}, { 30, 185,  40},  8},
+	{{-35, 135, 30}, {-30, 185,  40},  8},
 }
 
 GUY_JOINTS     :: len(GUY_JOINT_POSITIONS)
@@ -112,7 +112,7 @@ spotlight_start :: proc(program: gl.Program) {
 	vi += GUY_VERTICES
 
 	for joint, ji in GUY_JOINT_POSITIONS {
-		copy_array(guy_positions[JOINT_VERTICES*ji:], get_joint(joint.from, joint.to, w = 14))
+		copy_array(guy_positions[JOINT_VERTICES*ji:], get_joint(joint.from, joint.to, joint.w))
 	}
 
 	normals_from_positions(guy_normals, guy_positions)
