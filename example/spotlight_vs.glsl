@@ -3,8 +3,8 @@
 in vec4 a_position;
 in vec3 a_normal;
 
-uniform vec3 u_light_one_pos;
-uniform vec3 u_light_two_pos;
+uniform vec3 u_light_pos_one;
+uniform vec3 u_light_pos_two;
 uniform mat4 u_view;
 uniform mat4 u_local;
 
@@ -26,6 +26,6 @@ void main() {
 	v_normal = mat3(transpose(inverse(u_local))) * a_normal;
 
 	vec3 world_pos = (u_local * a_position).xyz;
-	v_surface_to_light_one = u_light_one_pos - world_pos;
-	v_surface_to_light_two = u_light_two_pos - world_pos;
+	v_surface_to_light_one = u_light_pos_one - world_pos;
+	v_surface_to_light_two = u_light_pos_two - world_pos;
 }

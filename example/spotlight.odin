@@ -32,18 +32,20 @@ ALL_VERTICES   :: PLANE_VERTICES + CUBE_VERTICES*2 + GUY_VERTICES
 
 #assert(ALL_VERTICES % 3 == 0)
 
-camera_angle         : f32
-u_view               : i32
-u_local              : i32
-u_light_one_pos      : i32
-u_light_two_pos      : i32
-u_light_one_color    : i32
-u_light_one_direction: i32
-u_light_two_color    : i32
-u_light_two_direction: i32
-vao                  : VAO
-positions            : [ALL_VERTICES]Vec
-normals              : [ALL_VERTICES]Vec
+camera_angle     : f32
+u_view           : i32
+u_local          : i32
+u_light_pos_one  : i32
+u_light_pos_two  : i32
+u_light_color_one: i32
+u_light_dir_one  : i32
+u_light_color_two: i32
+u_light_dir_two  : i32
+u_light_add_one  : i32
+u_light_add_two  : i32
+vao              : VAO
+positions        : [ALL_VERTICES]Vec
+normals          : [ALL_VERTICES]Vec
 
 
 @(private="package")
@@ -55,14 +57,16 @@ spotlight_start :: proc(program: gl.Program) {
 	a_position := gl.GetAttribLocation(program, "a_position")
 	a_normal   := gl.GetAttribLocation(program, "a_normal")
 
-	u_view                = gl.GetUniformLocation(program, "u_view")
-	u_local               = gl.GetUniformLocation(program, "u_local")
-	u_light_one_pos       = gl.GetUniformLocation(program, "u_light_one_pos")
-	u_light_two_pos       = gl.GetUniformLocation(program, "u_light_two_pos")
-	u_light_one_color     = gl.GetUniformLocation(program, "u_light_one_color")
-	u_light_one_direction = gl.GetUniformLocation(program, "u_light_one_direction")
-	u_light_two_color     = gl.GetUniformLocation(program, "u_light_two_color")
-	u_light_two_direction = gl.GetUniformLocation(program, "u_light_two_direction")
+	u_view            = gl.GetUniformLocation(program, "u_view")
+	u_local           = gl.GetUniformLocation(program, "u_local")
+	u_light_pos_one   = gl.GetUniformLocation(program, "u_light_pos_one")
+	u_light_pos_two   = gl.GetUniformLocation(program, "u_light_pos_two")
+	u_light_color_one = gl.GetUniformLocation(program, "u_light_color_one")
+	u_light_dir_one   = gl.GetUniformLocation(program, "u_light_dir_one")
+	u_light_color_two = gl.GetUniformLocation(program, "u_light_color_two")
+	u_light_dir_two   = gl.GetUniformLocation(program, "u_light_dir_two")
+	u_light_add_one   = gl.GetUniformLocation(program, "u_light_add_one")
+	u_light_add_two   = gl.GetUniformLocation(program, "u_light_add_two")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_normal)
@@ -126,8 +130,8 @@ spotlight_start :: proc(program: gl.Program) {
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, normals[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_normal, 3, gl.FLOAT, false, 0, 0)
 
-	gl.Uniform4fv(u_light_one_color, rgba_to_vec4(RED))
-	gl.Uniform4fv(u_light_two_color, rgba_to_vec4(BLUE))
+	gl.Uniform4fv(u_light_color_one, rgba_to_vec4(RED))
+	gl.Uniform4fv(u_light_color_two, rgba_to_vec4(BLUE))
 }
 
 @(private="package")
@@ -170,10 +174,10 @@ spotlight_frame :: proc(delta: f32) {
 	cube_blue_pos.z = CUBE_RADIUS * sin(cube_blue_angle)
 	cube_blue_pos.y = CUBE_HEIGHT*8
 
-	gl.Uniform3fv(u_light_one_pos, cube_red_pos)
-	gl.Uniform3fv(u_light_two_pos, cube_blue_pos)
-	gl.Uniform3fv(u_light_one_direction, normalize(-cube_red_pos))
-	gl.Uniform3fv(u_light_two_direction, normalize(-cube_blue_pos))
+	gl.Uniform3fv(u_light_pos_one, cube_red_pos)
+	gl.Uniform3fv(u_light_pos_two, cube_blue_pos)
+	gl.Uniform3fv(u_light_dir_one, normalize(-cube_red_pos))
+	gl.Uniform3fv(u_light_dir_two, normalize(-cube_blue_pos))
 	gl.UniformMatrix4fv(u_view, view_mat)
 
 	vi := 0
@@ -185,12 +189,16 @@ spotlight_frame :: proc(delta: f32) {
 
 	/* Draw cube RED */
 	gl.UniformMatrix4fv(u_local, mat4_translate(cube_red_pos))
+	gl.Uniform1f(u_light_add_one, 1)
 	gl.DrawArrays(gl.TRIANGLES, vi, CUBE_VERTICES)
+	gl.Uniform1f(u_light_add_one, 0)
 	vi += CUBE_VERTICES
 
 	/* Draw cube BLUE */
 	gl.UniformMatrix4fv(u_local, mat4_translate(cube_blue_pos))
+	gl.Uniform1f(u_light_add_two, 1)
 	gl.DrawArrays(gl.TRIANGLES, vi, CUBE_VERTICES)
+	gl.Uniform1f(u_light_add_two, 0)
 	vi += CUBE_VERTICES
 
 	/* Draw guy */
