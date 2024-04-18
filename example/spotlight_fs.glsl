@@ -13,8 +13,8 @@ uniform vec3 u_light_two_direction;
 
 out vec4 out_color;
 
-#define limit_start 0.9
-#define limit_range 0.1
+#define limit_lower 0.9
+#define limit_upper 1.0
 
 /*
 float step(a, b) {
@@ -24,7 +24,7 @@ float step(a, b) {
 
 float light_strength(vec3 normal, vec3 surface_to_light, vec3 light_direction) {
 	float dot_in_light  = dot(surface_to_light, -light_direction);
-	float in_light      = clamp((dot_in_light - limit_start) / limit_range, 0.0, 1.0);
+	float in_light      = smoothstep(limit_lower, limit_upper, dot_in_light);
 	float dot_in_normal = dot(normal, surface_to_light);
 
 	return in_light * (dot_in_normal - 0.35) * 2.0;
