@@ -20,6 +20,11 @@ out vec4 out_color;
 float step(a, b) {
 	return a < b ? 1.0 : 0.0;
 }
+
+smoothsetp(a, b, x) {
+	float t = clamp((x - a) / (b - a), 0.0, 1.0);
+	return t * t * (3.0 - 2.0 * t); // ease in and out
+}
 */
 
 float light_strength(vec3 normal, vec3 surface_to_light, vec3 light_direction) {
