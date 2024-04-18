@@ -1,16 +1,16 @@
 package example
 
 
-WHITE : RGBA : {255, 255, 255, 255}
-GREEN : RGBA : {60, 210, 0, 255}
-YELLOW: RGBA : {210, 200, 0, 255}
-BLUE  : RGBA : {0, 80, 190, 255}
-CYAN  : RGBA : {0, 210, 210, 255}
-RED   : RGBA : {230, 20, 0, 255}
-ORANGE: RGBA : {250, 150, 50, 255}
-PURPLE: RGBA : {160, 100, 200, 255}
-PURPLE_DARK: RGBA : {80, 30, 30, 255}
-BLACK : RGBA : {0, 0, 0, 255}
+WHITE       :: RGBA{255, 255, 255, 255}
+GREEN       :: RGBA{ 60, 210,   0, 255}
+YELLOW      :: RGBA{210, 200,   0, 255}
+BLUE        :: RGBA{  0,  80, 190, 255}
+CYAN        :: RGBA{  0, 210, 210, 255}
+RED         :: RGBA{230,  20,   0, 255}
+ORANGE      :: RGBA{250, 150,  50, 255}
+PURPLE      :: RGBA{160, 100, 200, 255}
+PURPLE_DARK :: RGBA{ 80,  30,  30, 255}
+BLACK       :: RGBA{  0,   0,   0, 255}
 
 
 CUBE_TRIANGLES :: 6 * 2
@@ -240,34 +240,44 @@ get_joint :: proc(from, to: Vec, w: f32) -> [JOINT_VERTICES]Vec {
 	mid := from*(1.0/3.0) + to*(2.0/3.0)
 	
 	from, to := from, to
+	if from.y > to.y {
+		from, to = to, from
+	}
 	
 	normal := normalize(to - from)
 
-	mat_x: Mat4
-	mat_z: Mat4
+	normal_x: Vec
+	normal_z: Vec
 
-	if normal.x > 0.5 || normal.x < -0.5 {
-		mat_x = mat4_rotate_y(PI/2)
-		mat_z = mat4_rotate_z(PI/2)
-	} else {
-		mat_x = mat4_rotate_x(PI/2)
-		if normal.z > 0.5 || normal.z < -0.5 {
-			mat_z = mat4_rotate_y(PI/2)
-		} else {
-			mat_z = mat4_rotate_z(PI/2)
-			if normal.y > 0.5 || normal.y < -0.5 {
-				mat_z = mat4_rotate_z(PI/2)
-			} else {
-				mat_z = mat4_rotate_x(PI/2)
-			}
+	if normal.x > 0.5 {
+		normal_x = vec3_rotate(normal, UP   , PI/2)
+		normal_z = vec3_rotate(normal, FRONT, PI/2)
+	}
+	else if normal.x < -0.5 {
+		normal_x = vec3_rotate(normal, DOWN , PI/2)
+		normal_z = vec3_rotate(normal, FRONT, PI/2)
+	}
+	else if normal.z > 0.5 {
+		normal_x = vec3_rotate(normal, RIGHT, PI/2)
+		normal_z = vec3_rotate(normal, UP   , PI/2)
+	}
+	else if normal.z < -0.5 {
+		if normal.x > 0 {
+			normal_x = vec3_rotate(normal, UP   , PI/2)
+			normal_z = vec3_rotate(normal, RIGHT, PI/2)
+		}
+		else {
+			normal_x = vec3_rotate(normal, DOWN , PI/2)
+			normal_z = vec3_rotate(normal, LEFT , PI/2)
 		}
 	}
+	else {
+		normal_x = vec3_rotate(normal, RIGHT, PI/2)
+		normal_z = vec3_rotate(normal, BACK , PI/2)
+	}
 
-	normal_x := vec3_transform(normal, mat_x)
-	normal_z := vec3_transform(normal, mat_z)
-
-	move_x: Vec = normal_x * w
-	move_z: Vec = normal_z * w
+	move_x := normal_x * w
+	move_z := normal_z * w
 	
 	return {
 		from,

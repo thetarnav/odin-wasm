@@ -20,6 +20,13 @@ dot       :: glm.dot
 cross     :: glm.cross
 normalize :: glm.normalize
 
+UP    :: Vec{ 0, 1, 0}
+DOWN  :: Vec{ 0,-1, 0}
+LEFT  :: Vec{-1, 0, 0}
+RIGHT :: Vec{ 1, 0, 0}
+FRONT :: Vec{ 0, 0, 1}
+BACK  :: Vec{ 0, 0,-1}
+
 
 rgba_to_vec4 :: proc "contextless" (rgba: RGBA) -> glm.vec4 {
 	return {f32(rgba.r)/255, f32(rgba.g)/255, f32(rgba.b)/255, f32(rgba.a)/255}
@@ -159,7 +166,7 @@ mat4_look_at :: proc "contextless" (eye, target, up: Vec3) -> Mat4 {
 
 // Rotates a vector around an axis
 @(require_results)
-vec3_rotate_by_axis_angle :: proc "contextless" (v, axis: Vec, angle: f32) -> Vec {
+vec3_rotate :: proc "contextless" (v, axis: Vec, angle: f32) -> Vec {
 	axis, angle := axis, angle
 
 	axis = normalize(axis)
