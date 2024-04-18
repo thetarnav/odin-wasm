@@ -13,23 +13,26 @@ uniform vec3 u_light_two_direction;
 
 out vec4 out_color;
 
+#define limit 0.92
+
 void main() {
 	// varrying variables are interpolated
 	vec3 normal               = normalize(v_normal);
 	vec3 surface_to_light_one = normalize(v_surface_to_light_one);
 	vec3 surface_to_light_two = normalize(v_surface_to_light_two);
 
-	float limit = 0.92;
-	float light_one = 0.0;
-	float light_two = 0.0;
-
-	if (dot(surface_to_light_one, -u_light_one_direction) >= limit) {
-		light_one = (dot(normal, surface_to_light_one) - 0.35) * 2.0;
+	/*
+	float step(a, b) {
+		return a < b ? 1.0 : 0.0;
 	}
+	*/
+	float light_one =
+		step(limit, dot(surface_to_light_one, -u_light_one_direction)) *
+		(dot(normal, surface_to_light_one) - 0.35) * 2.0;
 
-	if (dot(surface_to_light_two, -u_light_two_direction) >= limit) {
-		light_two = (dot(normal, surface_to_light_two) - 0.35) * 2.0;
-	}
+	float light_two =
+		step(limit, dot(surface_to_light_two, -u_light_two_direction)) *
+		(dot(normal, surface_to_light_two) - 0.35) * 2.0;
 
 	vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
 	out_color = (u_light_one_color * light_one + u_light_two_color * light_two);
