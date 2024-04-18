@@ -246,35 +246,31 @@ get_joint :: proc(from, to: Vec, w: f32) -> [JOINT_VERTICES]Vec {
 	
 	normal := normalize(to - from)
 
-	normal_x: Vec
-	normal_z: Vec
+	cross_dir: Vec
 
 	if normal.x > 0.5 {
-		normal_x = vec3_rotate(normal, UP   , PI/2)
-		normal_z = vec3_rotate(normal, FRONT, PI/2)
+		cross_dir = UP
 	}
 	else if normal.x < -0.5 {
-		normal_x = vec3_rotate(normal, DOWN , PI/2)
-		normal_z = vec3_rotate(normal, FRONT, PI/2)
+		cross_dir = DOWN
 	}
 	else if normal.z > 0.5 {
-		normal_x = vec3_rotate(normal, RIGHT, PI/2)
-		normal_z = vec3_rotate(normal, UP   , PI/2)
+		cross_dir = RIGHT
 	}
 	else if normal.z < -0.5 {
 		if normal.x > 0 {
-			normal_x = vec3_rotate(normal, UP   , PI/2)
-			normal_z = vec3_rotate(normal, RIGHT, PI/2)
+			cross_dir = UP
 		}
 		else {
-			normal_x = vec3_rotate(normal, DOWN , PI/2)
-			normal_z = vec3_rotate(normal, LEFT , PI/2)
+			cross_dir = DOWN
 		}
 	}
 	else {
-		normal_x = vec3_rotate(normal, RIGHT, PI/2)
-		normal_z = vec3_rotate(normal, BACK , PI/2)
+		cross_dir = RIGHT
 	}
+
+	normal_x := cross(normal, cross_dir)
+	normal_z := cross(normal, normal_x)
 
 	move_x := normal_x * w
 	move_z := normal_z * w
