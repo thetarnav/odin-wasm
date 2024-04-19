@@ -48,7 +48,7 @@ const ODIN_ARGS_RELESE = [
 	"-vet-shadowing",
 	"-vet-style",
 	"-vet-semicolon",
-	"-o:speed",
+	"-o:aggressive",
 	"-disable-assert",
 	"-no-bounds-check",
 	"-obfuscate-source-code-locations",
