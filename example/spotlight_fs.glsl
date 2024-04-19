@@ -11,10 +11,10 @@ uniform vec3  u_light_dir[2];
 
 out vec4 out_color;
 
-#define limit_lower 0.9
-#define limit_upper 1.0
+#define LIMIT_LOWER 0.9
+#define LIMIT_UPPER 1.0
 
-#define white vec4(1.0, 1.0, 1.0, 1.0)
+#define WHITE vec4(1.0, 1.0, 1.0, 1.0)
 
 /*
 float step(a, b) {
@@ -37,7 +37,7 @@ void main() {
 	for(int i = 0; i < 2; i++) {
 		vec3  surface_to_light = normalize(v_surface_to_light[i]);
 		float dot_in_light     = dot(surface_to_light, -u_light_dir[i]);
-		float in_light         = smoothstep(limit_lower, limit_upper, dot_in_light);
+		float in_light         = smoothstep(LIMIT_LOWER, LIMIT_UPPER, dot_in_light);
 		float dot_in_normal    = dot(normal, surface_to_light);
 		float light_strength   = in_light * (dot_in_normal - 0.35) * 2.0;
 		float light            = clamp(u_light_add[i] + light_strength, 0.0, 1.0);
@@ -45,5 +45,5 @@ void main() {
 		total_light_strength  += light;
 	}
 
-	out_color = mix(total_light_color, white, max(total_light_strength / 2.0, 0.0));
+	out_color = mix(total_light_color, WHITE, max(total_light_strength / 2.0, 0.0));
 }
