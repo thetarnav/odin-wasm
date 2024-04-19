@@ -92,8 +92,7 @@ export function populateUniformTable(webgl, program_id) {
 		num_uniforms = webgl.ctx.getProgramParameter(program, webgl.ctx.ACTIVE_UNIFORMS)
 
 	for (let i = 0; i < num_uniforms; ++i) {
-		const u = webgl.ctx.getActiveUniform(program, i)
-		if (!u) continue
+		const u = /** @type {WebGLActiveInfo} */ (webgl.ctx.getActiveUniform(program, i))
 
 		let name = u.name
 		if (

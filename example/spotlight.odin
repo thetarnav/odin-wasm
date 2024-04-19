@@ -32,20 +32,16 @@ ALL_VERTICES   :: PLANE_VERTICES + CUBE_VERTICES*2 + GUY_VERTICES
 
 #assert(ALL_VERTICES % 3 == 0)
 
-camera_angle     : f32
-u_view           : i32
-u_local          : i32
-u_light_pos_one  : i32
-u_light_pos_two  : i32
-u_light_color_one: i32
-u_light_dir_one  : i32
-u_light_color_two: i32
-u_light_dir_two  : i32
-u_light_add_one  : i32
-u_light_add_two  : i32
-vao              : VAO
-positions        : [ALL_VERTICES]Vec
-normals          : [ALL_VERTICES]Vec
+camera_angle : f32
+u_view       : i32
+u_local      : i32
+u_light_pos  : [2]i32
+u_light_color: [2]i32
+u_light_dir  : [2]i32
+u_light_add  : [2]i32
+vao          : VAO
+positions    : [ALL_VERTICES]Vec
+normals      : [ALL_VERTICES]Vec
 
 
 @(private="package")
@@ -57,16 +53,16 @@ spotlight_start :: proc(program: gl.Program) {
 	a_position := gl.GetAttribLocation(program, "a_position")
 	a_normal   := gl.GetAttribLocation(program, "a_normal")
 
-	u_view            = gl.GetUniformLocation(program, "u_view")
-	u_local           = gl.GetUniformLocation(program, "u_local")
-	u_light_pos_one   = gl.GetUniformLocation(program, "u_light_pos_one")
-	u_light_pos_two   = gl.GetUniformLocation(program, "u_light_pos_two")
-	u_light_color_one = gl.GetUniformLocation(program, "u_light_color_one")
-	u_light_dir_one   = gl.GetUniformLocation(program, "u_light_dir_one")
-	u_light_color_two = gl.GetUniformLocation(program, "u_light_color_two")
-	u_light_dir_two   = gl.GetUniformLocation(program, "u_light_dir_two")
-	u_light_add_one   = gl.GetUniformLocation(program, "u_light_add_one")
-	u_light_add_two   = gl.GetUniformLocation(program, "u_light_add_two")
+	u_view           = gl.GetUniformLocation(program, "u_view")
+	u_local          = gl.GetUniformLocation(program, "u_local")
+	u_light_pos[0]   = gl.GetUniformLocation(program, "u_light_pos[0]")
+	u_light_pos[1]   = gl.GetUniformLocation(program, "u_light_pos[1]")
+	u_light_color[0] = gl.GetUniformLocation(program, "u_light_color[0]")
+	u_light_dir[0]   = gl.GetUniformLocation(program, "u_light_dir[0]")
+	u_light_color[1] = gl.GetUniformLocation(program, "u_light_color[1]")
+	u_light_dir[1]   = gl.GetUniformLocation(program, "u_light_dir[1]")
+	u_light_add[0]   = gl.GetUniformLocation(program, "u_light_add[0]")
+	u_light_add[1]   = gl.GetUniformLocation(program, "u_light_add[1]")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_normal)
@@ -74,8 +70,8 @@ spotlight_start :: proc(program: gl.Program) {
 	positions_buffer := gl.CreateBuffer()
 	normals_buffer   := gl.CreateBuffer()
 
-	gl.Enable(gl.CULL_FACE) // don't draw back faces
-	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
+	gl.Enable(gl.CULL_FACE)
+	gl.Enable(gl.DEPTH_TEST)
 
 	vi := 0
 
@@ -130,8 +126,8 @@ spotlight_start :: proc(program: gl.Program) {
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, normals[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_normal, 3, gl.FLOAT, false, 0, 0)
 
-	gl.Uniform4fv(u_light_color_one, rgba_to_vec4(RED))
-	gl.Uniform4fv(u_light_color_two, rgba_to_vec4(BLUE))
+	gl.Uniform4fv(u_light_color[0], rgba_to_vec4(RED))
+	gl.Uniform4fv(u_light_color[1], rgba_to_vec4(BLUE))
 }
 
 @(private="package")
@@ -140,7 +136,6 @@ spotlight_frame :: proc(delta: f32) {
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0, 0, 0)
-	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	camera_pos := Vec{0, 200 + 300 * mouse_rel.y, 200 - 300 * (scale-0.5)}
@@ -174,14 +169,14 @@ spotlight_frame :: proc(delta: f32) {
 	cube_blue_pos.z = CUBE_RADIUS * sin(cube_blue_angle)
 	cube_blue_pos.y = CUBE_HEIGHT*8
 
-	gl.Uniform3fv(u_light_pos_one, cube_red_pos)
-	gl.Uniform3fv(u_light_pos_two, cube_blue_pos)
-	gl.Uniform3fv(u_light_dir_one, normalize(-cube_red_pos))
-	gl.Uniform3fv(u_light_dir_two, normalize(-cube_blue_pos))
+	gl.Uniform3fv(u_light_pos[0], cube_red_pos)
+	gl.Uniform3fv(u_light_pos[1], cube_blue_pos)
+	gl.Uniform3fv(u_light_dir[0], normalize(-cube_red_pos))
+	gl.Uniform3fv(u_light_dir[1], normalize(-cube_blue_pos))
 	gl.UniformMatrix4fv(u_view, view_mat)
 
 	vi := 0
-	
+
 	/* Draw plane */
 	gl.UniformMatrix4fv(u_local, 1)
 	gl.DrawArrays(gl.TRIANGLES, vi, PLANE_VERTICES)
@@ -189,16 +184,16 @@ spotlight_frame :: proc(delta: f32) {
 
 	/* Draw cube RED */
 	gl.UniformMatrix4fv(u_local, mat4_translate(cube_red_pos))
-	gl.Uniform1f(u_light_add_one, 1)
+	gl.Uniform1f(u_light_add[0], 1)
 	gl.DrawArrays(gl.TRIANGLES, vi, CUBE_VERTICES)
-	gl.Uniform1f(u_light_add_one, 0)
+	gl.Uniform1f(u_light_add[0], 0)
 	vi += CUBE_VERTICES
 
 	/* Draw cube BLUE */
 	gl.UniformMatrix4fv(u_local, mat4_translate(cube_blue_pos))
-	gl.Uniform1f(u_light_add_two, 1)
+	gl.Uniform1f(u_light_add[1], 1)
 	gl.DrawArrays(gl.TRIANGLES, vi, CUBE_VERTICES)
-	gl.Uniform1f(u_light_add_two, 0)
+	gl.Uniform1f(u_light_add[1], 0)
 	vi += CUBE_VERTICES
 
 	/* Draw guy */
