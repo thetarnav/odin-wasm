@@ -51,6 +51,8 @@ Add `js_wasm32` target to `ols.json` if you want to use [OLS](https://github.com
 
 Take look at [`package.json`](https://github.com/thetarnav/odin-wasm/tree/main/package.json) for all the available scripts.
 
+*(You need to run `npm i` beforehand)*
+
 The most important ones are:
 
 - `npm run dev` - starts the server and watches for changes
