@@ -28,27 +28,27 @@ positions: [VERTICES*2]f32 = {
 	0,     BOX_H,
 }
 
-state: struct {
+@private
+State_Rectangle :: struct {
 	rotation: f32,
 	u_matrix: i32,
 	vao:      VAO,
 }
 
-@(private="package")
-rectangle_start :: proc(program: gl.Program) {
-	using state
-
+@private
+setup_rectangle :: proc(s: ^State_Rectangle, program: gl.Program) {
 	/*
 	Position and color buffers are static,
 	so we can bind them to the Vertex_Array_Object
 	and reuse them in the draw call
 	*/
-	vao = gl.CreateVertexArray()
-	gl.BindVertexArray(vao) // need to bind VAO before binding buffers
+	s.vao = gl.CreateVertexArray()
+	gl.BindVertexArray(s.vao) // need to bind VAO before binding buffers
 
 	a_position := gl.GetAttribLocation (program, "a_position")
 	a_color    := gl.GetAttribLocation (program, "a_color")
-	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
+
+	s.u_matrix  = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -65,26 +65,25 @@ rectangle_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
-@(private="package")
-rectangle_frame :: proc(delta: f32) {
-	using state
+@private
+frame_rectangle :: proc(s: ^State_Rectangle, delta: f32) {
 
-	gl.BindVertexArray(vao)
+	gl.BindVertexArray(s.vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0, 0, 0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
-	rotation -= 0.01 * delta * mouse_rel.x
+	s.rotation -= 0.01 * delta * mouse_rel.x
 
 	mat: Mat3 = 1
 	mat *= mat3_projection(canvas_size)
 	mat *= mat3_translate(mouse_pos - canvas_pos)
 	mat *= mat3_scale(scale*2 + 0.4)
-	mat *= mat3_rotate(rotation)
+	mat *= mat3_rotate(s.rotation)
 	mat *= mat3_translate(-box_size / 2)
 
-	gl.UniformMatrix3fv(u_matrix, mat)
+	gl.UniformMatrix3fv(s.u_matrix, mat)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, VERTICES)
 }

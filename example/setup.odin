@@ -26,64 +26,52 @@ Example_Kind :: enum {
 	Lighting,
 	Specular,
 	Spotlight,
-	Texture,
 }
 example: Example_Kind
 
-Demo_Interface :: struct {
+Demo_Sources :: struct {
 	vs_sources, fs_sources: []string,
-	setup: proc(program: gl.Program),
-	frame: proc(delta: f32),
 }
-demos: [Example_Kind]Demo_Interface = {
+demos: [Example_Kind]Demo_Sources = {
 	.Rectangle = {
 		vs_sources = {#load("./rectangle_vs.glsl", string)},
 		fs_sources = {#load("./fs_simple.glsl", string)},
-		setup      = rectangle_start,
-		frame      = rectangle_frame,
 	},
 	.Pyramid = {
 		vs_sources = {#load("./pyramid_vs.glsl", string)},
 		fs_sources = {#load("./fs_simple.glsl", string)},
-		setup      = pyramid_start,
-		frame      = pyramid_frame,
 	},
 	.Boxes = {
 		vs_sources = {#load("./boxes_vs.glsl", string)},
 		fs_sources = {#load("./fs_simple.glsl", string)},
-		setup      = boxes_start,
-		frame      = boxes_frame,
 	},
 	.Camera = {
 		vs_sources = {#load("./boxes_vs.glsl", string)},
 		fs_sources = {#load("./fs_simple.glsl", string)},
-		setup      = camera_start,
-		frame      = camera_frame,
 	},
 	.Lighting = {
 		vs_sources = {#load("./lighting_vs.glsl", string)},
 		fs_sources = {#load("./lighting_fs.glsl", string)},
-		setup      = lighting_start,
-		frame      = lighting_frame,
 	},
 	.Specular = {
 		vs_sources = {#load("./specular_vs.glsl", string)},
 		fs_sources = {#load("./specular_fs.glsl", string)},
-		setup      = specular_start,
-		frame      = specular_frame,
 	},
 	.Spotlight = {
 		vs_sources = {#load("./spotlight_vs.glsl", string)},
 		fs_sources = {#load("./spotlight_fs.glsl", string)},
-		setup      = spotlight_start,
-		frame      = spotlight_frame,
 	},
-	.Texture = {
-		vs_sources = {#load("./boxes_vs.glsl", string)},
-		fs_sources = {#load("./fs_simple.glsl", string)},
-		setup      = texture_start,
-		frame      = texture_frame,
-	},
+}
+
+// state is a union because it is being used by only one of the examples
+demo_state: struct #raw_union {
+	rectangle: State_Rectangle,
+	pyramid:   State_Pyramid,
+	boxes:     State_Boxes,
+	camera:    State_Camera,
+	lighting:  State_Lighting,
+	specular:  State_Specular,
+	spotlight: State_Spotlight,
 }
 
 frame_arena_buffer: [1024]byte
@@ -147,7 +135,16 @@ on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
 	}
 
 	gl.UseProgram(program)
-	demo.setup(program)
+
+	switch example {
+	case .Rectangle: setup_rectangle(&demo_state.rectangle, program)
+	case .Pyramid:   setup_pyramid  (&demo_state.pyramid,   program)
+	case .Boxes:     setup_boxes    (&demo_state.boxes,     program)
+	case .Camera:    setup_camera   (&demo_state.camera,    program)
+	case .Lighting:  setup_lighting (&demo_state.lighting,  program)
+	case .Specular:  setup_specular (&demo_state.specular,  program)
+	case .Spotlight: setup_spotlight(&demo_state.spotlight, program)
+	}
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
 		fmt.eprintln("WebGL error:", err)
@@ -157,7 +154,8 @@ on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
 	return true
 }
 
-@export frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
+@(export)
+frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
 	context = ctx^
 	context.temp_allocator = mem.arena_allocator(&frame_arena)
 	defer free_all(context.temp_allocator)
@@ -167,5 +165,13 @@ on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
 		return
 	}
 
-	demos[example].frame(delta)
+	switch example {
+	case .Rectangle: frame_rectangle(&demo_state.rectangle, delta)
+	case .Pyramid:   frame_pyramid  (&demo_state.pyramid,   delta)
+	case .Boxes:     frame_boxes    (&demo_state.boxes,     delta)
+	case .Camera:    frame_camera   (&demo_state.camera,    delta)
+	case .Lighting:  frame_lighting (&demo_state.lighting,  delta)
+	case .Specular:  frame_specular (&demo_state.specular,  delta)
+	case .Spotlight: frame_spotlight(&demo_state.spotlight, delta)
+	}
 }

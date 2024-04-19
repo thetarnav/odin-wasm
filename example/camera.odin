@@ -17,7 +17,8 @@ PYRAMID_COLORS: [PYRAMID_VERTICES]RGBA : {
 	ORANGE, ORANGE, ORANGE, // 5
 }
 
-camera_state: struct {
+@private
+State_Camera :: struct {
 	rotation: f32,
 	u_matrix: i32,
 	vao:      VAO,
@@ -28,16 +29,15 @@ RING_RADIUS :: 260
 CUBE_RADIUS :: 220
 AMOUNT :: 10
 
-@(private="package")
-camera_start :: proc(program: gl.Program) {
-	using camera_state
-
-	vao = gl.CreateVertexArray()
-	gl.BindVertexArray(vao)
+@private
+setup_camera :: proc(s: ^State_Camera, program: gl.Program) {
+	s.vao = gl.CreateVertexArray()
+	gl.BindVertexArray(s.vao)
 
 	a_position := gl.GetAttribLocation (program, "a_position")
 	a_color    := gl.GetAttribLocation (program, "a_color")
-	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
+
+	s.u_matrix = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -72,11 +72,10 @@ camera_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
-@(private="package")
-camera_frame :: proc(delta: f32) {
-	using camera_state
+@private
+frame_camera :: proc(s: ^State_Camera, delta: f32) {
 
-	gl.BindVertexArray(vao)
+	gl.BindVertexArray(s.vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0, 0, 0)
@@ -94,13 +93,13 @@ camera_frame :: proc(delta: f32) {
 	)
 	view_mat *= camera_mat
 
-	rotation  += 0.01 * delta * mouse_rel.x
-	elevation := 300 * -(mouse_rel.y - 0.5)
+	s.rotation += 0.01 * delta * mouse_rel.x
+	elevation  := 300 * -(mouse_rel.y - 0.5)
 
 	cube_pos: Vec
 	cube_pos.y = elevation
-	cube_pos.x = CUBE_RADIUS * cos(rotation)
-	cube_pos.z = CUBE_RADIUS * sin(rotation)
+	cube_pos.x = CUBE_RADIUS * cos(s.rotation)
+	cube_pos.z = CUBE_RADIUS * sin(s.rotation)
 
 	for i in 0..<AMOUNT {
 		/* Draw pyramid looking at the cube */
@@ -118,15 +117,15 @@ camera_frame :: proc(delta: f32) {
 		)
 		mat *= mat4_rotate_x(PI/2)
 
-		gl.UniformMatrix4fv(u_matrix, mat)
+		gl.UniformMatrix4fv(s.u_matrix, mat)
 		gl.DrawArrays(gl.TRIANGLES, i*PYRAMID_VERTICES, PYRAMID_VERTICES)
 	}
 
 	{ /* Draw cube */
 		mat := view_mat
 		mat *= mat4_translate(cube_pos)
-		mat *= mat4_rotate_y(rotation)
-		gl.UniformMatrix4fv(u_matrix, mat)
+		mat *= mat4_rotate_y(s.rotation)
+		gl.UniformMatrix4fv(s.u_matrix, mat)
 		gl.DrawArrays(gl.TRIANGLES, ALL_PYRAMID_VERTICES, CUBE_VERTICES)
 	}
 }

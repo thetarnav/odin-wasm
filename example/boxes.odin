@@ -24,22 +24,22 @@ BOX_HEIGHT :: 60
 BOXES_ROWS   :: 3
 BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
 
-boxes_state: struct {
+@private
+State_Boxes :: struct {
 	rotation:   [2]f32,
 	u_matrix:   i32,
 	vao:        VAO,
 }
 
-@(private="package")
-boxes_start :: proc(program: gl.Program) {
-	using boxes_state
-
-	vao = gl.CreateVertexArray()
-	gl.BindVertexArray(vao)
+@private
+setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
+	s.vao = gl.CreateVertexArray()
+	gl.BindVertexArray(s.vao)
 
 	a_position := gl.GetAttribLocation (program, "a_position")
 	a_color    := gl.GetAttribLocation (program, "a_color")
-	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
+
+	s.u_matrix = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -75,18 +75,17 @@ boxes_start :: proc(program: gl.Program) {
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 }
 
-@(private="package")
-boxes_frame :: proc(delta: f32) {
-	using boxes_state
+@private
+frame_boxes :: proc(s: ^State_Boxes, delta: f32) {
 
-	gl.BindVertexArray(vao)
+	gl.BindVertexArray(s.vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0, 0, 0)
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	rotation -= 0.01 * delta * mouse_rel.yx
+	s.rotation -= 0.01 * delta * mouse_rel.yx
 
 	mat: Mat4 = 1
 	mat *= glm.mat4PerspectiveInfinite(
@@ -95,10 +94,10 @@ boxes_frame :: proc(delta: f32) {
 		near   = 1,
 	)
 	mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
-	mat *= mat4_rotate_x(rotation.x)
-	mat *= mat4_rotate_y(rotation.y)
+	mat *= mat4_rotate_x(s.rotation.x)
+	mat *= mat4_rotate_y(s.rotation.y)
 
-	gl.UniformMatrix4fv(u_matrix, mat)
+	gl.UniformMatrix4fv(s.u_matrix, mat)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES * BOXES_AMOUNT)
 }

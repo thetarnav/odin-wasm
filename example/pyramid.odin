@@ -50,22 +50,22 @@ positions: [VERTICES*3]f32 = {
 	 0,      0,   SIDE/2,
 }
 
-pyramid_state: struct {
+@(private="package")
+State_Pyramid :: struct {
 	rotation: [2]f32,
 	u_matrix: i32,
 	vao:      VAO,
 }
 
 @(private="package")
-pyramid_start :: proc(program: gl.Program) {
-	using pyramid_state
-
-	vao = gl.CreateVertexArray()
-	gl.BindVertexArray(vao)
+setup_pyramid :: proc(s: ^State_Pyramid, program: gl.Program) {
+	s.vao = gl.CreateVertexArray()
+	gl.BindVertexArray(s.vao)
 
 	a_position := gl.GetAttribLocation (program, "a_position")
 	a_color    := gl.GetAttribLocation (program, "a_color")
-	u_matrix    = gl.GetUniformLocation(program, "u_matrix")
+
+	s.u_matrix = gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -85,16 +85,15 @@ pyramid_start :: proc(program: gl.Program) {
 }
 
 @(private="package")
-pyramid_frame :: proc(delta: f32) {
-	using pyramid_state
+frame_pyramid :: proc(s: ^State_Pyramid, delta: f32) {
 
-	gl.BindVertexArray(vao)
+	gl.BindVertexArray(s.vao)
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0, 0, 0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
-	rotation -= 0.01 * delta * mouse_rel.yx
+	s.rotation -= 0.01 * delta * mouse_rel.yx
 
 	mat := glm.mat4Ortho3d(
 		left   = 0,
@@ -106,11 +105,11 @@ pyramid_frame :: proc(delta: f32) {
 	)
 	mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
 	mat *= glm.mat4Scale(scale*2 + 0.4)
-	mat *= mat4_rotate_y(-rotation.y)
-	mat *= mat4_rotate_x(rotation.x)
+	mat *= mat4_rotate_y(-s.rotation.y)
+	mat *= mat4_rotate_x( s.rotation.x)
 	mat *= glm.mat4Translate({0, -H / 2, 0})
 
-	gl.UniformMatrix4fv(u_matrix, mat)
+	gl.UniformMatrix4fv(s.u_matrix, mat)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, VERTICES)
 }
