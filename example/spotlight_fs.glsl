@@ -34,7 +34,7 @@ void main() {
 	vec4  total_light_color    = vec4(0.0, 0.0, 0.0, 0.0);
 	float total_light_strength = 0.0;
 
-	for(int i = 0; i < 2; i++) {
+	for (int i = 0; i < 2; i++) {
 		vec3  surface_to_light = normalize(v_surface_to_light[i]);
 		float dot_in_light     = dot(surface_to_light, -u_light_dir[i]);
 		float in_light         = smoothstep(LIMIT_LOWER, LIMIT_UPPER, dot_in_light);
