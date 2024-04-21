@@ -13,8 +13,10 @@ UTF8_Reader :: struct {
 	src : string,
 	pos : int,
 	char: rune,
+	width: int, // width of the last char
 }
 
+@(require_results)
 next_char :: proc "contextless" (t: ^UTF8_Reader) -> (char: rune, before_eof: bool) #optional_ok #no_bounds_check {
 	if t.pos >= len(t.src) {
 		t.char = 0
@@ -25,14 +27,53 @@ next_char :: proc "contextless" (t: ^UTF8_Reader) -> (char: rune, before_eof: bo
 	ch, width := utf8.decode_rune_in_string(t.src[t.pos:])
 	t.char = ch
 	t.pos += width
+	t.width = width
 	return ch, true
 }
 
-is_whitespace :: #force_inline proc "contextless" (ch: rune) -> bool {
-	switch ch {
-	case ' ', '\t', '\n', '\r': return true
-	case: return false
+unget_char :: #force_inline proc "contextless" (t: ^UTF8_Reader) {
+	t.pos -= t.width
+	t.width = 0
+}
+
+@(require_results)
+skip_whitespace_and_comments :: proc "contextless" (t: ^UTF8_Reader) -> (before_eof: bool) {
+	loop: for ch in next_char(t) {
+		switch ch {
+		case ' ', '\t', '\n', '\r': continue
+		case '/':
+			(next_char(t) == '/') or_continue
+			for c in next_char(t) {
+				switch c {
+				case '\n', 0: continue loop
+				}
+			}
+		case 0:
+			return false
+		case:
+			unget_char(t)
+			return true
+		}
 	}
+
+	return false
+}
+
+@(require_results)
+scan_word :: proc "contextless" (t: ^UTF8_Reader) -> string #no_bounds_check {
+	word_begin := t.pos
+
+	loop: for ch in next_char(t) {
+		switch ch {
+		case 'a'..='z', 'A'..='Z', '0'..='9', '_':
+			continue
+		case: 
+			unget_char(t)
+			break loop
+		}
+	}
+
+	return t.src[word_begin:t.pos]
 }
 
 Input :: struct {
@@ -57,41 +98,42 @@ Input_Type :: enum u8 {
 	Mat4,
 }
 
-vertex_get_inputs :: proc(src: string, allocator := context.allocator) -> []Input {
+Error_Kind :: enum {
+	None,
+	Unknown_Type,
+	Missing_Input_Name,
+}
+
+Error :: struct {
+	kind: Error_Kind,
+	pos : int,
+}
+
+vertex_get_inputs :: proc(src: string, allocator := context.allocator) -> ([]Input, Error) {
+
 	inputs := make([dynamic]Input, 0, 16, allocator)
 	defer shrink(&inputs)
 
 	reader := UTF8_Reader{src=src}
 	
-	word_begin: int
-	word_end  : int
 	input: Input
 	
-	for c in next_char(&reader) {
-		if is_whitespace(c) do continue
+	for _ in next_char(&reader) {
+		unget_char(&reader)
 
-		word_begin = reader.pos-1
-		for ch in next_char(&reader) {
-			if is_whitespace(ch) do break
-		}
-		word_end = reader.pos-1
+		skip_whitespace_and_comments(&reader) or_break
 
-		word := src[word_begin:word_end]
+		modifier := scan_word(&reader)
 
-		switch word {
+		switch modifier {
 		case "uniform":         input = Input{kind=.Uniform}
 		case "attribute", "in": input = Input{kind=.Attribute}
 		case: continue
 		}
 
-		word_begin = reader.pos
-		for ch in next_char(&reader) {
-			if is_whitespace(ch) do break
-			if ch == ';' do break
-		}
-		word_end = reader.pos-1
+		skip_whitespace_and_comments(&reader) or_break
 
-		switch src[word_begin:word_end] {
+		switch type_name := scan_word(&reader); type_name {
 		case "float": input.type = .Float
 		case "vec2":  input.type = .Vec2
 		case "vec3":  input.type = .Vec3
@@ -99,22 +141,19 @@ vertex_get_inputs :: proc(src: string, allocator := context.allocator) -> []Inpu
 		case "mat2":  input.type = .Mat2
 		case "mat3":  input.type = .Mat3
 		case "mat4":  input.type = .Mat4
+		case:
+			return {}, Error{.Unknown_Type, reader.pos}
 		}
 
-		word_begin = reader.pos
-		for ch in next_char(&reader) {
-			if is_whitespace(ch) do break
-			if ch == ';' do break
-		}
-		word_end = reader.pos-1
+		skip_whitespace_and_comments(&reader) or_break
 
-		input.name = src[word_begin:word_end]
+		input.name = scan_word(&reader)
+		if input.name == "" do return {}, Error{.Missing_Input_Name, reader.pos}
 
-
-		fmt.println(input)
+		append(&inputs, input)
 	}
 
-	return inputs[:]
+	return inputs[:], Error{}
 }
 
 main :: proc() {
@@ -122,11 +161,20 @@ main :: proc() {
 		strings.has_suffix(file.name, ".glsl") or_continue
 
 		content := string(file.data)
-		inputs := vertex_get_inputs(content)
+		inputs, err := vertex_get_inputs(content)
 
 		fmt.printf("file: %s\n", file.name)
+
+		if err.kind != .None {
+			fmt.printf("error: %s at pos %d\n", err.kind, err.pos)
+			continue
+		}
+		
 		for input in inputs {
 			fmt.printf("input: %s\n", input.name)
+			fmt.printf("kind: %s\n", input.kind)
+			fmt.printf("type: %s\n", input.type)
+			fmt.printf("\n")
 		}
 	}
 }
