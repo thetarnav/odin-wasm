@@ -2,6 +2,7 @@ package shdc
 
 import "core:fmt"
 import "core:strings"
+import "core:strconv"
 import "base:runtime"
 
 _ :: fmt // prevent unused import error
@@ -55,6 +56,7 @@ vertex_get_inputs :: proc(src: string, allocator := context.allocator) -> ([]Inp
 	for {
 		token = next_token(&t) or_break
 
+		// Input Kind
 		if token.kind != .Word do continue
 
 		switch token_string(token, src) {
@@ -63,8 +65,11 @@ vertex_get_inputs :: proc(src: string, allocator := context.allocator) -> ([]Inp
 		case: continue
 		}
 
+		// Input Type
 		token = next_token(&t)
-		if token.kind != .Word do return {}, Error_Invalid_Token{token}
+		if token.kind != .Word {
+			return {}, Error_Invalid_Token{token}
+		}
 
 		switch token_string(token, src) {
 		case "float": input.type = .Float
@@ -78,12 +83,33 @@ vertex_get_inputs :: proc(src: string, allocator := context.allocator) -> ([]Inp
 			return {}, Error_Unknown_Type{token.pos, token.len}
 		}
 
+		// Input Name
 		token = next_token(&t)
-		if token.kind != .Word do return {}, Error_Invalid_Token{token}
+		if token.kind != .Word {
+			return {}, Error_Invalid_Token{token}
+		}
 
 		input.name = token_string(token, src)
 
-		append(&inputs, input)
+		defer append(&inputs, input)
+
+		// Array Length
+		token = next_token(&t)
+		if token.kind != .Symbol || token_string(token, src) != "[" {
+			continue
+		}
+
+		token = next_token(&t)
+		if token.kind != .Int {
+			return {}, Error_Invalid_Token{token}
+		}
+
+		input.len, _ = strconv.parse_int(token_string(token, src))
+
+		token = next_token(&t)
+		if token.kind != .Symbol || token_string(token, src) != "]" {
+			return {}, Error_Invalid_Token{token}
+		}
 	}
 
 	return inputs[:], Error{}
@@ -105,8 +131,9 @@ main :: proc() {
 		
 		for input in inputs {
 			fmt.printf("input: %s\n", input.name)
-			fmt.printf("kind: %s\n", input.kind)
-			fmt.printf("type: %s\n", input.type)
+			fmt.printf("kind : %s\n", input.kind)
+			fmt.printf("type : %s\n", input.type)
+			fmt.printf("len  : %d\n", input.len)
 			fmt.printf("\n")
 		}
 	}
