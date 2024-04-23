@@ -36,16 +36,10 @@ setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	a_position := gl.GetAttribLocation(program, "a_position")
-	a_color    := gl.GetAttribLocation(program, "a_color")
+	a_position := attribute_location_vec3(program, "a_position")
+	a_color    := attribute_location_vec4(program, "a_color")
 
-	s.u_matrix = auto_cast gl.GetUniformLocation(program, "u_matrix")
-
-	gl.EnableVertexAttribArray(a_position)
-	gl.EnableVertexAttribArray(a_color)
-
-	positions_buffer := gl.CreateBuffer()
-	colors_buffer    := gl.CreateBuffer()
+	s.u_matrix = uniform_location_mat4(program, "u_matrix")
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
@@ -66,13 +60,8 @@ setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
 		copy_array(colors[i*CUBE_VERTICES:], CUBE_COLORS)
 	}
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_position, 3, gl.FLOAT, false, 0, 0)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
+	attribute(a_position, gl.CreateBuffer(), positions[:])
+	attribute(a_color   , gl.CreateBuffer(), colors[:])
 }
 
 @private

@@ -53,8 +53,8 @@ setup_spotlight :: proc(s: ^State_Spotlight, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	a_position := gl.GetAttribLocation(program, "a_position")
-	a_normal   := gl.GetAttribLocation(program, "a_normal")
+	a_position := attribute_location_vec3(program, "a_position")
+	a_normal   := attribute_location_vec3(program, "a_normal")
 
 	s.u_view           = uniform_location_mat4(program, "u_view")
 	s.u_local          = uniform_location_mat4(program, "u_local")
@@ -66,12 +66,6 @@ setup_spotlight :: proc(s: ^State_Spotlight, program: gl.Program) {
 	s.u_light_dir[1]   = uniform_location_vec3(program, "u_light_dir[1]")
 	s.u_light_add[0]   = uniform_location_float(program,"u_light_add[0]")
 	s.u_light_add[1]   = uniform_location_float(program,"u_light_add[1]")
-
-	gl.EnableVertexAttribArray(a_position)
-	gl.EnableVertexAttribArray(a_normal)
-
-	positions_buffer := gl.CreateBuffer()
-	normals_buffer   := gl.CreateBuffer()
 
 	gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.DEPTH_TEST)
@@ -120,20 +114,11 @@ setup_spotlight :: proc(s: ^State_Spotlight, program: gl.Program) {
 
 	normals_from_positions(guy_normals, guy_positions)
 
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, s.positions[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_position, 3, gl.FLOAT, false, 0, 0)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, normals_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, s.normals[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_normal, 3, gl.FLOAT, false, 0, 0)
+	attribute(a_position, gl.CreateBuffer(), s.positions[:])
+	attribute(a_normal  , gl.CreateBuffer(), s.normals[:])
 
 	uniform(s.u_light_color[0], rgba_to_vec4(RED))
 	uniform(s.u_light_color[1], rgba_to_vec4(BLUE))
-
-	// gl.Uniform4ui(i32(s.u_light_color[0]), 255, 0, 0, 255)
-	// gl.Uniform4ui(i32(s.u_light_color[1]), 0, 0, 255, 255)
 }
 
 @private

@@ -42,34 +42,260 @@ RIGHT :: vec3{ 1, 0, 0}
 FRONT :: vec3{ 0, 0, 1}
 BACK  :: vec3{ 0, 0,-1}
 
+Attribute_int   :: distinct i32
+Attribute_ivec2 :: distinct i32
+Attribute_ivec3 :: distinct i32
+Attribute_ivec4 :: distinct i32
+Attribute_uint  :: distinct i32
+Attribute_uvec2 :: distinct i32
+Attribute_uvec3 :: distinct i32
+Attribute_uvec4 :: distinct i32
+Attribute_bool  :: distinct i32
+Attribute_bvec2 :: distinct i32
+Attribute_bvec3 :: distinct i32
+Attribute_bvec4 :: distinct i32
+Attribute_float :: distinct i32
+Attribute_vec2  :: distinct i32
+Attribute_vec3  :: distinct i32
+Attribute_vec4  :: distinct i32
+Attribute_mat2  :: distinct i32
+Attribute_mat3  :: distinct i32
+Attribute_mat4  :: distinct i32
 
-Attribute_Float :: distinct i32
-Attribute_Vec2  :: distinct i32
-Attribute_Vec3  :: distinct i32
-Attribute_Vec4  :: distinct i32
-Attribute_Mat2  :: distinct i32
-Attribute_Mat3  :: distinct i32
-Attribute_Mat4  :: distinct i32
+attribute_location_int   :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_int   {
+	loc := Attribute_int  (#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_ivec2 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_ivec2 {
+	loc := Attribute_ivec2(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_ivec3 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_ivec3 {
+	loc := Attribute_ivec3(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_ivec4 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_ivec4 {
+	loc := Attribute_ivec4(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_uint  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uint  {
+	loc := Attribute_uint (#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_uvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uvec2 {
+	loc := Attribute_uvec2(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_uvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uvec3 {
+	loc := Attribute_uvec3(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_uvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uvec4 {
+	loc := Attribute_uvec4(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_bool  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bool  {
+	loc := Attribute_bool (#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_bvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bvec2 {
+	loc := Attribute_bvec2(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_bvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bvec3 {
+	loc := Attribute_bvec3(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_bvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bvec4 {
+	loc := Attribute_bvec4(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_float :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_float {
+	loc := Attribute_float(#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_vec2  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_vec2  {
+	loc := Attribute_vec2 (#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_vec3  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_vec3  {
+	loc := Attribute_vec3 (#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_vec4  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_vec4  {
+	loc := Attribute_vec4 (#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_mat2  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_mat2  {
+	loc := Attribute_mat2 (#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
+attribute_location_mat3  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_mat3  {
+	loc := Attribute_mat3 (#force_inline gl.GetAttribLocation(program, name))
+	if enable do gl.EnableVertexAttribArray(i32(loc))
+	return loc
+}
 
-Uniform_int     :: distinct i32
-Uniform_ivec2   :: distinct i32
-Uniform_ivec3   :: distinct i32
-Uniform_ivec4   :: distinct i32
-Uniform_uint    :: distinct i32
-Uniform_uvec2   :: distinct i32
-Uniform_uvec3   :: distinct i32
-Uniform_uvec4   :: distinct i32
-Uniform_bool    :: distinct i32
-Uniform_bvec2   :: distinct i32
-Uniform_bvec3   :: distinct i32
-Uniform_bvec4   :: distinct i32
-Uniform_float   :: distinct i32
-Uniform_vec2    :: distinct i32
-Uniform_vec3    :: distinct i32
-Uniform_vec4    :: distinct i32
-Uniform_mat2    :: distinct i32
-Uniform_mat3    :: distinct i32
-Uniform_mat4    :: distinct i32
+attribute_int    :: proc "contextless" (loc: Attribute_int, buffer: gl.Buffer, data: []i32) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 3, gl.INT, false, 0, 0)
+}
+attribute_ivec2  :: proc "contextless" (loc: Attribute_ivec2, buffer: gl.Buffer, data: []ivec2) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 2, gl.INT, false, 0, 0)
+}
+attribute_ivec3  :: proc "contextless" (loc: Attribute_ivec3, buffer: gl.Buffer, data: []ivec3) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 3, gl.INT, false, 0, 0)
+}
+attribute_ivec4  :: proc "contextless" (loc: Attribute_ivec4, buffer: gl.Buffer, data: []ivec4) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 4, gl.INT, false, 0, 0)
+}
+attribute_uint   :: proc "contextless" (loc: Attribute_uint, buffer: gl.Buffer, data: []u32) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 3, gl.UNSIGNED_INT, false, 0, 0)
+}
+attribute_uvec2  :: proc "contextless" (loc: Attribute_uvec2, buffer: gl.Buffer, data: []uvec2) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 2, gl.UNSIGNED_INT, false, 0, 0)
+}
+attribute_uvec3  :: proc "contextless" (loc: Attribute_uvec3, buffer: gl.Buffer, data: []uvec3) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 3, gl.UNSIGNED_INT, false, 0, 0)
+}
+attribute_uvec4  :: proc "contextless" (loc: Attribute_uvec4, buffer: gl.Buffer, data: []uvec4) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 4, gl.UNSIGNED_INT, false, 0, 0)
+}
+attribute_bool   :: proc "contextless" (loc: Attribute_bool, buffer: gl.Buffer, data: []b32) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, transmute([]u32)data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 3, gl.UNSIGNED_INT, false, 0, 0)
+}
+attribute_bvec2  :: proc "contextless" (loc: Attribute_bvec2, buffer: gl.Buffer, data: []bvec2) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, transmute([]uvec2)data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 2, gl.UNSIGNED_INT, false, 0, 0)
+}
+attribute_bvec3  :: proc "contextless" (loc: Attribute_bvec3, buffer: gl.Buffer, data: []bvec3) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, transmute([]uvec3)data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 3, gl.UNSIGNED_INT, false, 0, 0)
+}
+attribute_bvec4  :: proc "contextless" (loc: Attribute_bvec4, buffer: gl.Buffer, data: []bvec4) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, transmute([]uvec4)data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 4, gl.UNSIGNED_INT, false, 0, 0)
+}
+attribute_float  :: proc "contextless" (loc: Attribute_float, buffer: gl.Buffer, data: []f32) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 3, gl.FLOAT, false, 0, 0)
+}
+attribute_vec2   :: proc "contextless" (loc: Attribute_vec2, buffer: gl.Buffer, data: []vec2) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 2, gl.FLOAT, false, 0, 0)
+}
+attribute_vec3   :: proc "contextless" (loc: Attribute_vec3, buffer: gl.Buffer, data: []vec3) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 3, gl.FLOAT, false, 0, 0)
+}
+attribute_vec4   :: proc "contextless" (loc: Attribute_vec4, buffer: gl.Buffer, data: []vec4) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 4, gl.FLOAT, false, 0, 0)
+}
+attribute_vec4_byte :: proc "contextless" (loc: Attribute_vec4, buffer: gl.Buffer, data: []u8vec4) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 4, gl.UNSIGNED_BYTE, true, 0, 0)
+}
+attribute_mat2   :: proc "contextless" (loc: Attribute_mat2, buffer: gl.Buffer, data: []mat2) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 4, gl.FLOAT, false, 0, 0)
+}
+attribute_mat3   :: proc "contextless" (loc: Attribute_mat3, buffer: gl.Buffer, data: []mat3) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 9, gl.FLOAT, false, 0, 0)
+}
+attribute_mat4   :: proc "contextless" (loc: Attribute_mat4, buffer: gl.Buffer, data: []mat4) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
+	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+	gl.VertexAttribPointer(i32(loc), 16, gl.FLOAT, false, 0, 0)
+}
+
+attribute :: proc {
+	attribute_int,
+	attribute_ivec2,
+	attribute_ivec3,
+	attribute_ivec4,
+	attribute_uint,
+	attribute_uvec2,
+	attribute_uvec3,
+	attribute_uvec4,
+	attribute_bool,
+	attribute_bvec2,
+	attribute_bvec3,
+	attribute_bvec4,
+	attribute_float,
+	attribute_vec2,
+	attribute_vec3,
+	attribute_vec4,
+	attribute_vec4_byte,
+	attribute_mat2,
+	attribute_mat3,
+	attribute_mat4,
+}
+
+Uniform_int   :: distinct i32
+Uniform_ivec2 :: distinct i32
+Uniform_ivec3 :: distinct i32
+Uniform_ivec4 :: distinct i32
+Uniform_uint  :: distinct i32
+Uniform_uvec2 :: distinct i32
+Uniform_uvec3 :: distinct i32
+Uniform_uvec4 :: distinct i32
+Uniform_bool  :: distinct i32
+Uniform_bvec2 :: distinct i32
+Uniform_bvec3 :: distinct i32
+Uniform_bvec4 :: distinct i32
+Uniform_float :: distinct i32
+Uniform_vec2  :: distinct i32
+Uniform_vec3  :: distinct i32
+Uniform_vec4  :: distinct i32
+Uniform_mat2  :: distinct i32
+Uniform_mat3  :: distinct i32
+Uniform_mat4  :: distinct i32
 
 uniform_location_int   :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_int   {return Uniform_int  (#force_inline gl.GetUniformLocation(program, name))}
 uniform_location_ivec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec2 {return Uniform_ivec2(#force_inline gl.GetUniformLocation(program, name))}

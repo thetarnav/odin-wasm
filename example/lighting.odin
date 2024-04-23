@@ -39,22 +39,14 @@ setup_lighting :: proc(s: ^State_Lighting, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	a_position := gl.GetAttribLocation(program, "a_position")
-	a_normal   := gl.GetAttribLocation(program, "a_normal")
-	a_color    := gl.GetAttribLocation(program, "a_color")
+	a_position := attribute_location_vec3(program, "a_position")
+	a_normal   := attribute_location_vec3(program, "a_normal")
+	a_color    := attribute_location_vec4(program, "a_color")
 
-	s.u_view        = auto_cast gl.GetUniformLocation(program, "u_view")
-	s.u_local       = auto_cast gl.GetUniformLocation(program, "u_local")
-	s.u_light_dir   = auto_cast gl.GetUniformLocation(program, "u_light_dir")
-	s.u_light_color = auto_cast gl.GetUniformLocation(program, "u_light_color")
-
-	gl.EnableVertexAttribArray(a_position)
-	gl.EnableVertexAttribArray(a_normal)
-	gl.EnableVertexAttribArray(a_color)
-
-	positions_buffer := gl.CreateBuffer()
-	normals_buffer   := gl.CreateBuffer()
-	colors_buffer    := gl.CreateBuffer()
+	s.u_view        = uniform_location_mat4(program, "u_view")
+	s.u_local       = uniform_location_mat4(program, "u_local")
+	s.u_light_dir   = uniform_location_vec3(program, "u_light_dir")
+	s.u_light_color = uniform_location_vec4(program, "u_light_color")
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
@@ -138,17 +130,9 @@ setup_lighting :: proc(s: ^State_Lighting, program: gl.Program) {
 		}
 	}
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, s.positions[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_position, 3, gl.FLOAT, false, 0, 0)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, normals_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, s.normals[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_normal, 3, gl.FLOAT, false, 0, 0)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, s.colors[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
+	attribute(a_position, gl.CreateBuffer(), s.positions[:])
+	attribute(a_normal  , gl.CreateBuffer(), s.normals[:])
+	attribute(a_color   , gl.CreateBuffer(), s.colors[:])
 
 	uniform(s.u_light_color, rgba_to_vec4(ORANGE))
 }

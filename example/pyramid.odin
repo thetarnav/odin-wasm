@@ -15,39 +15,28 @@ H         :: math.SQRT_TWO * SIDE / 2
 Points should be in counter-clockwise order
 to show the front-face.
 */
-colors: [VERTICES*4]u8 = {
-	60,  210, 0,   255, // G
-	210, 210, 0,   255, // Y
-	0,   80,  190, 255, // B
-
-	230, 20,  0,   255, // R
-	0,   80,  190, 255, // B
-	210, 210, 0,   255, // Y
-
-	60,  210, 0,   255, // G
-	230, 20,  0,   255, // R
-	210, 210, 0,   255, // Y
-
-	0,   80,  190, 255, // B
-	230, 20,  0,   255, // R
-	60,  210, 0,   255, // G
+colors: [VERTICES]u8vec4 = {
+	GREEN, YELLOW, BLUE,
+	RED, BLUE, YELLOW,
+	GREEN, RED, YELLOW,
+	BLUE, RED, GREEN,
 }
-positions: [VERTICES*3]f32 = {
-	 0,      0,   SIDE/2,
-	 SIDE/2, H,   0,
-	-SIDE/2, H,   0,
+positions: [VERTICES]vec3 = {
+	{ 0,      0,   SIDE/2},
+	{ SIDE/2, H,   0},
+	{-SIDE/2, H,   0},
 
-	 0,      0,  -SIDE/2,
-	-SIDE/2, H,   0,
-	 SIDE/2, H,   0,
+	{ 0,      0,  -SIDE/2},
+	{-SIDE/2, H,   0},
+	{ SIDE/2, H,   0},
 
-	 0,      0,   SIDE/2,
-	 0,      0,  -SIDE/2,
-	 SIDE/2, H,   0,
+	{ 0,      0,   SIDE/2},
+	{ 0,      0,  -SIDE/2},
+	{ SIDE/2, H,   0},
 
-	-SIDE/2, H,   0,
-	 0,      0,  -SIDE/2,
-	 0,      0,   SIDE/2,
+	{-SIDE/2, H,   0},
+	{ 0,      0,  -SIDE/2},
+	{ 0,      0,   SIDE/2},
 }
 
 @(private="package")
@@ -62,26 +51,15 @@ setup_pyramid :: proc(s: ^State_Pyramid, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	a_position := gl.GetAttribLocation (program, "a_position")
-	a_color    := gl.GetAttribLocation (program, "a_color")
+	a_position := attribute_location_vec3(program, "a_position")
+	a_color    := attribute_location_vec4(program, "a_color")
 
 	s.u_matrix = uniform_location_mat4(program, "u_matrix")
 
-	gl.EnableVertexAttribArray(a_position)
-	gl.EnableVertexAttribArray(a_color)
-
-	positions_buffer := gl.CreateBuffer()
-	colors_buffer    := gl.CreateBuffer()
-
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_position, 3, gl.FLOAT, false, 0, 0)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
+	attribute(a_position, gl.CreateBuffer(), positions[:])
+	attribute(a_color   , gl.CreateBuffer(), colors[:])
 }
 
 @(private="package")

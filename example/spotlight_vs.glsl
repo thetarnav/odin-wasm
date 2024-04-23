@@ -1,6 +1,6 @@
 #version 300 es
 
-in vec4 a_position;
+in vec3 a_position;
 in vec3 a_normal;
 
 uniform vec3 u_light_pos[2];
@@ -11,8 +11,10 @@ out vec3 v_normal;
 out vec3 v_surface_to_light[2];
 
 void main() {
+	vec4 local_pos = u_local * vec4(a_position, 1.0);
+
 	// project the position
-	gl_Position = u_view * u_local * a_position;
+	gl_Position = u_view * local_pos;
 
 	/*
 	orient the normals and pass to the fragment shader
@@ -23,9 +25,7 @@ void main() {
 	*/
 	v_normal = mat3(transpose(inverse(u_local))) * a_normal;
 
-	vec3 world_pos = (u_local * a_position).xyz;
-
 	for (int i = 0; i < 2; i++) {
-		v_surface_to_light[i] = u_light_pos[i] - world_pos;
+		v_surface_to_light[i] = u_light_pos[i] - local_pos.xyz;
 	}
 }

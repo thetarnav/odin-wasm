@@ -9,23 +9,18 @@ BOX_W: f32 : 160
 BOX_H: f32 : 100
 box_size: [2]f32 = {BOX_W, BOX_H}
 
-colors: [VERTICES*4]u8 = {
-	60,  210, 0,   255, // G
-	210, 210, 0,   255, // Y
-	0,   80,  190, 255, // B
-
-	230, 20,  0,   255, // R
-	210, 210, 0,   255, // Y
-	0,   80,  190, 255, // B
+colors: [VERTICES]u8vec4 = {
+	GREEN, YELLOW, BLUE,
+	RED, YELLOW, BLUE,
 }
-positions: [VERTICES*2]f32 = {
-	0,     0,
-	BOX_W, 0,
-	0,     BOX_H,
+positions: [VERTICES]vec2 = {
+	{0,     0},
+	{BOX_W, 0},
+	{0,     BOX_H},
 
-	BOX_W, BOX_H,
-	BOX_W, 0,
-	0,     BOX_H,
+	{BOX_W, BOX_H},
+	{BOX_W, 0},
+	{0,     BOX_H},
 }
 
 @private
@@ -45,24 +40,13 @@ setup_rectangle :: proc(s: ^State_Rectangle, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao) // need to bind VAO before binding buffers
 
-	a_position := gl.GetAttribLocation (program, "a_position")
-	a_color    := gl.GetAttribLocation (program, "a_color")
+	a_position := attribute_location_vec2(program, "a_position")
+	a_color    := attribute_location_vec4(program, "a_color")
 
 	s.u_matrix  = uniform_location_mat3(program, "u_matrix")
 
-	gl.EnableVertexAttribArray(a_position)
-	gl.EnableVertexAttribArray(a_color)
-
-	positions_buffer := gl.CreateBuffer()
-	colors_buffer    := gl.CreateBuffer()
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, positions_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, positions[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, colors_buffer)
-	gl.BufferDataSlice(gl.ARRAY_BUFFER, colors[:], gl.STATIC_DRAW)
-	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
+	attribute(a_position, gl.CreateBuffer(), positions[:])
+	attribute(a_color   , gl.CreateBuffer(), colors[:])
 }
 
 @private
