@@ -43,7 +43,7 @@ Add `js_wasm32` target to `ols.json` if you want to use [OLS](https://github.com
 ```json
 {
     "checker_args": "-target:js_wasm32 -vet-unused -vet-shadowing -vet-style -vet-semicolon",
-	"enable_format": false
+    "enable_format": false
 }
 ```
 
