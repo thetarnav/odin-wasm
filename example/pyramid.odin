@@ -15,7 +15,7 @@ H         :: math.SQRT_TWO * SIDE / 2
 Points should be in counter-clockwise order
 to show the front-face.
 */
-colors: [VERTICES]u8vec4 = {
+colors: [VERTICES]RGBA = {
 	GREEN, YELLOW, BLUE,
 	RED, BLUE, YELLOW,
 	GREEN, RED, YELLOW,
@@ -39,14 +39,14 @@ positions: [VERTICES]vec3 = {
 	{ 0,      0,   SIDE/2},
 }
 
-@(private="package")
+@private
 State_Pyramid :: struct {
 	rotation: [2]f32,
 	u_matrix: Uniform_mat4,
 	vao:      VAO,
 }
 
-@(private="package")
+@private
 setup_pyramid :: proc(s: ^State_Pyramid, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
@@ -62,7 +62,7 @@ setup_pyramid :: proc(s: ^State_Pyramid, program: gl.Program) {
 	attribute(a_color   , gl.CreateBuffer(), colors[:])
 }
 
-@(private="package")
+@private
 frame_pyramid :: proc(s: ^State_Pyramid, delta: f32) {
 
 	gl.BindVertexArray(s.vao)
