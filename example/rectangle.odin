@@ -31,7 +31,7 @@ positions: [VERTICES*2]f32 = {
 @private
 State_Rectangle :: struct {
 	rotation: f32,
-	u_matrix: i32,
+	u_matrix: Uniform_mat3,
 	vao:      VAO,
 }
 
@@ -48,7 +48,7 @@ setup_rectangle :: proc(s: ^State_Rectangle, program: gl.Program) {
 	a_position := gl.GetAttribLocation (program, "a_position")
 	a_color    := gl.GetAttribLocation (program, "a_color")
 
-	s.u_matrix  = gl.GetUniformLocation(program, "u_matrix")
+	s.u_matrix  = uniform_location_mat3(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -83,7 +83,7 @@ frame_rectangle :: proc(s: ^State_Rectangle, delta: f32) {
 	mat *= mat3_rotate(s.rotation)
 	mat *= mat3_translate(-box_size / 2)
 
-	gl.UniformMatrix3fv(s.u_matrix, mat)
+	uniform(s.u_matrix, mat)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, VERTICES)
 }

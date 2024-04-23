@@ -53,7 +53,7 @@ positions: [VERTICES*3]f32 = {
 @(private="package")
 State_Pyramid :: struct {
 	rotation: [2]f32,
-	u_matrix: i32,
+	u_matrix: Uniform_mat4,
 	vao:      VAO,
 }
 
@@ -65,7 +65,7 @@ setup_pyramid :: proc(s: ^State_Pyramid, program: gl.Program) {
 	a_position := gl.GetAttribLocation (program, "a_position")
 	a_color    := gl.GetAttribLocation (program, "a_color")
 
-	s.u_matrix = gl.GetUniformLocation(program, "u_matrix")
+	s.u_matrix = uniform_location_mat4(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -109,7 +109,7 @@ frame_pyramid :: proc(s: ^State_Pyramid, delta: f32) {
 	mat *= mat4_rotate_x( s.rotation.x)
 	mat *= glm.mat4Translate({0, -H / 2, 0})
 
-	gl.UniformMatrix4fv(s.u_matrix, mat)
+	uniform(s.u_matrix, mat)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, VERTICES)
 }

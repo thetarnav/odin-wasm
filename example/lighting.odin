@@ -24,10 +24,10 @@ RING_SPACE  :: 30
 State_Lighting :: struct {
 	cube_angle:    f32,
 	ring_angle:    f32,
-	u_view:        i32,
-	u_local:       i32,
-	u_light_dir:   i32,
-	u_light_color: i32,
+	u_view:        Uniform_mat4,
+	u_local:       Uniform_mat4,
+	u_light_dir:   Uniform_vec3,
+	u_light_color: Uniform_vec4,
 	vao:           VAO,
 	positions:     [ALL_VERTICES]vec3,
 	normals:       [ALL_VERTICES]vec3,
@@ -43,10 +43,10 @@ setup_lighting :: proc(s: ^State_Lighting, program: gl.Program) {
 	a_normal   := gl.GetAttribLocation(program, "a_normal")
 	a_color    := gl.GetAttribLocation(program, "a_color")
 
-	s.u_view        = gl.GetUniformLocation(program, "u_view")
-	s.u_local       = gl.GetUniformLocation(program, "u_local")
-	s.u_light_dir   = gl.GetUniformLocation(program, "u_light_dir")
-	s.u_light_color = gl.GetUniformLocation(program, "u_light_color")
+	s.u_view        = auto_cast gl.GetUniformLocation(program, "u_view")
+	s.u_local       = auto_cast gl.GetUniformLocation(program, "u_local")
+	s.u_light_dir   = auto_cast gl.GetUniformLocation(program, "u_light_dir")
+	s.u_light_color = auto_cast gl.GetUniformLocation(program, "u_light_color")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_normal)
@@ -150,7 +150,7 @@ setup_lighting :: proc(s: ^State_Lighting, program: gl.Program) {
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, s.colors[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 
-	gl.Uniform4fv(s.u_light_color, rgba_to_vec4(ORANGE))
+	uniform(s.u_light_color, rgba_to_vec4(ORANGE))
 }
 
 @private
@@ -173,7 +173,7 @@ frame_lighting :: proc(s: ^State_Lighting, delta: f32) {
 	)
 	view_mat *= camera_mat
 
-	gl.UniformMatrix4fv(s.u_view, view_mat)
+	uniform(s.u_view, view_mat)
 
 	/* Draw cube */
 	s.cube_angle += 0.01 * delta * mouse_rel.x
@@ -187,12 +187,12 @@ frame_lighting :: proc(s: ^State_Lighting, delta: f32) {
 	cube_mat *= mat4_translate(cube_pos)
 	cube_mat *= mat4_rotate_y(s.cube_angle)
 
-	gl.UniformMatrix4fv(s.u_local, cube_mat)
+	uniform(s.u_local, cube_mat)
 	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES)
 
 	/* Draw light from cube */
 	light_dir := glm.normalize(cube_pos)
-	gl.Uniform3fv(s.u_light_dir, light_dir)
+	uniform(s.u_light_dir, light_dir)
 
 	/* Draw rings */
 	s.ring_angle += 0.002 * delta
@@ -202,7 +202,7 @@ frame_lighting :: proc(s: ^State_Lighting, delta: f32) {
 		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(i)) + s.ring_angle/4)
 		ring_mat *= mat4_rotate_x(s.ring_angle)
 
-		gl.UniformMatrix4fv(s.u_local, ring_mat)
+		uniform(s.u_local, ring_mat)
 		gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES + i*RING_VERTICES, RING_VERTICES)
 	}
 }

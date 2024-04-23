@@ -20,7 +20,7 @@ PYRAMID_COLORS: [PYRAMID_VERTICES]RGBA : {
 @private
 State_Camera :: struct {
 	rotation: f32,
-	u_matrix: i32,
+	u_matrix: Uniform_mat4,
 	vao:      VAO,
 }
 
@@ -37,7 +37,7 @@ setup_camera :: proc(s: ^State_Camera, program: gl.Program) {
 	a_position := gl.GetAttribLocation (program, "a_position")
 	a_color    := gl.GetAttribLocation (program, "a_color")
 
-	s.u_matrix = gl.GetUniformLocation(program, "u_matrix")
+	s.u_matrix = uniform_location_mat4(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -117,7 +117,7 @@ frame_camera :: proc(s: ^State_Camera, delta: f32) {
 		)
 		mat *= mat4_rotate_x(PI/2)
 
-		gl.UniformMatrix4fv(s.u_matrix, mat)
+		uniform(s.u_matrix, mat)
 		gl.DrawArrays(gl.TRIANGLES, i*PYRAMID_VERTICES, PYRAMID_VERTICES)
 	}
 
@@ -125,7 +125,7 @@ frame_camera :: proc(s: ^State_Camera, delta: f32) {
 		mat := view_mat
 		mat *= mat4_translate(cube_pos)
 		mat *= mat4_rotate_y(s.rotation)
-		gl.UniformMatrix4fv(s.u_matrix, mat)
+		uniform(s.u_matrix, mat)
 		gl.DrawArrays(gl.TRIANGLES, ALL_PYRAMID_VERTICES, CUBE_VERTICES)
 	}
 }

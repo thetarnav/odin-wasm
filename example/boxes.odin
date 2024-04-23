@@ -26,9 +26,9 @@ BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
 
 @private
 State_Boxes :: struct {
-	rotation:   [2]f32,
-	u_matrix:   i32,
-	vao:        VAO,
+	rotation: [2]f32,
+	u_matrix: Uniform_mat4,
+	vao:      VAO,
 }
 
 @private
@@ -36,10 +36,10 @@ setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	a_position := gl.GetAttribLocation (program, "a_position")
-	a_color    := gl.GetAttribLocation (program, "a_color")
+	a_position := gl.GetAttribLocation(program, "a_position")
+	a_color    := gl.GetAttribLocation(program, "a_color")
 
-	s.u_matrix = gl.GetUniformLocation(program, "u_matrix")
+	s.u_matrix = auto_cast gl.GetUniformLocation(program, "u_matrix")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_color)
@@ -97,7 +97,7 @@ frame_boxes :: proc(s: ^State_Boxes, delta: f32) {
 	mat *= mat4_rotate_x(s.rotation.x)
 	mat *= mat4_rotate_y(s.rotation.y)
 
-	gl.UniformMatrix4fv(s.u_matrix, mat)
+	uniform(s.u_matrix, mat)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES * BOXES_AMOUNT)
 }
