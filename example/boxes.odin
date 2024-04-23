@@ -50,7 +50,7 @@ setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	positions: [BOXES_AMOUNT * CUBE_VERTICES]Vec
+	positions: [BOXES_AMOUNT * CUBE_VERTICES]vec3
 	colors   : [BOXES_AMOUNT * CUBE_VERTICES]RGBA
 
 	for i in 0..<BOXES_AMOUNT {
@@ -87,7 +87,7 @@ frame_boxes :: proc(s: ^State_Boxes, delta: f32) {
 
 	s.rotation -= 0.01 * delta * mouse_rel.yx
 
-	mat: Mat4 = 1
+	mat: mat4 = 1
 	mat *= glm.mat4PerspectiveInfinite(
 		fovy   = glm.radians_f32(80),
 		aspect = aspect_ratio,

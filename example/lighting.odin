@@ -29,8 +29,8 @@ State_Lighting :: struct {
 	u_light_dir:   i32,
 	u_light_color: i32,
 	vao:           VAO,
-	positions:     [ALL_VERTICES]Vec,
-	normals:       [ALL_VERTICES]Vec,
+	positions:     [ALL_VERTICES]vec3,
+	normals:       [ALL_VERTICES]vec3,
 	colors:        [ALL_VERTICES]RGBA,
 }
 
@@ -61,7 +61,7 @@ setup_lighting :: proc(s: ^State_Lighting, program: gl.Program) {
 
 	/* Cube */
 	copy_array(s.positions[:], get_cube_positions(0, CUBE_HEIGHT))
-	cube_normals: [CUBE_VERTICES]Vec = 1
+	cube_normals: [CUBE_VERTICES]vec3 = 1
 	copy_array(s.normals[:], cube_normals)
 	slice.fill(s.colors[:], WHITE)
 
@@ -107,7 +107,7 @@ setup_lighting :: proc(s: ^State_Lighting, program: gl.Program) {
 			in_x1  := cos(b) * (radius-RING_LENGTH)
 			in_z1  := sin(b) * (radius-RING_LENGTH)
 
-			positions: []Vec = {
+			positions: []vec3 = {
 				/* Side */
 				{out_x0, -RING_HEIGHT/2, out_z0},
 				{out_x1, -RING_HEIGHT/2, out_z1},
@@ -162,7 +162,7 @@ frame_lighting :: proc(s: ^State_Lighting, delta: f32) {
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	camera_mat: Mat4 = 1
+	camera_mat: mat4 = 1
 	camera_mat *= mat4_translate({0, 0, 800 - 800 * scale})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
@@ -178,12 +178,12 @@ frame_lighting :: proc(s: ^State_Lighting, delta: f32) {
 	/* Draw cube */
 	s.cube_angle += 0.01 * delta * mouse_rel.x
 
-	cube_pos: Vec
+	cube_pos: vec3
 	cube_pos.y = 500 * -mouse_rel.y
 	cube_pos.x = CUBE_RADIUS * cos(s.cube_angle)
 	cube_pos.z = CUBE_RADIUS * sin(s.cube_angle)
 
-	cube_mat: Mat4 = 1
+	cube_mat: mat4 = 1
 	cube_mat *= mat4_translate(cube_pos)
 	cube_mat *= mat4_rotate_y(s.cube_angle)
 
@@ -198,7 +198,7 @@ frame_lighting :: proc(s: ^State_Lighting, delta: f32) {
 	s.ring_angle += 0.002 * delta
 
 	for i in 0..<RINGS {
-		ring_mat: Mat4 = 1
+		ring_mat: mat4 = 1
 		ring_mat *= mat4_rotate_z(2*PI / (f32(RINGS)/f32(i)) + s.ring_angle/4)
 		ring_mat *= mat4_rotate_x(s.ring_angle)
 

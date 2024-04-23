@@ -48,7 +48,7 @@ setup_camera :: proc(s: ^State_Camera, program: gl.Program) {
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	positions: [ALL_VERTICES]Vec
+	positions: [ALL_VERTICES]vec3
 	colors   : [ALL_VERTICES]RGBA
 
 	/* Pyramids */
@@ -82,7 +82,7 @@ frame_camera :: proc(s: ^State_Camera, delta: f32) {
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	camera_mat: Mat4 = 1
+	camera_mat: mat4 = 1
 	camera_mat *= mat4_translate({0, 0, 800 - 700 * (scale/1.2)})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
@@ -96,7 +96,7 @@ frame_camera :: proc(s: ^State_Camera, delta: f32) {
 	s.rotation += 0.01 * delta * mouse_rel.x
 	elevation  := 300 * -(mouse_rel.y - 0.5)
 
-	cube_pos: Vec
+	cube_pos: vec3
 	cube_pos.y = elevation
 	cube_pos.x = CUBE_RADIUS * cos(s.rotation)
 	cube_pos.z = CUBE_RADIUS * sin(s.rotation)

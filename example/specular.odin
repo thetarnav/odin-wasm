@@ -24,8 +24,8 @@ State_Specular :: struct {
 	u_light_color: i32,
 	u_eye_pos	 : i32,
 	vao          : VAO,
-	positions    : [ALL_VERTICES]Vec,
-	normals      : [ALL_VERTICES]Vec,
+	positions    : [ALL_VERTICES]vec3,
+	normals      : [ALL_VERTICES]vec3,
 	colors       : [ALL_VERTICES]RGBA,
 }
 
@@ -59,7 +59,7 @@ setup_specular :: proc(s: ^State_Specular, program: gl.Program) {
 
 	/* Cube */
 	copy_array(s.positions[:], get_cube_positions(0, CUBE_HEIGHT))
-	cube_normals: [CUBE_VERTICES]Vec = 1
+	cube_normals: [CUBE_VERTICES]vec3 = 1
 	copy_array(s.normals[:], cube_normals)
 	slice.fill(s.colors[:], WHITE)
 
@@ -95,9 +95,9 @@ frame_specular :: proc(s: ^State_Specular, delta: f32) {
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	camera_pos := Vec{0, 0, 500 - 500 * (scale-0.5)}
+	camera_pos := vec3{0, 0, 500 - 500 * (scale-0.5)}
 
-	camera_mat: Mat4 = 1
+	camera_mat: mat4 = 1
 	camera_mat *= mat4_translate(camera_pos)
 	camera_mat = glm.inverse_mat4(camera_mat)
 
@@ -110,12 +110,12 @@ frame_specular :: proc(s: ^State_Specular, delta: f32) {
 
 	s.cube_angle += 0.01 * delta * mouse_rel.x
 
-	cube_pos: Vec
+	cube_pos: vec3
 	cube_pos.y = 500 * -mouse_rel.y
 	cube_pos.x = CUBE_RADIUS * cos(s.cube_angle)
 	cube_pos.z = CUBE_RADIUS * sin(s.cube_angle)
 
-	cube_mat: Mat4 = 1
+	cube_mat: mat4 = 1
 	cube_mat *= mat4_translate(cube_pos)
 	cube_mat *= mat4_rotate_y(s.cube_angle)
 

@@ -76,7 +76,7 @@ frame_rectangle :: proc(s: ^State_Rectangle, delta: f32) {
 
 	s.rotation -= 0.01 * delta * mouse_rel.x
 
-	mat: Mat3 = 1
+	mat: mat3 = 1
 	mat *= mat3_projection(canvas_size)
 	mat *= mat3_translate(mouse_pos - canvas_pos)
 	mat *= mat3_scale(scale*2 + 0.4)

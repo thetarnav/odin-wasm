@@ -16,7 +16,7 @@ BLACK       :: RGBA{  0,   0,   0, 255}
 CUBE_TRIANGLES :: 6 * 2
 CUBE_VERTICES  :: CUBE_TRIANGLES * 3
 
-CUBE_POSITIONS: [CUBE_VERTICES]Vec : {
+CUBE_POSITIONS: [CUBE_VERTICES]vec3 : {
 	{0, 0, 0}, // 0
 	{1, 0, 0},
 	{0, 0, 1},
@@ -60,48 +60,48 @@ CUBE_POSITIONS: [CUBE_VERTICES]Vec : {
 	{0, 1, 0}, // 10
 	{0, 1, 1},
 	{1, 1, 1},
-	
+
 	{0, 1, 0}, // 11
 	{1, 1, 1},
 	{1, 1, 0},
 }
 
-CUBE_NORMALS: [CUBE_VERTICES]Vec : {
+CUBE_NORMALS: [CUBE_VERTICES]vec3 : {
 	{0, -1, 0}, // 0
 	{0, -1, 0},
 	{0, -1, 0},
 	{0, -1, 0}, // 1
 	{0, -1, 0},
 	{0, -1, 0},
-	
+
 	{0, 0, 1}, // 2
 	{0, 0, 1},
 	{0, 0, 1},
 	{0, 0, 1}, // 3
 	{0, 0, 1},
 	{0, 0, 1},
-	
+
 	{-1, 0, 0}, // 4
 	{-1, 0, 0},
 	{-1, 0, 0},
 	{-1, 0, 0}, // 5
 	{-1, 0, 0},
 	{-1, 0, 0},
-	
+
 	{1, 0, 0}, // 6
 	{1, 0, 0},
 	{1, 0, 0},
 	{1, 0, 0}, // 7
 	{1, 0, 0},
 	{1, 0, 0},
-	
+
 	{0, 0, -1}, // 8
 	{0, 0, -1},
 	{0, 0, -1},
 	{0, 0, -1}, // 9
 	{0, 0, -1},
 	{0, 0, -1},
-	
+
 	{0, 1, 0}, // 10
 	{0, 1, 0},
 	{0, 1, 0},
@@ -110,7 +110,7 @@ CUBE_NORMALS: [CUBE_VERTICES]Vec : {
 	{0, 1, 0},
 }
 
-get_cube_positions :: proc(pos: Vec = 0, h: f32 = 1) -> [CUBE_VERTICES]Vec {
+get_cube_positions :: proc(pos: vec3 = 0, h: f32 = 1) -> [CUBE_VERTICES]vec3 {
 	positions := CUBE_POSITIONS
 	for &vec in positions {
 		vec = pos + (vec - {0.5, 0.5, 0.5}) * h
@@ -122,7 +122,7 @@ get_cube_positions :: proc(pos: Vec = 0, h: f32 = 1) -> [CUBE_VERTICES]Vec {
 PYRAMID_TRIANGLES :: 6
 PYRAMID_VERTICES  :: PYRAMID_TRIANGLES * 3
 
-get_pyramid_positions :: proc(pos: Vec = 0, h: f32 = 1) -> [PYRAMID_VERTICES]Vec {
+get_pyramid_positions :: proc(pos: vec3 = 0, h: f32 = 1) -> [PYRAMID_VERTICES]vec3 {
 	x := pos.x - h/2
 	y := pos.y - h/2
 	z := pos.z - h/2
@@ -138,7 +138,7 @@ get_pyramid_positions :: proc(pos: Vec = 0, h: f32 = 1) -> [PYRAMID_VERTICES]Vec
 	}
 }
 
-get_sphere_base_triangle :: proc(positions, normals: []Vec, radius: f32, segments: int) {
+get_sphere_base_triangle :: proc(positions, normals: []vec3, radius: f32, segments: int) {
 	// TODO: merge top and bottom segment triangles
 	si := 0 // segment index
 	for vi in 0..<segments { // vertical
@@ -153,10 +153,10 @@ get_sphere_base_triangle :: proc(positions, normals: []Vec, radius: f32, segment
 			ha3 := 2*PI * (f32(hi)+1   + hmove) / f32(segments)
 
 			// Vertices
-			v0 := Vec{cos(ha0)*sin(va1), cos(va1), sin(ha0)*sin(va1)}
-			v1 := Vec{cos(ha1)*sin(va0), cos(va0), sin(ha1)*sin(va0)}
-			v2 := Vec{cos(ha2)*sin(va1), cos(va1), sin(ha2)*sin(va1)}
-			v3 := Vec{cos(ha3)*sin(va0), cos(va0), sin(ha3)*sin(va0)}
+			v0 := vec3{cos(ha0)*sin(va1), cos(va1), sin(ha0)*sin(va1)}
+			v1 := vec3{cos(ha1)*sin(va0), cos(va0), sin(ha1)*sin(va0)}
+			v2 := vec3{cos(ha2)*sin(va1), cos(va1), sin(ha2)*sin(va1)}
+			v3 := vec3{cos(ha3)*sin(va0), cos(va0), sin(ha3)*sin(va0)}
 
 			// Normals
 			n0 := normalize(v0)
@@ -187,7 +187,7 @@ get_sphere_base_triangle :: proc(positions, normals: []Vec, radius: f32, segment
 	}
 }
 
-get_sphere_base_rectangle :: proc(positions, normals: []Vec, radius: f32, segments: int) {
+get_sphere_base_rectangle :: proc(positions, normals: []vec3, radius: f32, segments: int) {
 	// TODO: merge top and bottom segment triangles
 	si := 0 // segment index
 	for vi in 0..<segments { // vertical
@@ -196,12 +196,12 @@ get_sphere_base_rectangle :: proc(positions, normals: []Vec, radius: f32, segmen
 			va1 :=   PI * f32(vi+1) / f32(segments)
 			ha0 := 2*PI * f32(hi+0) / f32(segments)
 			ha1 := 2*PI * f32(hi+1) / f32(segments)
-			
+
 			// Vertices
-			v0 := Vec{cos(ha0)*sin(va1), cos(va1), sin(ha0)*sin(va1)}
-			v1 := Vec{cos(ha0)*sin(va0), cos(va0), sin(ha0)*sin(va0)}
-			v2 := Vec{cos(ha1)*sin(va1), cos(va1), sin(ha1)*sin(va1)}
-			v3 := Vec{cos(ha1)*sin(va0), cos(va0), sin(ha1)*sin(va0)}
+			v0 := vec3{cos(ha0)*sin(va1), cos(va1), sin(ha0)*sin(va1)}
+			v1 := vec3{cos(ha0)*sin(va0), cos(va0), sin(ha0)*sin(va0)}
+			v2 := vec3{cos(ha1)*sin(va1), cos(va1), sin(ha1)*sin(va1)}
+			v3 := vec3{cos(ha1)*sin(va0), cos(va0), sin(ha1)*sin(va0)}
 
 			// Normals
 			n0 := normalize(v0)
@@ -235,18 +235,18 @@ get_sphere_base_rectangle :: proc(positions, normals: []Vec, radius: f32, segmen
 JOINT_TRIANGLES :: 8
 JOINT_VERTICES  :: 3 * JOINT_TRIANGLES
 
-get_joint :: proc(from, to: Vec, w: f32) -> [JOINT_VERTICES]Vec {
-	
+get_joint :: proc(from, to: vec3, w: f32) -> [JOINT_VERTICES]vec3 {
+
 	mid := from*(1.0/3.0) + to*(2.0/3.0)
-	
+
 	from, to := from, to
 	if from.y > to.y {
 		from, to = to, from
 	}
-	
+
 	normal := normalize(to - from)
 
-	cross_dir: Vec
+	cross_dir: vec3
 
 	if normal.x > 0.5 {
 		cross_dir = UP
@@ -274,20 +274,20 @@ get_joint :: proc(from, to: Vec, w: f32) -> [JOINT_VERTICES]Vec {
 
 	move_x := normal_x * w
 	move_z := normal_z * w
-	
+
 	return {
 		from,
 		mid + move_z,
 		mid + move_x,
-	
+
 		from,
 		mid - move_x,
 		mid + move_z,
-	
+
 		from,
 		mid + move_x,
 		mid - move_z,
-	
+
 		from,
 		mid - move_z,
 		mid - move_x,
