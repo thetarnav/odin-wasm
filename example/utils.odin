@@ -62,92 +62,92 @@ Attribute_mat2  :: distinct i32
 Attribute_mat3  :: distinct i32
 Attribute_mat4  :: distinct i32
 
-attribute_location_int   :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_int   {
+@require_results attribute_location_int   :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_int   {
 	loc := Attribute_int  (#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_ivec2 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_ivec2 {
+@require_results attribute_location_ivec2 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_ivec2 {
 	loc := Attribute_ivec2(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_ivec3 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_ivec3 {
+@require_results attribute_location_ivec3 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_ivec3 {
 	loc := Attribute_ivec3(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_ivec4 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_ivec4 {
+@require_results attribute_location_ivec4 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_ivec4 {
 	loc := Attribute_ivec4(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_uint  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uint  {
+@require_results attribute_location_uint  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uint  {
 	loc := Attribute_uint (#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_uvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uvec2 {
+@require_results attribute_location_uvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uvec2 {
 	loc := Attribute_uvec2(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_uvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uvec3 {
+@require_results attribute_location_uvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uvec3 {
 	loc := Attribute_uvec3(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_uvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uvec4 {
+@require_results attribute_location_uvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_uvec4 {
 	loc := Attribute_uvec4(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_bool  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bool  {
+@require_results attribute_location_bool  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bool  {
 	loc := Attribute_bool (#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_bvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bvec2 {
+@require_results attribute_location_bvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bvec2 {
 	loc := Attribute_bvec2(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_bvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bvec3 {
+@require_results attribute_location_bvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bvec3 {
 	loc := Attribute_bvec3(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_bvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bvec4 {
+@require_results attribute_location_bvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_bvec4 {
 	loc := Attribute_bvec4(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_float :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_float {
+@require_results attribute_location_float :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_float {
 	loc := Attribute_float(#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_vec2  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_vec2  {
+@require_results attribute_location_vec2  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_vec2  {
 	loc := Attribute_vec2 (#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_vec3  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_vec3  {
+@require_results attribute_location_vec3  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_vec3  {
 	loc := Attribute_vec3 (#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_vec4  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_vec4  {
+@require_results attribute_location_vec4  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_vec4  {
 	loc := Attribute_vec4 (#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_mat2  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_mat2  {
+@require_results attribute_location_mat2  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_mat2  {
 	loc := Attribute_mat2 (#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
 }
-attribute_location_mat3  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_mat3  {
+@require_results attribute_location_mat3  :: #force_inline proc "contextless" (program: gl.Program, name: string, enable: bool = true) -> Attribute_mat3  {
 	loc := Attribute_mat3 (#force_inline gl.GetAttribLocation(program, name))
 	if enable do gl.EnableVertexAttribArray(i32(loc))
 	return loc
@@ -297,25 +297,25 @@ Uniform_mat2  :: distinct i32
 Uniform_mat3  :: distinct i32
 Uniform_mat4  :: distinct i32
 
-uniform_location_int   :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_int   {return Uniform_int  (#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_ivec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec2 {return Uniform_ivec2(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_ivec3 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec3 {return Uniform_ivec3(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_ivec4 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec4 {return Uniform_ivec4(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_uint  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uint  {return Uniform_uint (#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_uvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uvec2 {return Uniform_uvec2(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_uvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uvec3 {return Uniform_uvec3(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_uvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uvec4 {return Uniform_uvec4(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_bool  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bool  {return Uniform_bool (#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_bvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bvec2 {return Uniform_bvec2(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_bvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bvec3 {return Uniform_bvec3(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_bvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bvec4 {return Uniform_bvec4(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_float :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_float {return Uniform_float(#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_vec2  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_vec2  {return Uniform_vec2 (#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_vec3  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_vec3  {return Uniform_vec3 (#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_vec4  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_vec4  {return Uniform_vec4 (#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_mat2  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_mat2  {return Uniform_mat2 (#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_mat3  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_mat3  {return Uniform_mat3 (#force_inline gl.GetUniformLocation(program, name))}
-uniform_location_mat4  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_mat4  {return Uniform_mat4 (#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_int   :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_int   {return Uniform_int  (#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_ivec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec2 {return Uniform_ivec2(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_ivec3 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec3 {return Uniform_ivec3(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_ivec4 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec4 {return Uniform_ivec4(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_uint  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uint  {return Uniform_uint (#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_uvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uvec2 {return Uniform_uvec2(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_uvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uvec3 {return Uniform_uvec3(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_uvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uvec4 {return Uniform_uvec4(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_bool  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bool  {return Uniform_bool (#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_bvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bvec2 {return Uniform_bvec2(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_bvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bvec3 {return Uniform_bvec3(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_bvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bvec4 {return Uniform_bvec4(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_float :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_float {return Uniform_float(#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_vec2  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_vec2  {return Uniform_vec2 (#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_vec3  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_vec3  {return Uniform_vec3 (#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_vec4  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_vec4  {return Uniform_vec4 (#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_mat2  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_mat2  {return Uniform_mat2 (#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_mat3  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_mat3  {return Uniform_mat3 (#force_inline gl.GetUniformLocation(program, name))}
+@require_results uniform_location_mat4  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_mat4  {return Uniform_mat4 (#force_inline gl.GetUniformLocation(program, name))}
 
 uniform_int   :: #force_inline proc "contextless" (loc: Uniform_int  , v: i32  ) {#force_inline gl.Uniform1iv      (i32(loc), v)}
 uniform_ivec2 :: #force_inline proc "contextless" (loc: Uniform_ivec2, v: ivec2) {#force_inline gl.Uniform2iv      (i32(loc), v)}
