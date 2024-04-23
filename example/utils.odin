@@ -4,16 +4,28 @@ import "base:intrinsics"
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-PI     :: glm.PI
-VAO    :: gl.VertexArrayObject
+float  :: f32
+double :: f64
 vec2   :: glm.vec2
 vec3   :: glm.vec3
 vec4   :: glm.vec4
+ivec2  :: glm.ivec2
+ivec3  :: glm.ivec3
+ivec4  :: glm.ivec4
+uvec2  :: glm.uvec2
+uvec3  :: glm.uvec3
+uvec4  :: glm.uvec4
+bvec2  :: distinct [2]b32
+bvec3  :: distinct [3]b32
+bvec4  :: distinct [4]b32
 mat2   :: glm.mat2
 mat3   :: glm.mat3
 mat4   :: glm.mat4
 u8vec4 :: distinct [4]u8
 RGBA   :: u8vec4
+
+PI     :: glm.PI
+VAO    :: gl.VertexArrayObject
 
 radians   :: glm.radians_f32
 cos       :: glm.cos
@@ -39,7 +51,19 @@ Attribute_Mat2  :: distinct i32
 Attribute_Mat3  :: distinct i32
 Attribute_Mat4  :: distinct i32
 
-Uniform_f32     :: distinct i32
+Uniform_int     :: distinct i32
+Uniform_ivec2   :: distinct i32
+Uniform_ivec3   :: distinct i32
+Uniform_ivec4   :: distinct i32
+Uniform_uint    :: distinct i32
+Uniform_uvec2   :: distinct i32
+Uniform_uvec3   :: distinct i32
+Uniform_uvec4   :: distinct i32
+Uniform_bool    :: distinct i32
+Uniform_bvec2   :: distinct i32
+Uniform_bvec3   :: distinct i32
+Uniform_bvec4   :: distinct i32
+Uniform_float   :: distinct i32
 Uniform_vec2    :: distinct i32
 Uniform_vec3    :: distinct i32
 Uniform_vec4    :: distinct i32
@@ -47,36 +71,73 @@ Uniform_mat2    :: distinct i32
 Uniform_mat3    :: distinct i32
 Uniform_mat4    :: distinct i32
 
-get_uniform_f32  :: #force_inline proc(program: gl.Program, name: string) -> Uniform_f32  {return Uniform_f32 (#force_inline gl.GetUniformLocation(program, name))}
-get_uniform_vec2 :: #force_inline proc(program: gl.Program, name: string) -> Uniform_vec2 {return Uniform_vec2(#force_inline gl.GetUniformLocation(program, name))}
-get_uniform_vec3 :: #force_inline proc(program: gl.Program, name: string) -> Uniform_vec3 {return Uniform_vec3(#force_inline gl.GetUniformLocation(program, name))}
-get_uniform_vec4 :: #force_inline proc(program: gl.Program, name: string) -> Uniform_vec4 {return Uniform_vec4(#force_inline gl.GetUniformLocation(program, name))}
-get_uniform_mat2 :: #force_inline proc(program: gl.Program, name: string) -> Uniform_mat2 {return Uniform_mat2(#force_inline gl.GetUniformLocation(program, name))}
-get_uniform_mat3 :: #force_inline proc(program: gl.Program, name: string) -> Uniform_mat3 {return Uniform_mat3(#force_inline gl.GetUniformLocation(program, name))}
-get_uniform_mat4 :: #force_inline proc(program: gl.Program, name: string) -> Uniform_mat4 {return Uniform_mat4(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_int   :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_int   {return Uniform_int  (#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_ivec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec2 {return Uniform_ivec2(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_ivec3 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec3 {return Uniform_ivec3(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_ivec4 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_ivec4 {return Uniform_ivec4(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_uint  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uint  {return Uniform_uint (#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_uvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uvec2 {return Uniform_uvec2(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_uvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uvec3 {return Uniform_uvec3(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_uvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_uvec4 {return Uniform_uvec4(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_bool  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bool  {return Uniform_bool (#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_bvec2 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bvec2 {return Uniform_bvec2(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_bvec3 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bvec3 {return Uniform_bvec3(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_bvec4 :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_bvec4 {return Uniform_bvec4(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_float :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_float {return Uniform_float(#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_vec2  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_vec2  {return Uniform_vec2 (#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_vec3  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_vec3  {return Uniform_vec3 (#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_vec4  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_vec4  {return Uniform_vec4 (#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_mat2  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_mat2  {return Uniform_mat2 (#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_mat3  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_mat3  {return Uniform_mat3 (#force_inline gl.GetUniformLocation(program, name))}
+uniform_location_mat4  :: #force_inline proc "contextless" (program: gl.Program, name: string) -> Uniform_mat4  {return Uniform_mat4 (#force_inline gl.GetUniformLocation(program, name))}
 
-uniform_vec1 :: #force_inline proc(loc: Uniform_f32,  v: f32 ) {#force_inline gl.Uniform1fv(i32(loc), v)}
-uniform_vec2 :: #force_inline proc(loc: Uniform_vec2, v: vec2) {#force_inline gl.Uniform2fv(i32(loc), v)}
-uniform_vec3 :: #force_inline proc(loc: Uniform_vec3, v: vec3) {#force_inline gl.Uniform3fv(i32(loc), v)}
-uniform_vec4 :: #force_inline proc(loc: Uniform_vec4, v: vec4) {#force_inline gl.Uniform4fv(i32(loc), v)}
-uniform_f32  :: uniform_vec1
-uniform_vec  :: proc{uniform_f32, uniform_vec2, uniform_vec3, uniform_vec4}
+uniform_int   :: #force_inline proc "contextless" (loc: Uniform_int  , v: i32  ) {#force_inline gl.Uniform1iv      (i32(loc), v)}
+uniform_ivec2 :: #force_inline proc "contextless" (loc: Uniform_ivec2, v: ivec2) {#force_inline gl.Uniform2iv      (i32(loc), v)}
+uniform_ivec3 :: #force_inline proc "contextless" (loc: Uniform_ivec3, v: ivec3) {#force_inline gl.Uniform3iv      (i32(loc), v)}
+uniform_ivec4 :: #force_inline proc "contextless" (loc: Uniform_ivec4, v: ivec4) {#force_inline gl.Uniform4iv      (i32(loc), v)}
+uniform_uint  :: #force_inline proc "contextless" (loc: Uniform_uint , v: u32  ) {#force_inline gl.Uniform1uiv     (i32(loc), v)}
+uniform_uvec2 :: #force_inline proc "contextless" (loc: Uniform_uvec2, v: uvec2) {#force_inline gl.Uniform2uiv     (i32(loc), v)}
+uniform_uvec3 :: #force_inline proc "contextless" (loc: Uniform_uvec3, v: uvec3) {#force_inline gl.Uniform3uiv     (i32(loc), v)}
+uniform_uvec4 :: #force_inline proc "contextless" (loc: Uniform_uvec4, v: uvec4) {#force_inline gl.Uniform4uiv     (i32(loc), v)}
+uniform_bool  :: #force_inline proc "contextless" (loc: Uniform_bool , v: b32  ) {#force_inline gl.Uniform1uiv     (i32(loc), u32(v))}
+uniform_bvec2 :: #force_inline proc "contextless" (loc: Uniform_bvec2, v: bvec2) {#force_inline gl.Uniform2uiv     (i32(loc), transmute(uvec2)v)}
+uniform_bvec3 :: #force_inline proc "contextless" (loc: Uniform_bvec3, v: bvec3) {#force_inline gl.Uniform3uiv     (i32(loc), transmute(uvec3)v)}
+uniform_bvec4 :: #force_inline proc "contextless" (loc: Uniform_bvec4, v: bvec4) {#force_inline gl.Uniform4uiv     (i32(loc), transmute(uvec4)v)}
+uniform_float :: #force_inline proc "contextless" (loc: Uniform_float, v: float) {#force_inline gl.Uniform1fv      (i32(loc), v)}
+uniform_vec2  :: #force_inline proc "contextless" (loc: Uniform_vec2 , v: vec2 ) {#force_inline gl.Uniform2fv      (i32(loc), v)}
+uniform_vec3  :: #force_inline proc "contextless" (loc: Uniform_vec3 , v: vec3 ) {#force_inline gl.Uniform3fv      (i32(loc), v)}
+uniform_vec4  :: #force_inline proc "contextless" (loc: Uniform_vec4 , v: vec4 ) {#force_inline gl.Uniform4fv      (i32(loc), v)}
+uniform_mat2  :: #force_inline proc "contextless" (loc: Uniform_mat2 , v: mat2 ) {#force_inline gl.UniformMatrix2fv(i32(loc), v)}
+uniform_mat3  :: #force_inline proc "contextless" (loc: Uniform_mat3 , v: mat3 ) {#force_inline gl.UniformMatrix3fv(i32(loc), v)}
+uniform_mat4  :: #force_inline proc "contextless" (loc: Uniform_mat4 , v: mat4 ) {#force_inline gl.UniformMatrix4fv(i32(loc), v)}
 
-uniform_ivec1 :: #force_inline proc(loc: Uniform_f32,  v: i32      ) {#force_inline gl.Uniform1iv(i32(loc), v)}
-uniform_ivec2 :: #force_inline proc(loc: Uniform_vec2, v: glm.ivec2) {#force_inline gl.Uniform2iv(i32(loc), v)}
-uniform_ivec3 :: #force_inline proc(loc: Uniform_vec3, v: glm.ivec3) {#force_inline gl.Uniform3iv(i32(loc), v)}
-uniform_ivec4 :: #force_inline proc(loc: Uniform_vec4, v: glm.ivec4) {#force_inline gl.Uniform4iv(i32(loc), v)}
-uniform_i32   :: uniform_ivec1
-uniform_ivec  :: proc{uniform_ivec1, uniform_ivec2, uniform_ivec3, uniform_ivec4}
+uniform :: proc {
+	uniform_int,
+	uniform_ivec2,
+	uniform_ivec3,
+	uniform_ivec4,
+	uniform_uint,
+	uniform_uvec2,
+	uniform_uvec3,
+	uniform_uvec4,
+	uniform_bool,
+	uniform_bvec2,
+	uniform_bvec3,
+	uniform_bvec4,
+	uniform_float,
+	uniform_vec2,
+	uniform_vec3,
+	uniform_vec4,
+	uniform_mat2,
+	uniform_mat3,
+	uniform_mat4,
+}
 
-uniform_mat2 :: #force_inline proc(loc: Uniform_mat2, v: mat2) {#force_inline gl.UniformMatrix2fv(i32(loc), v)}
-uniform_mat3 :: #force_inline proc(loc: Uniform_mat3, v: mat3) {#force_inline gl.UniformMatrix3fv(i32(loc), v)}
-uniform_mat4 :: #force_inline proc(loc: Uniform_mat4, v: mat4) {#force_inline gl.UniformMatrix4fv(i32(loc), v)}
-uniform_mat  :: proc{uniform_mat2, uniform_mat3, uniform_mat4}
 
-rgba_to_vec4 :: proc "contextless" (rgba: u8vec4) -> vec4 {
+u8vec4_to_vec4 :: proc "contextless" (rgba: u8vec4) -> vec4 {
 	return {f32(rgba.r)/255, f32(rgba.g)/255, f32(rgba.b)/255, f32(rgba.a)/255}
 }
+rgba_to_vec4 :: u8vec4_to_vec4
 
 copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
 	src := src

@@ -40,7 +40,7 @@ State_Spotlight :: struct {
 	u_light_pos  : [2]Uniform_vec3,
 	u_light_color: [2]Uniform_vec4,
 	u_light_dir  : [2]Uniform_vec3,
-	u_light_add  : [2]Uniform_f32,
+	u_light_add  : [2]Uniform_float,
 	vao          : VAO,
 	positions    : [ALL_VERTICES]vec3,
 	normals      : [ALL_VERTICES]vec3,
@@ -56,16 +56,16 @@ setup_spotlight :: proc(s: ^State_Spotlight, program: gl.Program) {
 	a_position := gl.GetAttribLocation(program, "a_position")
 	a_normal   := gl.GetAttribLocation(program, "a_normal")
 
-	s.u_view           = get_uniform_mat4(program, "u_view")
-	s.u_local          = get_uniform_mat4(program, "u_local")
-	s.u_light_pos[0]   = get_uniform_vec3(program, "u_light_pos[0]")
-	s.u_light_pos[1]   = get_uniform_vec3(program, "u_light_pos[1]")
-	s.u_light_color[0] = get_uniform_vec4(program, "u_light_color[0]")
-	s.u_light_color[1] = get_uniform_vec4(program, "u_light_color[1]")
-	s.u_light_dir[0]   = get_uniform_vec3(program, "u_light_dir[0]")
-	s.u_light_dir[1]   = get_uniform_vec3(program, "u_light_dir[1]")
-	s.u_light_add[0]   = get_uniform_f32(program,  "u_light_add[0]")
-	s.u_light_add[1]   = get_uniform_f32(program,  "u_light_add[1]")
+	s.u_view           = uniform_location_mat4(program, "u_view")
+	s.u_local          = uniform_location_mat4(program, "u_local")
+	s.u_light_pos[0]   = uniform_location_vec3(program, "u_light_pos[0]")
+	s.u_light_pos[1]   = uniform_location_vec3(program, "u_light_pos[1]")
+	s.u_light_color[0] = uniform_location_vec4(program, "u_light_color[0]")
+	s.u_light_color[1] = uniform_location_vec4(program, "u_light_color[1]")
+	s.u_light_dir[0]   = uniform_location_vec3(program, "u_light_dir[0]")
+	s.u_light_dir[1]   = uniform_location_vec3(program, "u_light_dir[1]")
+	s.u_light_add[0]   = uniform_location_float(program,"u_light_add[0]")
+	s.u_light_add[1]   = uniform_location_float(program,"u_light_add[1]")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_normal)
@@ -129,8 +129,11 @@ setup_spotlight :: proc(s: ^State_Spotlight, program: gl.Program) {
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, s.normals[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_normal, 3, gl.FLOAT, false, 0, 0)
 
-	uniform_vec(s.u_light_color[0], rgba_to_vec4(RED))
-	uniform_vec(s.u_light_color[1], rgba_to_vec4(BLUE))
+	uniform(s.u_light_color[0], rgba_to_vec4(RED))
+	uniform(s.u_light_color[1], rgba_to_vec4(BLUE))
+
+	// gl.Uniform4ui(i32(s.u_light_color[0]), 255, 0, 0, 255)
+	// gl.Uniform4ui(i32(s.u_light_color[1]), 0, 0, 255, 255)
 }
 
 @private
@@ -172,35 +175,35 @@ frame_spotlight :: proc(s: ^State_Spotlight, delta: f32) {
 	cube_blue_pos.z = CUBE_RADIUS * sin(cube_blue_angle)
 	cube_blue_pos.y = CUBE_HEIGHT*8
 
-	uniform_vec(s.u_light_pos[0], cube_red_pos)
-	uniform_vec(s.u_light_pos[1], cube_blue_pos)
-	uniform_vec(s.u_light_dir[0], normalize(-cube_red_pos))
-	uniform_vec(s.u_light_dir[1], normalize(-cube_blue_pos))
-	uniform_mat(s.u_view, view_mat)
+	uniform(s.u_light_pos[0], cube_red_pos)
+	uniform(s.u_light_pos[1], cube_blue_pos)
+	uniform(s.u_light_dir[0], normalize(-cube_red_pos))
+	uniform(s.u_light_dir[1], normalize(-cube_blue_pos))
+	uniform(s.u_view, view_mat)
 
 	vi := 0
 
 	/* Draw plane */
-	uniform_mat(s.u_local, 1)
+	uniform(s.u_local, 1)
 	gl.DrawArrays(gl.TRIANGLES, vi, PLANE_VERTICES)
 	vi += PLANE_VERTICES
 
 	/* Draw cube RED */
-	uniform_mat(s.u_local, mat4_translate(cube_red_pos))
-	uniform_vec(s.u_light_add[0], 1)
+	uniform(s.u_local, mat4_translate(cube_red_pos))
+	uniform(s.u_light_add[0], 1)
 	gl.DrawArrays(gl.TRIANGLES, vi, CUBE_VERTICES)
-	uniform_vec(s.u_light_add[0], 0)
+	uniform(s.u_light_add[0], 0)
 	vi += CUBE_VERTICES
 
 	/* Draw cube BLUE */
-	uniform_mat(s.u_local, mat4_translate(cube_blue_pos))
-	uniform_vec(s.u_light_add[1], 1)
+	uniform(s.u_local, mat4_translate(cube_blue_pos))
+	uniform(s.u_light_add[1], 1)
 	gl.DrawArrays(gl.TRIANGLES, vi, CUBE_VERTICES)
-	uniform_vec(s.u_light_add[1], 0)
+	uniform(s.u_light_add[1], 0)
 	vi += CUBE_VERTICES
 
 	/* Draw guy */
-	uniform_mat(s.u_local, 1)
+	uniform(s.u_local, 1)
 	gl.DrawArrays(gl.TRIANGLES, vi, GUY_VERTICES)
 	vi += GUY_VERTICES
 }

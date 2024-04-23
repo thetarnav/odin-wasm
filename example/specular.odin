@@ -18,11 +18,11 @@ BALL_RADIUS :: 200
 State_Specular :: struct {
 	cube_angle   : f32,
 	ball_angle   : f32,
-	u_view       : i32,
-	u_local      : i32,
-	u_light_pos  : i32,
-	u_light_color: i32,
-	u_eye_pos	 : i32,
+	u_view       : Uniform_mat4,
+	u_local      : Uniform_mat4,
+	u_light_pos  : Uniform_vec3,
+	u_light_color: Uniform_vec4,
+	u_eye_pos	 : Uniform_vec3,
 	vao          : VAO,
 	positions    : [ALL_VERTICES]vec3,
 	normals      : [ALL_VERTICES]vec3,
@@ -39,11 +39,11 @@ setup_specular :: proc(s: ^State_Specular, program: gl.Program) {
 	a_normal   := gl.GetAttribLocation(program, "a_normal")
 	a_color    := gl.GetAttribLocation(program, "a_color")
 
-	s.u_view        = gl.GetUniformLocation(program, "u_view")
-	s.u_local       = gl.GetUniformLocation(program, "u_local")
-	s.u_light_pos   = gl.GetUniformLocation(program, "u_light_pos")
-	s.u_light_color = gl.GetUniformLocation(program, "u_light_color")
-	s.u_eye_pos     = gl.GetUniformLocation(program, "u_eye_pos")
+	s.u_view        = uniform_location_mat4(program, "u_view")
+	s.u_local       = uniform_location_mat4(program, "u_local")
+	s.u_light_pos   = uniform_location_vec3(program, "u_light_pos")
+	s.u_light_color = uniform_location_vec4(program, "u_light_color")
+	s.u_eye_pos     = uniform_location_vec3(program, "u_eye_pos")
 
 	gl.EnableVertexAttribArray(a_position)
 	gl.EnableVertexAttribArray(a_normal)
@@ -83,7 +83,7 @@ setup_specular :: proc(s: ^State_Specular, program: gl.Program) {
 	gl.BufferDataSlice(gl.ARRAY_BUFFER, s.colors[:], gl.STATIC_DRAW)
 	gl.VertexAttribPointer(a_color, 4, gl.UNSIGNED_BYTE, true, 0, 0)
 
-	gl.Uniform4fv(s.u_light_color, rgba_to_vec4(WHITE))
+	uniform(s.u_light_color, rgba_to_vec4(WHITE))
 }
 
 @private
@@ -120,16 +120,16 @@ frame_specular :: proc(s: ^State_Specular, delta: f32) {
 	cube_mat *= mat4_rotate_y(s.cube_angle)
 
 
-	gl.Uniform3fv(s.u_light_pos, cube_pos)
-	gl.Uniform3fv(s.u_eye_pos, camera_pos)
-	gl.UniformMatrix4fv(s.u_view, view_mat)
+	uniform(s.u_light_pos, cube_pos)
+	uniform(s.u_eye_pos, camera_pos)
+	uniform(s.u_view, view_mat)
 
 	/* Draw cube */
-	gl.UniformMatrix4fv(s.u_local, cube_mat)
+	uniform(s.u_local, cube_mat)
 	gl.DrawArrays(gl.TRIANGLES, 0, CUBE_VERTICES)
 
 	/* Draw sphere */
 	s.ball_angle += 0.0002 * delta
-	gl.UniformMatrix4fv(s.u_local, mat4_rotate_y(s.ball_angle) * mat4_rotate_x(s.ball_angle))
+	uniform(s.u_local, mat4_rotate_y(s.ball_angle) * mat4_rotate_x(s.ball_angle))
 	gl.DrawArrays(gl.TRIANGLES, CUBE_VERTICES, BALL_VERTICES)
 }
