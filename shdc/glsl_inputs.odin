@@ -5,23 +5,13 @@ import "core:strconv"
 Input :: struct {
 	name: string,
 	kind: Input_Kind,
-	type: Input_Type,
+	type: string,
 	len : int, // for arrays
 }
 
 Input_Kind :: enum u8 {
 	Uniform,
 	Attribute,
-}
-
-Input_Type :: enum u8 {
-	Float,
-	Vec2,
-	Vec3,
-	Vec4,
-	Mat2,
-	Mat3,
-	Mat4,
 }
 
 Error_Invalid_Token :: struct {
@@ -64,17 +54,7 @@ vertex_get_inputs :: proc(src: string, allocator := context.allocator) -> ([]Inp
 			return {}, Error_Invalid_Token{token}
 		}
 
-		switch token_string(token, src) {
-		case "float": input.type = .Float
-		case "vec2":  input.type = .Vec2
-		case "vec3":  input.type = .Vec3
-		case "vec4":  input.type = .Vec4
-		case "mat2":  input.type = .Mat2
-		case "mat3":  input.type = .Mat3
-		case "mat4":  input.type = .Mat4
-		case:
-			return {}, Error_Unknown_Type{token.pos, token.len}
-		}
+		input.type = token_string(token, src)
 
 		// Input Name
 		token = next_token(&t)
