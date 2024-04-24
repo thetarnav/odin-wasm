@@ -73,14 +73,31 @@ main :: proc() {
 		write(&b, ", program: gl.Program) {\n")
 
 		for input in inputs {
-			write(&b, "\ts.")
-			write(&b, input.name)
-			write(&b, " = ")
-			write(&b, input.kind == .Uniform ? "uniform_location_" : "attribute_location_")
-			write(&b, input.type)
-			write(&b, "(program, \"")
-			write(&b, input.name)
-			write(&b, "\")\n")
+			if input.len == 0 {
+				write(&b, "\ts.")
+				write(&b, input.name)
+				write(&b, " = ")
+				write(&b, input.kind == .Uniform ? "uniform_location_" : "attribute_location_")
+				write(&b, input.type)
+				write(&b, "(program, \"")
+				write(&b, input.name)
+				write(&b, "\")\n")
+			} else {
+				for i in 0..<input.len {
+					write(&b, "\ts.")
+					write(&b, input.name)
+					write(&b, "[")
+					strings.write_int(&b, i)
+					write(&b, "] = ")
+					write(&b, input.kind == .Uniform ? "uniform_location_" : "attribute_location_")
+					write(&b, input.type)
+					write(&b, "(program, \"")
+					write(&b, input.name)
+					write(&b, "[")
+					strings.write_int(&b, i)
+					write(&b, "]\")\n")
+				}
+			}
 		}
 
 		write(&b, "}\n\n")
