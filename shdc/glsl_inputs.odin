@@ -2,6 +2,11 @@ package shdc
 
 import "core:strconv"
 
+Shader_Kind :: enum u8 {
+	Vertex,
+	Fragment,
+}
+
 Input :: struct {
 	name: string,
 	kind: Input_Kind,
@@ -26,7 +31,7 @@ Error :: union {
 	Error_Unknown_Type,
 }
 
-vertex_get_inputs :: proc(src: string, allocator := context.allocator) -> ([]Input, Error) {
+shader_get_inputs :: proc(src: string, shader_kind: Shader_Kind, allocator := context.allocator) -> ([]Input, Error) {
 
 	inputs := make([dynamic]Input, 0, 16, allocator)
 	defer shrink(&inputs)
@@ -43,8 +48,11 @@ vertex_get_inputs :: proc(src: string, allocator := context.allocator) -> ([]Inp
 		if token.kind != .Word do continue
 
 		switch token_string(token, src) {
-		case "uniform":         input = Input{kind=.Uniform}
-		case "attribute", "in": input = Input{kind=.Attribute}
+		case "uniform":   input = Input{kind=.Uniform}
+		case "attribute": input = Input{kind=.Attribute}
+		case "in": 
+			if shader_kind == .Fragment do continue
+			input = Input{kind=.Attribute}
 		case: continue
 		}
 
