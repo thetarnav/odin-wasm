@@ -15,12 +15,6 @@ H         :: math.SQRT_TWO * SIDE / 2
 Points should be in counter-clockwise order
 to show the front-face.
 */
-colors: [VERTICES]RGBA = {
-	GREEN, YELLOW, BLUE,
-	RED, BLUE, YELLOW,
-	GREEN, RED, YELLOW,
-	BLUE, RED, GREEN,
-}
 positions: [VERTICES]vec3 = {
 	{ 0,      0,   SIDE/2},
 	{ SIDE/2, H,   0},
@@ -37,6 +31,12 @@ positions: [VERTICES]vec3 = {
 	{-SIDE/2, H,   0},
 	{ 0,      0,  -SIDE/2},
 	{ 0,      0,   SIDE/2},
+}
+colors: [VERTICES]RGBA = {
+	GREEN, YELLOW, BLUE,
+	RED, BLUE, YELLOW,
+	GREEN, RED, YELLOW,
+	BLUE, RED, GREEN,
 }
 
 @private
