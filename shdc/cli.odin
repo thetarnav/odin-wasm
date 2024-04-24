@@ -23,7 +23,7 @@ main :: proc() {
 	write(&b, output_header)
 
 	for file in files {
-		strings.has_suffix(file.name, ".glsl") or_continue
+		(strings.has_suffix(file.name, ".vert") || strings.has_suffix(file.name, ".frag")) or_continue
 
 		content := string(file.data)
 		inputs, err := vertex_get_inputs(content)

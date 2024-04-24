@@ -34,32 +34,32 @@ Demo_Sources :: struct {
 }
 demos: [Example_Kind]Demo_Sources = {
 	.Rectangle = {
-		vs_sources = {#load("./rectangle_vs.glsl", string)},
-		fs_sources = {#load("./fs_simple.glsl", string)},
+		vs_sources = {#load("./rectangle.vert", string)},
+		fs_sources = {#load("./simple.frag", string)},
 	},
 	.Pyramid = {
-		vs_sources = {#load("./pyramid_vs.glsl", string)},
-		fs_sources = {#load("./fs_simple.glsl", string)},
+		vs_sources = {#load("./pyramid.vert", string)},
+		fs_sources = {#load("./simple.frag", string)},
 	},
 	.Boxes = {
-		vs_sources = {#load("./boxes_vs.glsl", string)},
-		fs_sources = {#load("./fs_simple.glsl", string)},
+		vs_sources = {#load("./boxes.vert", string)},
+		fs_sources = {#load("./simple.frag", string)},
 	},
 	.Camera = {
-		vs_sources = {#load("./boxes_vs.glsl", string)},
-		fs_sources = {#load("./fs_simple.glsl", string)},
+		vs_sources = {#load("./boxes.vert", string)},
+		fs_sources = {#load("./simple.frag", string)},
 	},
 	.Lighting = {
-		vs_sources = {#load("./lighting_vs.glsl", string)},
-		fs_sources = {#load("./lighting_fs.glsl", string)},
+		vs_sources = {#load("./lighting.vert", string)},
+		fs_sources = {#load("./lighting.frag", string)},
 	},
 	.Specular = {
-		vs_sources = {#load("./specular_vs.glsl", string)},
-		fs_sources = {#load("./specular_fs.glsl", string)},
+		vs_sources = {#load("./specular.vert", string)},
+		fs_sources = {#load("./specular.frag", string)},
 	},
 	.Spotlight = {
-		vs_sources = {#load("./spotlight_vs.glsl", string)},
-		fs_sources = {#load("./spotlight_fs.glsl", string)},
+		vs_sources = {#load("./spotlight.vert", string)},
+		fs_sources = {#load("./spotlight.frag", string)},
 	},
 }
 
