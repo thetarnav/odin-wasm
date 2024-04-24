@@ -26,9 +26,9 @@ BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
 
 @private
 State_Boxes :: struct {
-	rotation: [2]f32,
-	u_matrix: Uniform_mat4,
-	vao:      VAO,
+	using vert: Inputs_Boxes_Vert,
+	vao       : VAO,
+	rotation  : [2]f32,
 }
 
 @private
@@ -36,10 +36,7 @@ setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	a_position := attribute_location_vec3(program, "a_position")
-	a_color    := attribute_location_vec4(program, "a_color")
-
-	s.u_matrix = uniform_location_mat4(program, "u_matrix")
+	input_locations_boxes_vert(s, program)
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
@@ -60,8 +57,8 @@ setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
 		copy_array(colors[i*CUBE_VERTICES:], CUBE_COLORS)
 	}
 
-	attribute(a_position, gl.CreateBuffer(), positions[:])
-	attribute(a_color   , gl.CreateBuffer(), colors[:])
+	attribute(s.a_position, gl.CreateBuffer(), positions[:])
+	attribute(s.a_color   , gl.CreateBuffer(), colors[:])
 }
 
 @private

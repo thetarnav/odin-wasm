@@ -22,16 +22,14 @@ RING_SPACE  :: 30
 
 @private
 State_Lighting :: struct {
-	cube_angle:    f32,
-	ring_angle:    f32,
-	u_view:        Uniform_mat4,
-	u_local:       Uniform_mat4,
-	u_light_dir:   Uniform_vec3,
-	u_light_color: Uniform_vec4,
-	vao:           VAO,
-	positions:     [ALL_VERTICES]vec3,
-	normals:       [ALL_VERTICES]vec3,
-	colors:        [ALL_VERTICES]RGBA,
+	using vert: Inputs_Lighting_Vert,
+	using frag: Inputs_Lighting_Frag,
+	vao       : VAO,
+	cube_angle: f32,
+	ring_angle: f32,
+	positions : [ALL_VERTICES]vec3,
+	normals   : [ALL_VERTICES]vec3,
+	colors    : [ALL_VERTICES]RGBA,
 }
 
 @private
@@ -39,14 +37,8 @@ setup_lighting :: proc(s: ^State_Lighting, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	a_position := attribute_location_vec3(program, "a_position")
-	a_normal   := attribute_location_vec3(program, "a_normal")
-	a_color    := attribute_location_vec4(program, "a_color")
-
-	s.u_view        = uniform_location_mat4(program, "u_view")
-	s.u_local       = uniform_location_mat4(program, "u_local")
-	s.u_light_dir   = uniform_location_vec3(program, "u_light_dir")
-	s.u_light_color = uniform_location_vec4(program, "u_light_color")
+	input_locations_lighting_vert(s, program)
+	input_locations_lighting_frag(s, program)
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
@@ -130,9 +122,9 @@ setup_lighting :: proc(s: ^State_Lighting, program: gl.Program) {
 		}
 	}
 
-	attribute(a_position, gl.CreateBuffer(), s.positions[:])
-	attribute(a_normal  , gl.CreateBuffer(), s.normals[:])
-	attribute(a_color   , gl.CreateBuffer(), s.colors[:])
+	attribute(s.a_position, gl.CreateBuffer(), s.positions[:])
+	attribute(s.a_normal  , gl.CreateBuffer(), s.normals[:])
+	attribute(s.a_color   , gl.CreateBuffer(), s.colors[:])
 
 	uniform(s.u_light_color, rgba_to_vec4(ORANGE))
 }

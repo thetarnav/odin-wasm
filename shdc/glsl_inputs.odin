@@ -3,8 +3,8 @@ package shdc
 import "core:strconv"
 
 Shader_Kind :: enum u8 {
-	Vertex,
-	Fragment,
+	Vert,
+	Frag,
 }
 
 Input :: struct {
@@ -51,7 +51,7 @@ shader_get_inputs :: proc(src: string, shader_kind: Shader_Kind, allocator := co
 		case "uniform":   input = Input{kind=.Uniform}
 		case "attribute": input = Input{kind=.Attribute}
 		case "in": 
-			if shader_kind == .Fragment do continue
+			if shader_kind == .Frag do continue
 			input = Input{kind=.Attribute}
 		case: continue
 		}

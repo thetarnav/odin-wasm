@@ -16,34 +16,23 @@ BALL_RADIUS :: 200
 
 @private
 State_Specular :: struct {
-	cube_angle   : f32,
-	ball_angle   : f32,
-	u_view       : Uniform_mat4,
-	u_local      : Uniform_mat4,
-	u_light_pos  : Uniform_vec3,
-	u_light_color: Uniform_vec4,
-	u_eye_pos	 : Uniform_vec3,
-	vao          : VAO,
-	positions    : [ALL_VERTICES]vec3,
-	normals      : [ALL_VERTICES]vec3,
-	colors       : [ALL_VERTICES]RGBA,
+	using vert: Inputs_Specular_Vert,
+	using frag: Inputs_Specular_Frag,
+	vao       : VAO,
+	cube_angle: f32,
+	ball_angle: f32,
+	positions : [ALL_VERTICES]vec3,
+	normals   : [ALL_VERTICES]vec3,
+	colors    : [ALL_VERTICES]RGBA,
 }
 
 @private
 setup_specular :: proc(s: ^State_Specular, program: gl.Program) {
-
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	a_position := attribute_location_vec3(program, "a_position")
-	a_normal   := attribute_location_vec3(program, "a_normal")
-	a_color    := attribute_location_vec4(program, "a_color")
-
-	s.u_view        = uniform_location_mat4(program, "u_view")
-	s.u_local       = uniform_location_mat4(program, "u_local")
-	s.u_light_pos   = uniform_location_vec3(program, "u_light_pos")
-	s.u_light_color = uniform_location_vec4(program, "u_light_color")
-	s.u_eye_pos     = uniform_location_vec3(program, "u_eye_pos")
+	input_locations_specular_vert(s, program)
+	input_locations_specular_frag(s, program)
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
@@ -63,9 +52,9 @@ setup_specular :: proc(s: ^State_Specular, program: gl.Program) {
 	get_sphere_base_triangle(ball_positions, ball_normals, BALL_RADIUS, BALL_SEGMENTS)
 	copy_pattern(ball_colors, []RGBA{PURPLE, CYAN, CYAN, PURPLE, CYAN, PURPLE})
 
-	attribute(a_position, gl.CreateBuffer(), s.positions[:])
-	attribute(a_normal  , gl.CreateBuffer(), s.normals[:])
-	attribute(a_color   , gl.CreateBuffer(), s.colors[:])
+	attribute(s.a_position, gl.CreateBuffer(), s.positions[:])
+	attribute(s.a_normal  , gl.CreateBuffer(), s.normals[:])
+	attribute(s.a_color   , gl.CreateBuffer(), s.colors[:])
 
 	uniform(s.u_light_color, rgba_to_vec4(WHITE))
 }

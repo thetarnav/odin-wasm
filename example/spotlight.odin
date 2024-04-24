@@ -34,16 +34,12 @@ ALL_VERTICES   :: PLANE_VERTICES + CUBE_VERTICES*2 + GUY_VERTICES
 
 @private
 State_Spotlight :: struct {
-	camera_angle : f32,
-	u_view       : Uniform_mat4,
-	u_local      : Uniform_mat4,
-	u_light_pos  : [2]Uniform_vec3,
-	u_light_color: [2]Uniform_vec4,
-	u_light_dir  : [2]Uniform_vec3,
-	u_light_add  : [2]Uniform_float,
-	vao          : VAO,
-	positions    : [ALL_VERTICES]vec3,
-	normals      : [ALL_VERTICES]vec3,
+	using vert  : Inputs_Spotlight_Vert,
+	using frag  : Inputs_Spotlight_Frag,
+	vao         : VAO,
+	camera_angle: f32,
+	positions   : [ALL_VERTICES]vec3,
+	normals     : [ALL_VERTICES]vec3,
 }
 
 
@@ -53,19 +49,8 @@ setup_spotlight :: proc(s: ^State_Spotlight, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	a_position := attribute_location_vec3(program, "a_position")
-	a_normal   := attribute_location_vec3(program, "a_normal")
-
-	s.u_view           = uniform_location_mat4(program, "u_view")
-	s.u_local          = uniform_location_mat4(program, "u_local")
-	s.u_light_pos[0]   = uniform_location_vec3(program, "u_light_pos[0]")
-	s.u_light_pos[1]   = uniform_location_vec3(program, "u_light_pos[1]")
-	s.u_light_color[0] = uniform_location_vec4(program, "u_light_color[0]")
-	s.u_light_color[1] = uniform_location_vec4(program, "u_light_color[1]")
-	s.u_light_dir[0]   = uniform_location_vec3(program, "u_light_dir[0]")
-	s.u_light_dir[1]   = uniform_location_vec3(program, "u_light_dir[1]")
-	s.u_light_add[0]   = uniform_location_float(program,"u_light_add[0]")
-	s.u_light_add[1]   = uniform_location_float(program,"u_light_add[1]")
+	input_locations_spotlight_vert(s, program)
+	input_locations_spotlight_frag(s, program)
 
 	gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.DEPTH_TEST)
@@ -114,8 +99,8 @@ setup_spotlight :: proc(s: ^State_Spotlight, program: gl.Program) {
 
 	normals_from_positions(guy_normals, guy_positions)
 
-	attribute(a_position, gl.CreateBuffer(), s.positions[:])
-	attribute(a_normal  , gl.CreateBuffer(), s.normals[:])
+	attribute(s.a_position, gl.CreateBuffer(), s.positions[:])
+	attribute(s.a_normal  , gl.CreateBuffer(), s.normals[:])
 
 	uniform(s.u_light_color[0], rgba_to_vec4(RED))
 	uniform(s.u_light_color[1], rgba_to_vec4(BLUE))
