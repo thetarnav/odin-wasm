@@ -138,4 +138,6 @@ main :: proc() {
 	if !ok {
 		fmt.printf("failed to write file\n")
 	}
+
+	os.exit(0)
 }

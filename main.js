@@ -52,6 +52,16 @@ const ODIN_ARGS_RELESE = [
 	"-no-bounds-check",
 	"-obfuscate-source-code-locations",
 ]
+const ODIN_ARGS_SHDC = [
+	"-vet-unused",
+	"-vet-style",
+	"-vet-semicolon",
+	"-o:aggressive",
+	"-microarch:native",
+	"-disable-assert",
+	"-no-bounds-check",
+	"-obfuscate-source-code-locations",
+]
 
 /*
 Allow passing odin compiler flags to the script.
@@ -83,12 +93,12 @@ const command_handlers = {
 		const server = makeHttpServer(requestListener)
 		const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
 
-		let wasm_build_promise = buildWASM(false)
-		const config_promise = buildConfig(true)
+		let wasm_build_promise = build_shader_utils().then(() => build_wasm(true))
+		const config_promise = build_config(true)
 
 		const watcher = chokidar.watch(
 			[
-				`./${PLAYGROUND_DIRNAME}/**/*.{js,html,css,odin,glsl}`,
+				`./${PLAYGROUND_DIRNAME}/**/*.{js,html,css,odin,vert,frag}`,
 				`./${PACKAGE_DIRNAME}/**/*.{js,odin}`,
 			],
 			{
@@ -97,12 +107,18 @@ const command_handlers = {
 			},
 		)
 		void watcher.on("change", filepath => {
-			if (filepath.endsWith(".odin") || filepath.endsWith(".glsl")) {
-				// eslint-disable-next-line no-console
+			switch (path.extname(filepath)) {
+			case ".odin":
 				console.log("Rebuilding WASM...")
-				wasm_build_promise = buildWASM(false)
+				wasm_build_promise = build_wasm(true)
+				break
+			case ".vert":
+			case ".frag":
+				console.log("Rebuilding shader utils...")
+				wasm_build_promise = build_shader_utils()
+				break
 			}
-			// eslint-disable-next-line no-console
+
 			console.log("Reloading page...")
 			sendToAllClients(wss, MESSAGE_RELOAD)
 		})
@@ -186,8 +202,8 @@ const command_handlers = {
 		/* Clean dist dir */
 		await ensureEmptyDir(dist_path)
 
-		const wasm_promise = buildWASM(true)
-		await buildConfig(false)
+		const wasm_promise = build_shader_utils().then(() => build_wasm(false))
+		await build_config(false)
 
 		const bundle_res = await unsafePromiseToError(
 			rollup.rollup({input: path.join(playground_path, "setup.js")}),
@@ -264,12 +280,18 @@ const JSC_CONFIG = {
 	},
 }
 
+/** @returns {Promise<number>} exit code */
+function build_shader_utils() {
+	const child = child_process.execFile("./shdc.bin", args, {cwd: dirname})
+	return childProcessToPromise(child)
+}
+
 /**
- * @param   {boolean}         is_release
+ * @param   {boolean}         is_dev
  * @returns {Promise<number>}            exit code
  */
-function buildWASM(is_release) {
-	const args = ODIN_ARGS_SHARED.concat(is_release ? ODIN_ARGS_RELESE : ODIN_ARGS_DEV)
+function build_wasm(is_dev) {
+	const args = ODIN_ARGS_SHARED.concat(is_dev ? ODIN_ARGS_DEV : ODIN_ARGS_RELESE)
 
 	const child = child_process.execFile("odin", args, {cwd: dirname})
 	child.stderr?.on("data", data => {
@@ -286,7 +308,7 @@ function buildWASM(is_release) {
  * @param   {boolean}       is_dev
  * @returns {Promise<void>}
  */
-async function buildConfig(is_dev) {
+async function build_config(is_dev) {
 	const content = await fsp.readFile(config_path, "utf8")
 	const corrected =
 		"/* THIS FILE IS AUTO GENERATED, DO NOT EDIT */\n" +
