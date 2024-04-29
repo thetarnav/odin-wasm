@@ -105,7 +105,7 @@ on_wheel :: proc(e: dom.Event) {
 	scale = clamp(scale, 0, 1)
 }
 @export
-on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
+on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: f32) {
 	window_size  = {vw, vh}
 	canvas_size  = {cw, ch}
 	canvas_pos   = {cx, cy}
@@ -113,10 +113,8 @@ on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
 	aspect_ratio = canvas_size.x / canvas_size.y
 }
 
-@export start :: proc "contextless" (
-	ctx: ^runtime.Context,
-	example_kind: Example_Kind,
-) -> (ok: bool) {
+@export
+start :: proc "c" (ctx: ^runtime.Context, example_kind: Example_Kind) -> (ok: bool) {
 	context = ctx^
 	example = example_kind
 
@@ -154,8 +152,8 @@ on_window_resize :: proc "contextless" (vw, vh, cw, ch, cx, cy: f32) {
 	return true
 }
 
-@(export)
-frame :: proc "contextless" (ctx: ^runtime.Context, delta: f32) {
+@export
+frame :: proc "c" (ctx: ^runtime.Context, delta: f32) {
 	context = ctx^
 	context.temp_allocator = mem.arena_allocator(&frame_arena)
 	defer free_all(context.temp_allocator)
