@@ -2,12 +2,10 @@ package shdc
 
 import "core:fmt"
 import str "core:strings"
-import "base:runtime"
 import "core:os"
+import "core:mem"
 
 write :: str.write_string
-
-files: []runtime.Load_Directory_File = #load_directory("../example")
 
 output_header: string : `/*
 
@@ -22,17 +20,31 @@ import gl  "../wasm/webgl"
 
 `
 
+file_buffer: [mem.Megabyte]byte
+
 main :: proc() {
 	context.allocator = context.temp_allocator
 
 	b := str.builder_make_len_cap(0, 10000)
 	write(&b, output_header)
 
-	for file in files {
+	dir_handle, open_err := os.open("example")
+	if open_err != 0 {
+		panic("failed to open directory")
+	}
+
+	file_infos, read_err := os.read_dir(dir_handle, -1)
+	if read_err != 0 {
+		panic("failed to read directory")
+	}
+
+	for fi in file_infos {
+		if fi.is_dir do continue
+
 		shader_kind: Shader_Kind
 		shader_name_suffix: string
 		
-		switch file.name[max(0, len(file.name)-5):] {
+		switch fi.name[max(0, len(fi.name)-5):] {
 		case ".vert":
 			shader_kind = .Vert
 			shader_name_suffix = "_vert"
@@ -42,17 +54,25 @@ main :: proc() {
 		case: continue
 		}
 
-		shader_name := str.concatenate({file.name[:len(file.name)-5], shader_name_suffix})
+		shader_name := str.concatenate({fi.name[:len(fi.name)-5], shader_name_suffix})
 		shader_name_snake := str.to_snake_case(shader_name)
 		shader_name_ada   := str.to_ada_case  (shader_name)
 
-		fmt.printf("file: %s\n", file.name)
+		file_handle, _ := os.open(fi.fullpath)
+		file_len, read_err := os.read(file_handle, file_buffer[:])
+		if read_err != 0 {
+			fmt.panicf("failed to read file: %s\n", fi.fullpath)
+		}
 
-		inputs, err := shader_get_inputs(string(file.data), shader_kind)
+		defer {
+			os.close(file_handle)
+			mem.zero_slice(file_buffer[:file_len])
+		}
 
+		file_text := string(file_buffer[:file_len])
+		inputs, err := shader_get_inputs(file_text, shader_kind)
 		if err != nil {
-			fmt.printf("error: %v\n", err)
-			continue
+			fmt.panicf("error: %v\n", err)
 		}
 
 		/* Type */
@@ -61,12 +81,6 @@ main :: proc() {
 		write(&b, " :: struct {\n")
 		
 		for input in inputs {
-			fmt.printf("input: %s\n", input.name)
-			fmt.printf("kind : %s\n", input.kind)
-			fmt.printf("type : %s\n", input.type)
-			fmt.printf("len  : %d\n", input.len)
-			fmt.printf("\n")
-
 			write(&b, "\t")
 			write(&b, input.name)
 			write(&b, ": ")

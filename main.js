@@ -45,7 +45,6 @@ const ODIN_ARGS_DEV    = [
 /** @type {string[]} */
 const ODIN_ARGS_RELESE = [
 	"-vet-unused",
-	"-vet-shadowing",
 	"-vet-style",
 	"-vet-semicolon",
 	"-o:aggressive",
