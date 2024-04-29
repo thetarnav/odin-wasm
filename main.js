@@ -30,6 +30,8 @@ const dist_path       = path.join(dirname, DIST_DIRNAME)
 const config_path     = path.join(dirname, CONFIG_FILENAME)
 const config_path_out = path.join(playground_path, CONFIG_OUT_FILENAME)
 const public_path     = path.join(playground_path, PUBLIC_DIRNAME)
+const shdc_dir_path   = path.join(dirname, "shdc")
+const shdc_bin_path   = path.join(dirname, "shdc.bin")
 
 
 /** @type {string[]} */
@@ -53,6 +55,9 @@ const ODIN_ARGS_RELESE = [
 	"-obfuscate-source-code-locations",
 ]
 const ODIN_ARGS_SHDC = [
+	"build",
+	shdc_dir_path,
+	"-out:"+shdc_bin_path,
 	"-vet-unused",
 	"-vet-style",
 	"-vet-semicolon",
@@ -79,9 +84,10 @@ for (let i = 2; i < process.argv.length; i++) {
 
 /** @enum {(typeof Command)[keyof typeof Command]} */
 const Command = /** @type {const} */ ({
-	Server : "server",  // Start a dev server
-	Preview: "preview", // Start a static server that serves the dist dir
-	Build  : "build",   // Build the example page
+	Server    : "server",     // Start a dev server
+	Preview   : "preview",    // Start a static server that serves the dist dir
+	Build     : "build",      // Build the example page
+	Build_SHDC: "build-shdc", // Rebuild the SHDC binary
 })
 
 /** @type {Record<Command, (args: string[]) => void>} */
@@ -93,7 +99,10 @@ const command_handlers = {
 		const server = makeHttpServer(requestListener)
 		const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
 
-		let wasm_build_promise = build_shader_utils().then(() => build_wasm(true))
+		let wasm_build_promise = 
+			build_shdc()
+			.then(() => build_shader_utils())
+			.then(() => build_wasm(true))
 		const config_promise = build_config(true)
 
 		const watcher = chokidar.watch(
@@ -109,17 +118,17 @@ const command_handlers = {
 		void watcher.on("change", filepath => {
 			switch (path.extname(filepath)) {
 			case ".odin":
-				console.log("Rebuilding WASM...")
+				info("Rebuilding WASM...")
 				wasm_build_promise = build_wasm(true)
 				break
 			case ".vert":
 			case ".frag":
-				console.log("Rebuilding shader utils...")
+				info("Rebuilding shader utils...")
 				wasm_build_promise = build_shader_utils()
 				break
 			}
 
-			console.log("Reloading page...")
+			info("Reloading page...")
 			sendToAllClients(wss, MESSAGE_RELOAD)
 		})
 
@@ -199,26 +208,36 @@ const command_handlers = {
 		})
 	},
 	async [Command.Build]() {
+		const logger = make_logger("BUILD")
+
 		/* Clean dist dir */
 		await ensureEmptyDir(dist_path)
+		logger_info(logger, "Cleared dist dir")
 
-		const wasm_promise = build_shader_utils().then(() => build_wasm(false))
+		const wasm_promise =
+			build_shdc()
+			.then(() => build_shader_utils())
+			.then(() => build_wasm(false))
+		
 		await build_config(false)
+		logger_info(logger, "Built config")
 
 		const bundle_res = await unsafePromiseToError(
 			rollup.rollup({input: path.join(playground_path, "setup.js")}),
 		)
 		if (bundle_res instanceof Error) panic("Failed to bundle, error:", bundle_res)
+		else logger_info(logger, "Bundled")
 
 		const generate_res = await unsafePromiseToError(bundle_res.generate({}))
 		if (generate_res instanceof Error) panic("Failed to generate, error:", generate_res)
+		else logger_info(logger, "Generated")
 
 		let errors_count = 0
 
 		const promises = generate_res.output.map(async chunk => {
 			if (chunk.type === "asset") {
 				// eslint-disable-next-line no-console
-				console.error("Unexpected asset:", chunk.fileName)
+				error("Unexpected asset: "+chunk.fileName)
 				errors_count += 1
 				return
 			}
@@ -233,14 +252,12 @@ const command_handlers = {
 		})
 
 		await Promise.all(promises)
-
 		void bundle_res.close()
+		logger_info(logger, "Transformed")
 
 		errors_count
-			? // eslint-disable-next-line no-console
-				console.error("JS Build failed, errors:", errors_count)
-			: // eslint-disable-next-line no-console
-				console.log("JS Build complete")
+			? logger_error(logger, "JS Build failed, errors: "+errors_count)
+			: logger_info(logger, "JS Build complete")
 
 		const wasm_exit_code = await wasm_promise
 		if (wasm_exit_code != 0) panic("Failed to build WASM, code:", wasm_exit_code)
@@ -248,11 +265,14 @@ const command_handlers = {
 		/* Copy public dir */
 		await copyDirContents(public_path, dist_path)
 
-		// eslint-disable-next-line no-console
-		console.log("Build complete")
+		logger_success(logger, "Build complete")
 
 		process.exit(0)
 	},
+	[Command.Build_SHDC]() {
+		fs.rmSync(shdc_bin_path, {force: true})
+		build_shdc()
+	}
 }
 
 /** @type {<O extends Object>(o: O, k: PropertyKey | keyof O) => k is keyof O} */
@@ -281,25 +301,67 @@ const JSC_CONFIG = {
 }
 
 /** @returns {Promise<number>} exit code */
-function build_shader_utils() {
-	const child = child_process.execFile("./shdc.bin", args, {cwd: dirname})
-	return childProcessToPromise(child)
+async function build_shader_utils() {
+	const start = performance.now()
+
+	const child = child_process.execFile(shdc_bin_path, args, {cwd: dirname})
+	const code = await childProcessToPromise(child)
+	
+	if (code === 0) {
+		info(`Shader utils built in: ${Math.round(performance.now() - start)}ms`)
+	} else {
+		error("Shader utils build failed");
+	}
+
+	return code
+}
+
+/** @returns {Promise<number>} exit code */
+async function build_shdc() {
+	const start = performance.now()
+	
+	if (await fileExists(shdc_bin_path)) {
+		return 0
+	}
+
+	const child = child_process.execFile("odin", ODIN_ARGS_SHDC, {cwd: dirname})
+	
+	child.stderr?.on("data", console.error)
+
+	const code = await childProcessToPromise(child)
+	
+	if (code === 0) {
+		info(`SHDC built in: ${Math.round(performance.now() - start)}ms`)
+	} else {
+		error("SHDC build failed");
+	}
+
+	return code
 }
 
 /**
  * @param   {boolean}         is_dev
  * @returns {Promise<number>}            exit code
  */
-function build_wasm(is_dev) {
+async function build_wasm(is_dev) {
+	const start = performance.now()
+
 	const args = ODIN_ARGS_SHARED.concat(is_dev ? ODIN_ARGS_DEV : ODIN_ARGS_RELESE)
 
 	const child = child_process.execFile("odin", args, {cwd: dirname})
 	child.stderr?.on("data", data => {
-		// eslint-disable-next-line no-console
 		console.error(data.toString())
 	})
 
-	return childProcessToPromise(child)
+	const code = await childProcessToPromise(child)
+
+	if (code === 0) {
+		info(`WASM built in: ${Math.round(performance.now() - start)}ms`)
+	} else {
+		error("WASM build failed");
+	}
+
+	return code
 }
 
 /**
@@ -326,10 +388,10 @@ async function build_config(is_dev) {
 function makeHttpServer(requestListener) {
 	const server = http.createServer(requestListener).listen(HTTP_PORT)
 
-	// eslint-disable-next-line no-console
-	console.log(`//
-// Server running at http://127.0.0.1:${HTTP_PORT}
-//`)
+	// "\x1b[90m"+message+"\x1b[0m");
+	console.log("\x1b[90m"+`//`+"\x1b[0m")
+	console.log("\x1b[90m"+`//`+"\x1b[0m"+` Server running at http://127.0.0.1:${HTTP_PORT}`)
+	console.log("\x1b[90m"+`//`+"\x1b[0m")
 
 	return server
 }
@@ -363,6 +425,65 @@ function streamStatic(req, res, filepath, req_time) {
 	log_request(req, res, req_time)
 }
 
+function info (/** @type {string} */ message) {
+	console.log("\x1b[90m"+message+"\x1b[0m");
+}
+function success (/** @type {string} */ message) {
+	console.log("\x1b[32m"+message+"\x1b[0m")
+}
+function error (/** @type {string} */ message) {
+	console.error("\x1b[31m"+message+"\x1b[0m")
+}
+
+/** @returns {never} */
+function panic(/** @type {any[]} */ ...message) {
+	error(...message)
+	process.exit(1)
+}
+
+/**
+ * @typedef {object} Logger
+ * @property {string} prefix
+ * @property {number} time
+ */
+
+/**
+ * @param   {string} prefix
+ * @returns {Logger} */
+function make_logger(/** @type {string} */ prefix) {
+	return {
+		prefix: prefix,
+		time  : performance.now(),
+	}
+}
+/**
+ * @param {Logger} logger 
+ * @param {string} message 
+ * @returns {void} */
+function logger_info(logger, message) {
+	const now = performance.now()
+	console.log("\x1b[90m"+`${logger.prefix} [${Math.round(now - logger.time)}ms] ${message}`+"\x1b[0m")
+	logger.time = now
+}
+/**
+ * @param {Logger} logger 
+ * @param {string} message 
+ * @returns {void} */
+function logger_success(logger, message) {
+	const now = performance.now()
+	console.log("\x1b[32m"+`${logger.prefix} [${Math.round(now - logger.time)}ms] ${message}`+"\x1b[0m")
+	logger.time = now
+}
+/**
+ * @param {Logger} logger 
+ * @param {string} message 
+ * @returns {void} */
+function logger_error(logger, message) {
+	const now = performance.now()
+	console.error("\x1b[31m"+`${logger.prefix} [${Math.round(now - logger.time)}ms] ${message}`+"\x1b[0m")
+	logger.time = now
+}
+
 /**
  * @param   {http.IncomingMessage} req
  * @param   {http.ServerResponse}  res
@@ -388,13 +509,6 @@ function log_request(req, res, req_time) {
 	txt += " "
 	txt += req.url ?? "NULL"
 	console.log(txt)
-}
-
-/** @returns {never} */
-function panic(/** @type {any[]} */ ...message) {
-	// eslint-disable-next-line no-console
-	console.error(...message)
-	process.exit(1)
 }
 
 /** @typedef {Parameters<ws.WebSocket["send"]>[0]} BufferLike */
