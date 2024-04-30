@@ -30,7 +30,7 @@ next_char :: proc "contextless" (t: ^Tokenizer) -> (char: rune, before_eof: bool
 	if t.pos_read >= len(t.src) {
 		t.char = 0
 		t.pos_read = len(t.src)+1
-		t.width = 1
+		t.width = 0
 		return 0, false
 	}
 
@@ -65,7 +65,7 @@ next_token :: proc "contextless" (t: ^Tokenizer) -> (token: Token, before_eof: b
 		return
 	}
 
-	if t.pos_read > len(t.src) {
+	if t.pos_read >= len(t.src) {
 		return make_token(t, .EOF), false
 	}
 	before_eof = true

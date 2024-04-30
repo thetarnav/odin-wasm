@@ -3,7 +3,6 @@ package shdc
 import "core:fmt"
 import str "core:strings"
 import "core:os"
-import "core:mem"
 
 write :: str.write_string
 
@@ -19,8 +18,6 @@ import gl  "../wasm/webgl"
 
 
 `
-
-file_buffer: [mem.Megabyte]byte
 
 main :: proc() {
 	context.allocator = context.temp_allocator
@@ -38,46 +35,46 @@ main :: proc() {
 		panic("failed to read directory")
 	}
 
+
+	input_map: map[string]^[dynamic]Shader_Input
+
+
 	for fi in file_infos {
 		if fi.is_dir do continue
 
-		shader_kind: Shader_Kind
-		shader_name_suffix: string
+		ext_idx := len(fi.name)-5
+		if ext_idx <= 0 do continue
+
+		file_name := fi.name[:ext_idx]
 		
-		switch fi.name[max(0, len(fi.name)-5):] {
-		case ".vert":
-			shader_kind = .Vert
-			shader_name_suffix = "_vert"
-		case ".frag":
-			shader_kind = .Frag
-			shader_name_suffix = "_frag"
-		case: continue
+		shader_kind: Shader_Kind
+		switch fi.name[ext_idx:] {
+		case ".vert": shader_kind = .Vert
+		case ".frag": shader_kind = .Frag
+		case: continue 
 		}
 
-		shader_name := str.concatenate({fi.name[:len(fi.name)-5], shader_name_suffix})
-		shader_name_snake := str.to_snake_case(shader_name)
-		shader_name_ada   := str.to_ada_case  (shader_name)
-
-		file_handle, _ := os.open(fi.fullpath)
-		file_len, read_err := os.read(file_handle, file_buffer[:])
-		if read_err != 0 {
-			fmt.panicf("failed to read file: %s\n", fi.fullpath)
+		inputs, in_map := input_map[file_name]
+		if !in_map {
+			inputs = new([dynamic]Shader_Input)
+			reserve(inputs, 12)
+			input_map[file_name] = inputs
 		}
 
-		defer {
-			os.close(file_handle)
-			mem.zero_slice(file_buffer[:file_len])
-		}
-
-		file_text := string(file_buffer[:file_len])
-		inputs, err := shader_get_inputs(file_text, shader_kind)
+		file_buf := os.read_entire_file(fi.fullpath) or_else fmt.panicf("failed to read file: %s\n", fi.fullpath)
+		err := shader_inputs_append(inputs, string(file_buf), shader_kind)
 		if err != nil {
 			fmt.panicf("error: %v\n", err)
 		}
+	}
+
+	for file_name, inputs in input_map {
+		file_name_snake := str.to_snake_case(file_name); defer delete(file_name_snake)
+		file_name_ada   := str.to_ada_case  (file_name); defer delete(file_name_ada)
 
 		/* Type */
 		write(&b, "Inputs_")
-		write(&b, shader_name_ada)
+		write(&b, file_name_ada)
 		write(&b, " :: struct {\n")
 		
 		for input in inputs {
@@ -98,9 +95,9 @@ main :: proc() {
 
 		/* Locations */
 		write(&b, "input_locations_")
-		write(&b, shader_name_snake)
+		write(&b, file_name_snake)
 		write(&b, " :: proc(s: ^Inputs_")
-		write(&b, shader_name_ada)
+		write(&b, file_name_ada)
 		write(&b, ", program: gl.Program) {\n")
 
 		for input in inputs {
