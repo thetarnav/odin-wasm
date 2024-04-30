@@ -121,7 +121,7 @@ frame_spotlight :: proc(s: ^State_Spotlight, delta: f32) {
 	camera_mat *= mat4_rotate_y(s.camera_angle)
 	camera_mat *= mat4_translate(camera_pos)
 	camera_mat *= mat4_look_at(camera_pos, {0, 50, 0}, {0, 1, 0})
-	camera_mat = glm.inverse_mat4(camera_mat)
+	camera_mat  = glm.inverse_mat4(camera_mat)
 
 	view_mat := glm.mat4PerspectiveInfinite(
 		fovy   = radians(80),
@@ -138,12 +138,12 @@ frame_spotlight :: proc(s: ^State_Spotlight, delta: f32) {
 	cube_red_pos: vec3
 	cube_red_pos.x = CUBE_RADIUS * cos(cube_red_angle)
 	cube_red_pos.z = CUBE_RADIUS * sin(cube_red_angle)
-	cube_red_pos.y = CUBE_HEIGHT*8
+	cube_red_pos.y = CUBE_HEIGHT * 8
 
 	cube_blue_pos: vec3
 	cube_blue_pos.x = CUBE_RADIUS * cos(cube_blue_angle)
 	cube_blue_pos.z = CUBE_RADIUS * sin(cube_blue_angle)
-	cube_blue_pos.y = CUBE_HEIGHT*8
+	cube_blue_pos.y = CUBE_HEIGHT * 8
 
 	uniform(s.u_light_pos[0], cube_red_pos)
 	uniform(s.u_light_pos[1], cube_blue_pos)
@@ -177,3 +177,4 @@ frame_spotlight :: proc(s: ^State_Spotlight, delta: f32) {
 	gl.DrawArrays(gl.TRIANGLES, vi, GUY_VERTICES)
 	vi += GUY_VERTICES
 }
+	
