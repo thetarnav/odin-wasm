@@ -3,6 +3,7 @@ package example
 import "core:fmt"
 import "core:mem"
 import "core:runtime"
+import "core:math/rand"
 
 import "../wasm/dom"
 import gl "../wasm/webgl"
@@ -26,13 +27,13 @@ Example_Kind :: enum {
 	Lighting,
 	Specular,
 	Spotlight,
+	Candy,
 }
 example: Example_Kind
 
-Demo_Sources :: struct {
+demos: [Example_Kind]struct {
 	vs_sources, fs_sources: []string,
-}
-demos: [Example_Kind]Demo_Sources = {
+} = {
 	.Rectangle = {
 		vs_sources = {#load("./rectangle.vert", string)},
 		fs_sources = {#load("./simple.frag", string)},
@@ -61,6 +62,10 @@ demos: [Example_Kind]Demo_Sources = {
 		vs_sources = {#load("./spotlight.vert", string)},
 		fs_sources = {#load("./spotlight.frag", string)},
 	},
+	.Candy = {
+		vs_sources = {#load("./candy.vert", string)},
+		fs_sources = {#load("./candy.frag", string)},
+	},
 }
 
 // state is a union because it is being used by only one of the examples
@@ -72,12 +77,21 @@ demo_state: struct #raw_union {
 	lighting:  State_Lighting,
 	specular:  State_Specular,
 	spotlight: State_Spotlight,
+	candy:     State_Candy,
 }
 
-frame_arena_buffer: [1024]byte
-frame_arena: mem.Arena = {
-	data = frame_arena_buffer[:],
-}
+
+temp_arena_buffer: [mem.Megabyte]byte
+temp_arena: mem.Arena = {data = temp_arena_buffer[:]}
+temp_arena_allocator := mem.arena_allocator(&temp_arena)
+
+forever_arena_buffer: [mem.Megabyte]byte
+forever_arena: mem.Arena = {data = forever_arena_buffer[:]}
+forever_arena_allocator := mem.arena_allocator(&forever_arena)
+
+
+system_rand: rand.Rand = {is_system=true}
+
 
 main :: proc() {
 	if ODIN_DEBUG {
@@ -90,10 +104,14 @@ main :: proc() {
 	dom.add_window_event_listener(.Wheel, {}, on_wheel)
 	dom.add_window_event_listener(.Mouse_Move, {}, on_mouse_move)
 
+
 	dpr = f32(dom.device_pixel_ratio())
 	window_size = cast_vec2(f32, dom.get_window_inner_size())
 	canvas_size = window_size - 200
 	mouse_pos   = window_size / 2
+
+
+	rand.set_global_seed(rand.uint64(&system_rand))
 }
 
 on_mouse_move :: proc(e: dom.Event) {
@@ -116,6 +134,10 @@ on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: f32) {
 @export
 start :: proc "c" (ctx: ^runtime.Context, example_kind: Example_Kind) -> (ok: bool) {
 	context = ctx^
+	context.allocator      = forever_arena_allocator
+	context.temp_allocator = temp_arena_allocator
+	defer free_all(context.temp_allocator)
+
 	example = example_kind
 
 	// Make sure that this matches the id of your canvas.
@@ -142,6 +164,7 @@ start :: proc "c" (ctx: ^runtime.Context, example_kind: Example_Kind) -> (ok: bo
 	case .Lighting:  setup_lighting (&demo_state.lighting,  program)
 	case .Specular:  setup_specular (&demo_state.specular,  program)
 	case .Spotlight: setup_spotlight(&demo_state.spotlight, program)
+	case .Candy:     setup_candy    (&demo_state.candy,     program)
 	}
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
@@ -155,7 +178,8 @@ start :: proc "c" (ctx: ^runtime.Context, example_kind: Example_Kind) -> (ok: bo
 @export
 frame :: proc "c" (ctx: ^runtime.Context, delta: f32) {
 	context = ctx^
-	context.temp_allocator = mem.arena_allocator(&frame_arena)
+	context.allocator      = forever_arena_allocator
+	context.temp_allocator = temp_arena_allocator
 	defer free_all(context.temp_allocator)
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
@@ -171,5 +195,6 @@ frame :: proc "c" (ctx: ^runtime.Context, delta: f32) {
 	case .Lighting:  frame_lighting (&demo_state.lighting,  delta)
 	case .Specular:  frame_specular (&demo_state.specular,  delta)
 	case .Spotlight: frame_spotlight(&demo_state.spotlight, delta)
+	case .Candy:     frame_candy    (&demo_state.candy,     delta)
 	}
 }

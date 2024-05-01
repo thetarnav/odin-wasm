@@ -63,6 +63,30 @@ Attribute_Values_Lighting :: struct {
 	a_color: vec4,
 }
 
+Input_Locations_Candy :: struct {
+	u_color_mult: Uniform_vec4,
+	a_position: Attribute_vec4,
+	a_color: Attribute_vec4,
+	u_matrix: Uniform_mat4,
+}
+
+input_locations_candy :: proc(s: ^Input_Locations_Candy, program: gl.Program) {
+	s.u_color_mult = uniform_location_vec4(program, "u_color_mult")
+	s.a_position = attribute_location_vec4(program, "a_position")
+	s.a_color = attribute_location_vec4(program, "a_color")
+	s.u_matrix = uniform_location_mat4(program, "u_matrix")
+}
+
+Uniform_Values_Candy :: struct {
+	u_color_mult: vec4,
+	u_matrix: mat4,
+}
+
+Attribute_Values_Candy :: struct {
+	a_position: vec4,
+	a_color: vec4,
+}
+
 Input_Locations_Specular :: struct {
 	u_light_color: Uniform_vec4,
 	a_position: Attribute_vec3,
