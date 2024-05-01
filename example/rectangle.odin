@@ -25,7 +25,7 @@ positions: [VERTICES]vec2 = {
 
 @private
 State_Rectangle :: struct {
-	using vert: Inputs_Rectangle_Vert,
+	using locations: Input_Locations_Rectangle,
 	vao       : VAO,
 	rotation  : f32,
 }
@@ -40,7 +40,7 @@ setup_rectangle :: proc(s: ^State_Rectangle, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao) // need to bind VAO before binding buffers
 
-	input_locations_rectangle_vert(s, program)
+	input_locations_rectangle(s, program)
 
 	attribute(s.a_position, gl.CreateBuffer(), positions[:])
 	attribute(s.a_color   , gl.CreateBuffer(), colors[:])

@@ -41,7 +41,7 @@ colors: [VERTICES]RGBA = {
 
 @private
 State_Pyramid :: struct {
-	using vert: Inputs_Pyramid_Vert,
+	using locations: Input_Locations_Pyramid,
 	vao       : VAO,
 	rotation  : [2]f32,
 }
@@ -51,7 +51,7 @@ setup_pyramid :: proc(s: ^State_Pyramid, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	input_locations_pyramid_vert(s, program)
+	input_locations_pyramid(s, program)
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 

@@ -22,8 +22,7 @@ RING_SPACE  :: 30
 
 @private
 State_Lighting :: struct {
-	using vert: Inputs_Lighting_Vert,
-	using frag: Inputs_Lighting_Frag,
+	using locations: Input_Locations_Lighting,
 	vao       : VAO,
 	cube_angle: f32,
 	ring_angle: f32,
@@ -37,8 +36,7 @@ setup_lighting :: proc(s: ^State_Lighting, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	input_locations_lighting_vert(s, program)
-	input_locations_lighting_frag(s, program)
+	input_locations_lighting(s, program)
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces

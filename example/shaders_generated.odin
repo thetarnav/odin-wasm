@@ -9,53 +9,62 @@ package example
 import gl  "../wasm/webgl"
 
 
-Inputs_Rectangle_Vert :: struct {
+Input_Locations_Rectangle :: struct {
 	a_position: Attribute_vec2,
 	a_color: Attribute_vec4,
 	u_matrix: Uniform_mat3,
 }
 
-input_locations_rectangle_vert :: proc(s: ^Inputs_Rectangle_Vert, program: gl.Program) {
+input_locations_rectangle :: proc(s: ^Input_Locations_Rectangle, program: gl.Program) {
 	s.a_position = attribute_location_vec2(program, "a_position")
 	s.a_color = attribute_location_vec4(program, "a_color")
 	s.u_matrix = uniform_location_mat3(program, "u_matrix")
 }
 
-Inputs_Lighting_Vert :: struct {
+Uniform_Values_Rectangle :: struct {
+	u_matrix: mat3,
+}
+
+Attribute_Values_Rectangle :: struct {
+	a_position: vec2,
+	a_color: vec4,
+}
+
+Input_Locations_Lighting :: struct {
 	a_position: Attribute_vec3,
 	a_normal: Attribute_vec3,
 	a_color: Attribute_vec4,
 	u_view: Uniform_mat4,
 	u_local: Uniform_mat4,
+	u_light_dir: Uniform_vec3,
+	u_light_color: Uniform_vec4,
 }
 
-input_locations_lighting_vert :: proc(s: ^Inputs_Lighting_Vert, program: gl.Program) {
+input_locations_lighting :: proc(s: ^Input_Locations_Lighting, program: gl.Program) {
 	s.a_position = attribute_location_vec3(program, "a_position")
 	s.a_normal = attribute_location_vec3(program, "a_normal")
 	s.a_color = attribute_location_vec4(program, "a_color")
 	s.u_view = uniform_location_mat4(program, "u_view")
 	s.u_local = uniform_location_mat4(program, "u_local")
-}
-
-Inputs_Specular_Frag :: struct {
-	u_light_color: Uniform_vec4,
-}
-
-input_locations_specular_frag :: proc(s: ^Inputs_Specular_Frag, program: gl.Program) {
-	s.u_light_color = uniform_location_vec4(program, "u_light_color")
-}
-
-Inputs_Lighting_Frag :: struct {
-	u_light_dir: Uniform_vec3,
-	u_light_color: Uniform_vec4,
-}
-
-input_locations_lighting_frag :: proc(s: ^Inputs_Lighting_Frag, program: gl.Program) {
 	s.u_light_dir = uniform_location_vec3(program, "u_light_dir")
 	s.u_light_color = uniform_location_vec4(program, "u_light_color")
 }
 
-Inputs_Specular_Vert :: struct {
+Uniform_Values_Lighting :: struct {
+	u_view: mat4,
+	u_local: mat4,
+	u_light_dir: vec3,
+	u_light_color: vec4,
+}
+
+Attribute_Values_Lighting :: struct {
+	a_position: vec3,
+	a_normal: vec3,
+	a_color: vec4,
+}
+
+Input_Locations_Specular :: struct {
+	u_light_color: Uniform_vec4,
 	a_position: Attribute_vec3,
 	a_normal: Attribute_vec3,
 	a_color: Attribute_vec4,
@@ -65,7 +74,8 @@ Inputs_Specular_Vert :: struct {
 	u_local: Uniform_mat4,
 }
 
-input_locations_specular_vert :: proc(s: ^Inputs_Specular_Vert, program: gl.Program) {
+input_locations_specular :: proc(s: ^Input_Locations_Specular, program: gl.Program) {
+	s.u_light_color = uniform_location_vec4(program, "u_light_color")
 	s.a_position = attribute_location_vec3(program, "a_position")
 	s.a_normal = attribute_location_vec3(program, "a_normal")
 	s.a_color = attribute_location_vec4(program, "a_color")
@@ -75,65 +85,111 @@ input_locations_specular_vert :: proc(s: ^Inputs_Specular_Vert, program: gl.Prog
 	s.u_local = uniform_location_mat4(program, "u_local")
 }
 
-Inputs_Boxes_Vert :: struct {
+Uniform_Values_Specular :: struct {
+	u_light_color: vec4,
+	u_light_pos: vec3,
+	u_eye_pos: vec3,
+	u_view: mat4,
+	u_local: mat4,
+}
+
+Attribute_Values_Specular :: struct {
+	a_position: vec3,
+	a_normal: vec3,
+	a_color: vec4,
+}
+
+Input_Locations_Boxes :: struct {
 	a_position: Attribute_vec3,
 	a_color: Attribute_vec4,
 	u_matrix: Uniform_mat4,
 }
 
-input_locations_boxes_vert :: proc(s: ^Inputs_Boxes_Vert, program: gl.Program) {
+input_locations_boxes :: proc(s: ^Input_Locations_Boxes, program: gl.Program) {
 	s.a_position = attribute_location_vec3(program, "a_position")
 	s.a_color = attribute_location_vec4(program, "a_color")
 	s.u_matrix = uniform_location_mat4(program, "u_matrix")
 }
 
-Inputs_Spotlight_Vert :: struct {
+Uniform_Values_Boxes :: struct {
+	u_matrix: mat4,
+}
+
+Attribute_Values_Boxes :: struct {
+	a_position: vec3,
+	a_color: vec4,
+}
+
+Input_Locations_Spotlight :: struct {
 	a_position: Attribute_vec3,
 	a_normal: Attribute_vec3,
 	u_light_pos: [2]Uniform_vec3,
 	u_view: Uniform_mat4,
 	u_local: Uniform_mat4,
+	u_light_add: [2]Uniform_float,
+	u_light_color: [2]Uniform_vec4,
+	u_light_dir: [2]Uniform_vec3,
 }
 
-input_locations_spotlight_vert :: proc(s: ^Inputs_Spotlight_Vert, program: gl.Program) {
+input_locations_spotlight :: proc(s: ^Input_Locations_Spotlight, program: gl.Program) {
 	s.a_position = attribute_location_vec3(program, "a_position")
 	s.a_normal = attribute_location_vec3(program, "a_normal")
 	s.u_light_pos[0] = uniform_location_vec3(program, "u_light_pos[0]")
 	s.u_light_pos[1] = uniform_location_vec3(program, "u_light_pos[1]")
 	s.u_view = uniform_location_mat4(program, "u_view")
 	s.u_local = uniform_location_mat4(program, "u_local")
-}
-
-Inputs_Pyramid_Vert :: struct {
-	a_position: Attribute_vec3,
-	a_color: Attribute_vec4,
-	u_matrix: Uniform_mat4,
-}
-
-input_locations_pyramid_vert :: proc(s: ^Inputs_Pyramid_Vert, program: gl.Program) {
-	s.a_position = attribute_location_vec3(program, "a_position")
-	s.a_color = attribute_location_vec4(program, "a_color")
-	s.u_matrix = uniform_location_mat4(program, "u_matrix")
-}
-
-Inputs_Simple_Frag :: struct {
-}
-
-input_locations_simple_frag :: proc(s: ^Inputs_Simple_Frag, program: gl.Program) {
-}
-
-Inputs_Spotlight_Frag :: struct {
-	u_light_add: [2]Uniform_float,
-	u_light_color: [2]Uniform_vec4,
-	u_light_dir: [2]Uniform_vec3,
-}
-
-input_locations_spotlight_frag :: proc(s: ^Inputs_Spotlight_Frag, program: gl.Program) {
 	s.u_light_add[0] = uniform_location_float(program, "u_light_add[0]")
 	s.u_light_add[1] = uniform_location_float(program, "u_light_add[1]")
 	s.u_light_color[0] = uniform_location_vec4(program, "u_light_color[0]")
 	s.u_light_color[1] = uniform_location_vec4(program, "u_light_color[1]")
 	s.u_light_dir[0] = uniform_location_vec3(program, "u_light_dir[0]")
 	s.u_light_dir[1] = uniform_location_vec3(program, "u_light_dir[1]")
+}
+
+Uniform_Values_Spotlight :: struct {
+	u_light_pos: vec3,
+	u_view: mat4,
+	u_local: mat4,
+	u_light_add: float,
+	u_light_color: vec4,
+	u_light_dir: vec3,
+}
+
+Attribute_Values_Spotlight :: struct {
+	a_position: vec3,
+	a_normal: vec3,
+}
+
+Input_Locations_Pyramid :: struct {
+	a_position: Attribute_vec3,
+	a_color: Attribute_vec4,
+	u_matrix: Uniform_mat4,
+}
+
+input_locations_pyramid :: proc(s: ^Input_Locations_Pyramid, program: gl.Program) {
+	s.a_position = attribute_location_vec3(program, "a_position")
+	s.a_color = attribute_location_vec4(program, "a_color")
+	s.u_matrix = uniform_location_mat4(program, "u_matrix")
+}
+
+Uniform_Values_Pyramid :: struct {
+	u_matrix: mat4,
+}
+
+Attribute_Values_Pyramid :: struct {
+	a_position: vec3,
+	a_color: vec4,
+}
+
+Input_Locations_Simple :: struct {
+}
+
+input_locations_simple :: proc(s: ^Input_Locations_Simple, program: gl.Program) {
+}
+
+Uniform_Values_Simple :: struct {
+}
+
+Attribute_Values_Simple :: struct {
 }
 

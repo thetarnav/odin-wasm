@@ -34,8 +34,7 @@ ALL_VERTICES   :: PLANE_VERTICES + CUBE_VERTICES*2 + GUY_VERTICES
 
 @private
 State_Spotlight :: struct {
-	using vert  : Inputs_Spotlight_Vert,
-	using frag  : Inputs_Spotlight_Frag,
+	using locations: Input_Locations_Spotlight,
 	vao         : VAO,
 	camera_angle: f32,
 	positions   : [ALL_VERTICES]vec3,
@@ -49,8 +48,7 @@ setup_spotlight :: proc(s: ^State_Spotlight, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	input_locations_spotlight_vert(s, program)
-	input_locations_spotlight_frag(s, program)
+	input_locations_spotlight(s, program)
 
 	gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.DEPTH_TEST)

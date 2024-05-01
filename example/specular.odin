@@ -16,8 +16,7 @@ BALL_RADIUS :: 200
 
 @private
 State_Specular :: struct {
-	using vert: Inputs_Specular_Vert,
-	using frag: Inputs_Specular_Frag,
+	using locations: Input_Locations_Specular,
 	vao       : VAO,
 	cube_angle: f32,
 	ball_angle: f32,
@@ -31,8 +30,7 @@ setup_specular :: proc(s: ^State_Specular, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	input_locations_specular_vert(s, program)
-	input_locations_specular_frag(s, program)
+	input_locations_specular(s, program)
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces

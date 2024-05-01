@@ -36,7 +36,8 @@ main :: proc() {
 	}
 
 
-	input_map: map[string]^[dynamic]Shader_Input
+	inputs_all := make([]struct{name: string, inputs: [dynamic]Shader_Input}, len(file_infos))
+	inputs_all_len := 0
 
 
 	for fi in file_infos {
@@ -54,11 +55,18 @@ main :: proc() {
 		case: continue 
 		}
 
-		inputs, in_map := input_map[file_name]
-		if !in_map {
-			inputs = new([dynamic]Shader_Input)
-			reserve(inputs, 12)
-			input_map[file_name] = inputs
+		inputs: ^[dynamic]Shader_Input
+		search: {
+			for &item in inputs_all[:inputs_all_len] {
+				if item.name == file_name {
+					inputs = &item.inputs
+					break search
+				}
+			}
+			
+			inputs_all[inputs_all_len] = {file_name, make([dynamic]Shader_Input, 0, 12)}
+			inputs = &inputs_all[inputs_all_len].inputs
+			inputs_all_len += 1
 		}
 
 		file_buf := os.read_entire_file(fi.fullpath) or_else fmt.panicf("failed to read file: %s\n", fi.fullpath)
@@ -67,17 +75,20 @@ main :: proc() {
 			fmt.panicf("error: %v\n", err)
 		}
 	}
+	
 
-	for file_name, inputs in input_map {
-		file_name_snake := str.to_snake_case(file_name); defer delete(file_name_snake)
-		file_name_ada   := str.to_ada_case  (file_name); defer delete(file_name_ada)
+	for item in inputs_all[:inputs_all_len] {
+		file_name_snake := str.to_snake_case(item.name); defer delete(file_name_snake)
+		file_name_ada   := str.to_ada_case  (item.name); defer delete(file_name_ada)
 
-		/* Type */
-		write(&b, "Inputs_")
+		/*
+		Locations Type
+		*/
+		write(&b, "Input_Locations_")
 		write(&b, file_name_ada)
 		write(&b, " :: struct {\n")
 		
-		for input in inputs {
+		for input in item.inputs {
 			write(&b, "\t")
 			write(&b, input.name)
 			write(&b, ": ")
@@ -93,14 +104,16 @@ main :: proc() {
 
 		write(&b, "}\n\n")
 
-		/* Locations */
+		/*
+		Locations Proc
+		*/
 		write(&b, "input_locations_")
 		write(&b, file_name_snake)
-		write(&b, " :: proc(s: ^Inputs_")
+		write(&b, " :: proc(s: ^Input_Locations_")
 		write(&b, file_name_ada)
 		write(&b, ", program: gl.Program) {\n")
 
-		for input in inputs {
+		for input in item.inputs {
 			if input.len == 0 {
 				write(&b, "\ts.")
 				write(&b, input.name)
@@ -127,9 +140,45 @@ main :: proc() {
 				}
 			}
 		}
+		write(&b, "}\n\n")
 
+		/*
+		Uniforms Type
+		*/
+		write(&b, "Uniform_Values_")
+		write(&b, file_name_ada)
+		write(&b, " :: struct {\n")
+
+		for input in item.inputs {
+			if input.kind != .Uniform do continue
+
+			write(&b, "\t")
+			write(&b, input.name)
+			write(&b, ": ")
+			write(&b, input.type)
+			write(&b, ",\n")
+		}
+		write(&b, "}\n\n")
+
+		/*
+		Attributes Type
+		*/
+		write(&b, "Attribute_Values_")
+		write(&b, file_name_ada)
+		write(&b, " :: struct {\n")
+
+		for input in item.inputs {
+			if input.kind != .Attribute do continue
+
+			write(&b, "\t")
+			write(&b, input.name)
+			write(&b, ": ")
+			write(&b, input.type)
+			write(&b, ",\n")
+		}
 		write(&b, "}\n\n")
 	}
+	
 
 	ok := os.write_entire_file("example/shaders_generated.odin", b.buf[:])
 	if !ok {

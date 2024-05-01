@@ -19,7 +19,7 @@ PYRAMID_COLORS: [PYRAMID_VERTICES]RGBA : {
 
 @private
 State_Camera :: struct {
-	using vert: Inputs_Boxes_Vert,
+	using locations: Input_Locations_Boxes,
 	vao:      VAO,
 	rotation: f32,
 }
@@ -34,7 +34,7 @@ setup_camera :: proc(s: ^State_Camera, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	input_locations_boxes_vert(s, program)
+	input_locations_boxes(s, program)
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces

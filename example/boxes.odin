@@ -26,9 +26,9 @@ BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
 
 @private
 State_Boxes :: struct {
-	using vert: Inputs_Boxes_Vert,
-	vao       : VAO,
-	rotation  : [2]f32,
+	using locations: Input_Locations_Boxes,
+	vao     : VAO,
+	rotation: [2]f32,
 }
 
 @private
@@ -36,7 +36,7 @@ setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
 	s.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(s.vao)
 
-	input_locations_boxes_vert(s, program)
+	input_locations_boxes(s, program)
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
