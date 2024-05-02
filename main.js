@@ -214,10 +214,11 @@ const command_handlers = {
 		await ensureEmptyDir(dist_path)
 		logger_info(logger, "Cleared dist dir")
 
-		const wasm_promise =
-			build_shdc()
-			.then(() => build_shader_utils())
-			.then(() => build_wasm(false))
+		/*
+		During build, building shdc, and generating shader utils is skipped
+		this is because they are comminted to the repo, and are not expected to change
+		*/
+		const wasm_promise = build_wasm(false)
 
 		await build_config(false)
 		logger_info(logger, "Built config")
