@@ -164,11 +164,7 @@ frame_candy :: proc(s: ^State_Candy, delta: f32) {
 		o.u_view  = view_mat
 
 		gl.BindVertexArray(o.shape.vao)
-
-		uniform(o.shape.u_view,       o.u_view)
-		uniform(o.shape.u_local,      o.u_local)
-		uniform(o.shape.u_color_mult, o.u_color_mult)
-
+		uniforms_candy(o.shape, o)
 		gl.DrawArrays(gl.TRIANGLES, 0, len(o.shape.positions))
 	}
 }
