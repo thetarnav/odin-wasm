@@ -111,29 +111,29 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 
 	oi := 0
 	for &o in s.objects[oi:oi+20] {
-		o.shape = cube_shape
-		o.translation = candy_random_translation()
+		o.shape          = cube_shape
+		o.translation    = candy_random_translation()
 		o.rotation_speed = candy_random_rotation_speed()
-		o.scale = rand.float32_range(30, 60)
-		o.u_color_mult = rgba_to_vec4(rand_color())
+		o.scale          = rand.float32_range(30, 60)
+		o.u_color_mult   = rgba_to_vec4(rand_color())
 	}
 	oi += 20
 
 	for &o in s.objects[oi:oi+20] {
-		o.shape = pyramid_shape
-		o.translation = candy_random_translation()
+		o.shape          = pyramid_shape
+		o.translation    = candy_random_translation()
 		o.rotation_speed = candy_random_rotation_speed()
-		o.scale = rand.float32_range(30, 60)
-		o.u_color_mult = rgba_to_vec4(rand_color())
+		o.scale          = rand.float32_range(30, 60)
+		o.u_color_mult   = rgba_to_vec4(rand_color())
 	}
 	oi += 20
 
 	for &o in s.objects[oi:oi+20] {
-		o.shape = sphere_shape
-		o.translation = candy_random_translation()
+		o.shape          = sphere_shape
+		o.translation    = candy_random_translation()
 		o.rotation_speed = candy_random_rotation_speed()
-		o.scale = rand.float32_range(20, 40)
-		o.u_color_mult = rgba_to_vec4(rand_color())
+		o.scale          = rand.float32_range(20, 40)
+		o.u_color_mult   = rgba_to_vec4(rand_color())
 	}
 }
 
