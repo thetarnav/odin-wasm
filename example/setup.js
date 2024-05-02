@@ -17,7 +17,6 @@ if (IS_DEV) {
 
 	/* To test dispatching custom events */
 	document.body.addEventListener("lol", () => {
-		// eslint-disable-next-line no-console
 		console.log("lol event has been received")
 	})
 }
@@ -128,9 +127,7 @@ wasm.initWasmState(wasm_state, src_instance)
 const exports = /** @type {Wasm_Exports} */ (wasm_state.exports)
 
 if (IS_DEV) {
-	// eslint-disable-next-line no-console
 	console.log("WASM exports:", exports)
-	// eslint-disable-next-line no-console
 	console.log("WASM memory:", exports.memory)
 }
 

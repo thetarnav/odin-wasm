@@ -99,7 +99,7 @@ const command_handlers = {
 		const server = makeHttpServer(requestListener)
 		const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
 
-		let wasm_build_promise = 
+		let wasm_build_promise =
 			build_shdc()
 			.then(() => build_shader_utils())
 			.then(() => build_wasm(true))
@@ -218,7 +218,7 @@ const command_handlers = {
 			build_shdc()
 			.then(() => build_shader_utils())
 			.then(() => build_wasm(false))
-		
+
 		await build_config(false)
 		logger_info(logger, "Built config")
 
@@ -236,7 +236,6 @@ const command_handlers = {
 
 		const promises = generate_res.output.map(async chunk => {
 			if (chunk.type === "asset") {
-				// eslint-disable-next-line no-console
 				error("Unexpected asset: "+chunk.fileName)
 				errors_count += 1
 				return
@@ -306,7 +305,7 @@ async function build_shader_utils() {
 
 	const child = child_process.execFile(shdc_bin_path, args, {cwd: dirname})
 	const code = await childProcessToPromise(child)
-	
+
 	if (code === 0) {
 		info(`Shader utils built in: ${Math.round(performance.now() - start)}ms`)
 	} else {
@@ -319,17 +318,17 @@ async function build_shader_utils() {
 /** @returns {Promise<number>} exit code */
 async function build_shdc() {
 	const start = performance.now()
-	
+
 	if (await fileExists(shdc_bin_path)) {
 		return 0
 	}
 
 	const child = child_process.execFile("odin", ODIN_ARGS_SHDC, {cwd: dirname})
-	
+
 	child.stderr?.on("data", console.error)
 
 	const code = await childProcessToPromise(child)
-	
+
 	if (code === 0) {
 		info(`SHDC built in: ${Math.round(performance.now() - start)}ms`)
 	} else {
@@ -457,8 +456,8 @@ function make_logger(/** @type {string} */ prefix) {
 	}
 }
 /**
- * @param {Logger} logger 
- * @param {string} message 
+ * @param {Logger} logger
+ * @param {string} message
  * @returns {void} */
 function logger_info(logger, message) {
 	const now = performance.now()
@@ -466,8 +465,8 @@ function logger_info(logger, message) {
 	logger.time = now
 }
 /**
- * @param {Logger} logger 
- * @param {string} message 
+ * @param {Logger} logger
+ * @param {string} message
  * @returns {void} */
 function logger_success(logger, message) {
 	const now = performance.now()
@@ -475,8 +474,8 @@ function logger_success(logger, message) {
 	logger.time = now
 }
 /**
- * @param {Logger} logger 
- * @param {string} message 
+ * @param {Logger} logger
+ * @param {string} message
  * @returns {void} */
 function logger_error(logger, message) {
 	const now = performance.now()

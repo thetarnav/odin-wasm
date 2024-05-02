@@ -7,7 +7,6 @@ const ERROR_STYLE = "color: #eee; background-color: #d10; padding: 2px 4px"
 export function eprintln(/** @type {string} */ text) {
 	if (!CONSOLE_ENABLED) return
 
-	// eslint-disable-next-line no-console
 	console.log("%c" + text, ERROR_STYLE)
 }
 

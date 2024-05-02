@@ -11,7 +11,6 @@ export function enableConsole() {
  */
 export function assert(condition, ...data) {
 	if (!CONSOLE_ENABLED) return
-	// eslint-disable-next-line no-console
 	console.assert(condition, ...data)
 }
 /**
@@ -20,7 +19,6 @@ export function assert(condition, ...data) {
  */
 export function log(...data) {
 	if (!CONSOLE_ENABLED) return
-	// eslint-disable-next-line no-console
 	console.log(...data)
 }
 /**
@@ -29,7 +27,6 @@ export function log(...data) {
  */
 export function warn(...data) {
 	if (!CONSOLE_ENABLED) return
-	// eslint-disable-next-line no-console
 	console.warn(...data)
 }
 /**
@@ -38,6 +35,5 @@ export function warn(...data) {
  */
 export function error(...data) {
 	if (!CONSOLE_ENABLED) return
-	// eslint-disable-next-line no-console
 	console.error(...data)
 }
