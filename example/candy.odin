@@ -13,9 +13,9 @@ State_Candy :: struct {
 
 Shape :: struct {
 	using locations: Input_Locations_Candy,
-	vao       : VAO,
-	positions : []vec3,
-	colors    : []u8vec4,
+	vao      : VAO,
+	positions: []vec3,
+	colors   : []u8vec4,
 }
 
 Object :: struct {
@@ -25,34 +25,6 @@ Object :: struct {
 	rotation_speed: vec3,
 	translation   : vec3,
 	scale         : f32,
-}
-
-rand_color :: proc() -> u8vec4 {
-	color := transmute(u8vec4)rand.uint32()
-	color.a = 255
-	return color
-}
-rand_color_gray :: proc() -> u8vec4 {
-	l := u8(rand.uint64()) / 2 + 128
-	return {l, l, l, 255}
-}
-rand_vert_colors :: proc(colors: []u8vec4) {
-	assert(len(colors)%3 == 0)
-	for i in 0..<len(colors)/3 {
-		color := rand_color()
-		colors[i*3+0] = color
-		colors[i*3+1] = color
-		colors[i*3+2] = color
-	}
-}
-rand_vert_colors_gray :: proc(colors: []u8vec4) {
-	assert(len(colors)%3 == 0)
-	for i in 0..<len(colors)/3 {
-		color := rand_color_gray()
-		colors[i*3+0] = color
-		colors[i*3+1] = color
-		colors[i*3+2] = color
-	}
 }
 
 
@@ -71,7 +43,7 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 	cube_shape.positions = cube_positions[:]
 	
 	cube_shape.colors = make([]u8vec4, len(cube_positions))
-	rand_vert_colors_gray(cube_shape.colors)
+	rand_colors_gray(cube_shape.colors)
 
 	cube_shape.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(cube_shape.vao)
@@ -91,7 +63,7 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 	pyramid_shape.positions = pyramid_positions[:]
 
 	pyramid_shape.colors = make([]u8vec4, len(pyramid_positions))
-	rand_vert_colors_gray(pyramid_shape.colors)
+	rand_colors_gray(pyramid_shape.colors)
 
 	pyramid_shape.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(pyramid_shape.vao)
@@ -115,7 +87,7 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 	get_sphere_base_triangle(sphere_shape.positions, sphere_normals, 1, segments)
 
 	sphere_shape.colors = make([]u8vec4, sphere_vertices)
-	rand_vert_colors_gray(sphere_shape.colors)
+	rand_colors_gray(sphere_shape.colors)
 
 	sphere_shape.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(sphere_shape.vao)

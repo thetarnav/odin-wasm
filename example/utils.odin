@@ -1,6 +1,7 @@
 package example
 
 import "base:intrinsics"
+import "core:math/rand"
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
@@ -383,6 +384,34 @@ cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
 
 vec2_to_vec3 :: #force_inline proc "contextless" (v: $T/[2]f32, z: f32 = 0) -> vec3 {
 	return {v.x, v.y, z}
+}
+
+rand_color :: proc(r: ^rand.Rand = nil) -> u8vec4 {
+	color := transmute(u8vec4)rand.uint32(r)
+	color.a = 255
+	return color
+}
+rand_color_gray :: proc(r: ^rand.Rand = nil) -> u8vec4 {
+	l := u8(rand.uint64(r)) / 2 + 128
+	return {l, l, l, 255}
+}
+rand_colors :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
+	assert(len(colors)%3 == 0)
+	for i in 0..<len(colors)/3 {
+		color := rand_color(r)
+		colors[i*3+0] = color
+		colors[i*3+1] = color
+		colors[i*3+2] = color
+	}
+}
+rand_colors_gray :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
+	assert(len(colors)%3 == 0)
+	for i in 0..<len(colors)/3 {
+		color := rand_color_gray(r)
+		colors[i*3+0] = color
+		colors[i*3+1] = color
+		colors[i*3+2] = color
+	}
 }
 
 @(require_results)
