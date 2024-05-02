@@ -25,6 +25,7 @@
 		"server": "node main.js server",
 		"build": "node main.js build",
 		"preview": "node main.js preview",
+		"shdc": "node main.js shdc",
 		"test": "node --test",
 		"typecheck:ts": "tsc --noEmit -p ./jsconfig.json",
 		"typecheck:odin": "odin check example -target:js_wasm32",

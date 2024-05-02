@@ -28,6 +28,16 @@ Feel free to use this repo as a template for your own projects.
 
 There are some convenience scripts in [`main.js`](https://github.com/thetarnav/odin-wasm/tree/main/main.js) for building and running the example. And a github action for building and deploying the example to github pages.
 
+### 4. GLSL utils codegen tool
+
+The [`/shdc`](https://github.com/thetarnav/odin-wasm/tree/main/shdc) directory contains a cli tool for generating GLSL utils from parsing glsl shaders in the [`example/`](https://github.com/thetarnav/odin-wasm/tree/main/example) dir.
+
+It can be ran with `npm run shdc`, or `odin run shdc`.
+
+The generated file is committed to the repo, you can check it out in [`example/shaders_generated.odin`](https://github.com/thetarnav/odin-wasm/blob/main/example/shaders_generated.odin).
+
+The tool is just an experiment of parsing glsl, and generating some boilerplate code, so that getting attribute and uniform locations, and setting the values is a bit easier.
+
 ## Development
 
 ### Dependencies
@@ -58,3 +68,4 @@ The most important ones are:
 - `npm run dev` - starts the server and watches for changes
 - `npm run build` - builds the example to `dist/`
 - `npm run preview` - starts a server to preview the built example
+- `npm run shdc` - generates shader utils from parsing glsl shaders

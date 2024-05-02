@@ -88,6 +88,7 @@ const Command = /** @type {const} */ ({
 	Preview   : "preview",    // Start a static server that serves the dist dir
 	Build     : "build",      // Build the example page
 	Build_SHDC: "build-shdc", // Rebuild the SHDC binary
+	shdc      : "shdc",       // Generate shader utils
 })
 
 /** @type {Record<Command, (args: string[]) => void>} */
@@ -272,7 +273,11 @@ const command_handlers = {
 	[Command.Build_SHDC]() {
 		fs.rmSync(shdc_bin_path, {force: true})
 		build_shdc()
-	}
+	},
+	[Command.shdc]() {
+		build_shdc()
+		build_shader_utils()
+	},
 }
 
 /** @type {<O extends Object>(o: O, k: PropertyKey | keyof O) => k is keyof O} */
