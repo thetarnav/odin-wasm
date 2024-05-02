@@ -8,7 +8,8 @@ import gl  "../wasm/webgl"
 
 @private
 State_Candy :: struct {
-	objects: []Object,
+	objects : []Object,
+	rotation: [2]f32,
 }
 
 Shape :: struct {
@@ -31,7 +32,8 @@ candy_random_rotation_speed :: proc() -> vec3 {
 	return {rand.float32_range(-1, 1), rand.float32_range(-1, 1), rand.float32_range(-1, 1)}
 }
 candy_random_translation :: proc() -> vec3 {
-	return {rand.float32_range(-200, 200), rand.float32_range(-200, 200), rand.float32_range(-200, 200)}
+	RADIUS :: 260
+	return {rand.float32_range(-RADIUS, RADIUS), rand.float32_range(-RADIUS, RADIUS), rand.float32_range(-RADIUS, RADIUS)}
 }
 
 
@@ -135,6 +137,9 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 		o.scale          = rand.float32_range(20, 40)
 		o.u_color_mult   = rgba_to_vec4(rand_color())
 	}
+
+	/* Init rotation */
+	s.rotation = 1
 }
 
 @private
@@ -143,19 +148,17 @@ frame_candy :: proc(s: ^State_Candy, delta: f32) {
 	gl.ClearColor(0, 0, 0, 0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
+	s.rotation -= 0.01 * delta * mouse_rel.yx
 
-	camera_pos: vec3 = {0, 0, 500 - 500 * (scale-0.5)}
-
-	camera_mat: mat4 = 1
-	camera_mat *= mat4_translate(camera_pos)
-	camera_mat = glm.inverse_mat4(camera_mat)
-
-	view_mat := glm.mat4PerspectiveInfinite(
-		fovy   = radians(80),
+	view_mat: mat4 = 1
+	view_mat *= glm.mat4PerspectiveInfinite(
+		fovy   = glm.radians_f32(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	view_mat *= camera_mat
+	view_mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
+	view_mat *= mat4_rotate_x(s.rotation.x)
+	view_mat *= mat4_rotate_y(s.rotation.y)
 
 
 	for &o in s.objects {
