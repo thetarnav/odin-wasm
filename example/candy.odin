@@ -89,7 +89,7 @@ frame_candy :: proc(s: ^State_Candy, delta: f32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 
-	camera_pos := vec3{0, 0, 500 - 500 * (scale-0.5)}
+	camera_pos: vec3 = {0, 0, 500 - 500 * (scale-0.5)}
 
 	camera_mat: mat4 = 1
 	camera_mat *= mat4_translate(camera_pos)
@@ -104,11 +104,8 @@ frame_candy :: proc(s: ^State_Candy, delta: f32) {
 
 
 	for &o in s.objects {
-		o.u_local *= mat4_rotate_x(delta * 0.002 * o.rotation_speed.x)
-		o.u_local *= mat4_rotate_y(delta * 0.002 * o.rotation_speed.y)
-		o.u_local *= mat4_rotate_z(delta * 0.002 * o.rotation_speed.z)
-
-		o.u_view = view_mat
+		o.u_local *= mat4_rotate_vec(delta * 0.002 * o.rotation_speed)
+		o.u_view   = view_mat
 
 		gl.BindVertexArray(o.shape.vao)
 

@@ -460,6 +460,10 @@ mat4_rotate_z :: proc "contextless" (radians: f32) -> mat4 {
 	}
 }
 @(require_results)
+mat4_rotate_vec :: #force_inline proc "contextless" (v: vec3) -> mat4 {
+	return mat4_rotate_x(v.x) * mat4_rotate_y(v.y) * mat4_rotate_z(v.z)
+}
+@(require_results)
 mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> mat4 {
     f    : f32 = tan(fov*0.5)
     range: f32 = 1 / (near - far)
