@@ -27,6 +27,13 @@ Object :: struct {
 	scale         : f32,
 }
 
+candy_random_rotation_speed :: proc() -> vec3 {
+	return {rand.float32_range(-1, 1), rand.float32_range(-1, 1), rand.float32_range(-1, 1)}
+}
+candy_random_translation :: proc() -> vec3 {
+	return {rand.float32_range(-200, 200), rand.float32_range(-200, 200), rand.float32_range(-200, 200)}
+}
+
 
 @private
 setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
@@ -105,58 +112,28 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 	oi := 0
 	for &o in s.objects[oi:oi+20] {
 		o.shape = cube_shape
-		o.translation = {
-			rand.float32_range(-200, 200),
-			rand.float32_range(-200, 200),
-			rand.float32_range(-200, 200),
-		}
-		o.rotation_speed = {
-			rand.float32_range(-1, 1),
-			rand.float32_range(-1, 1),
-			rand.float32_range(-1, 1),
-		}
+		o.translation = candy_random_translation()
+		o.rotation_speed = candy_random_rotation_speed()
 		o.scale = rand.float32_range(30, 60)
 		o.u_color_mult = rgba_to_vec4(rand_color())
-		o.u_local = 1
-		o.u_view  = 1
 	}
 	oi += 20
 
 	for &o in s.objects[oi:oi+20] {
 		o.shape = pyramid_shape
-		o.translation = {
-			rand.float32_range(-200, 200),
-			rand.float32_range(-200, 200),
-			rand.float32_range(-200, 200),
-		}
-		o.rotation_speed = {
-			rand.float32_range(-1, 1),
-			rand.float32_range(-1, 1),
-			rand.float32_range(-1, 1),
-		}
+		o.translation = candy_random_translation()
+		o.rotation_speed = candy_random_rotation_speed()
 		o.scale = rand.float32_range(30, 60)
 		o.u_color_mult = rgba_to_vec4(rand_color())
-		o.u_local = 1
-		o.u_view  = 1
 	}
 	oi += 20
 
 	for &o in s.objects[oi:oi+20] {
 		o.shape = sphere_shape
-		o.translation = {
-			rand.float32_range(-200, 200),
-			rand.float32_range(-200, 200),
-			rand.float32_range(-200, 200),
-		}
-		o.rotation_speed = {
-			rand.float32_range(-1, 1),
-			rand.float32_range(-1, 1),
-			rand.float32_range(-1, 1),
-		}
+		o.translation = candy_random_translation()
+		o.rotation_speed = candy_random_rotation_speed()
 		o.scale = rand.float32_range(20, 40)
 		o.u_color_mult = rgba_to_vec4(rand_color())
-		o.u_local = 1
-		o.u_view  = 1
 	}
 }
 
