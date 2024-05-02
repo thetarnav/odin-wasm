@@ -138,7 +138,16 @@ get_pyramid_positions :: proc(pos: vec3 = 0, h: f32 = 1) -> [PYRAMID_VERTICES]ve
 	}
 }
 
+get_sphere_vertices :: proc (segments: int) -> int {
+	return 6 * segments * segments
+}
+
 get_sphere_base_triangle :: proc(positions, normals: []vec3, radius: f32, segments: int) {
+	assert(segments % 2 == 0, "Sphere segments must be even")
+	assert(len(positions) == len(normals), "Positions and normals must have the same length")
+	assert(len(positions) % 3 == 0, "Positions must be a multiple of 3")
+	assert(len(positions) == get_sphere_vertices(segments), "Invalid number of vertices")
+
 	// TODO: merge top and bottom segment triangles
 	si := 0 // segment index
 	for vi in 0..<segments { // vertical
@@ -188,6 +197,11 @@ get_sphere_base_triangle :: proc(positions, normals: []vec3, radius: f32, segmen
 }
 
 get_sphere_base_rectangle :: proc(positions, normals: []vec3, radius: f32, segments: int) {
+	assert(segments % 2 == 0, "Sphere segments must be even")
+	assert(len(positions) == len(normals), "Positions and normals must have the same length")
+	assert(len(positions) % 3 == 0, "Positions must be a multiple of 3")
+	assert(len(positions) == get_sphere_vertices(segments), "Invalid number of vertices")
+
 	// TODO: merge top and bottom segment triangles
 	si := 0 // segment index
 	for vi in 0..<segments { // vertical

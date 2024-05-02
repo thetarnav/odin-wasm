@@ -420,9 +420,26 @@ mat3_projection :: proc "contextless" (size: [2]f32) -> mat3 {
 	}
 }
 
-mat4_translate :: glm.mat4Translate
 mat4_inverse   :: glm.inverse_mat4
 
+@(require_results)
+mat4_translate :: proc "contextless" (v: vec3) -> mat4 {
+	return {
+		1, 0, 0, v.x,
+		0, 1, 0, v.y,
+		0, 0, 1, v.z,
+		0, 0, 0, 1,
+	}
+}
+@(require_results)
+mat4_scale :: proc "contextless" (v: vec3) -> (m: mat4) {
+	return {
+		v.x, 0,   0,   0,
+		0,   v.y, 0,   0,
+		0,   0,   v.z, 0,
+		0,   0,   0,   1,
+	}
+}
 @(require_results)
 mat4_rotate_x :: proc "contextless" (radians: f32) -> mat4 {
 	c := cos(radians)

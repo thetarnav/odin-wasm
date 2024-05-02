@@ -13,22 +13,46 @@ State_Candy :: struct {
 
 Shape :: struct {
 	using locations: Input_Locations_Candy,
-	vao:       VAO,
-	positions: []vec3,
-	colors:    []u8vec4,
+	vao       : VAO,
+	positions : []vec3,
+	colors    : []u8vec4,
 }
 
 Object :: struct {
 	using uniforms: Uniform_Values_Candy,
-	shape:          Shape,
+	shape         : Shape,
+	rotation      : vec3,
 	rotation_speed: vec3,
-	translation:    vec3,
+	translation   : vec3,
+	scale         : f32,
 }
 
 rand_color :: proc() -> u8vec4 {
 	color := transmute(u8vec4)rand.uint32()
 	color.a = 255
 	return color
+}
+rand_color_gray :: proc() -> u8vec4 {
+	l := u8(rand.uint64()) / 2 + 128
+	return {l, l, l, 255}
+}
+rand_vert_colors :: proc(colors: []u8vec4) {
+	assert(len(colors)%3 == 0)
+	for i in 0..<len(colors)/3 {
+		color := rand_color()
+		colors[i*3+0] = color
+		colors[i*3+1] = color
+		colors[i*3+2] = color
+	}
+}
+rand_vert_colors_gray :: proc(colors: []u8vec4) {
+	assert(len(colors)%3 == 0)
+	for i in 0..<len(colors)/3 {
+		color := rand_color_gray()
+		colors[i*3+0] = color
+		colors[i*3+1] = color
+		colors[i*3+2] = color
+	}
 }
 
 
@@ -43,13 +67,11 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 	*/
 	cube_shape: Shape
 
-	cube_positions := get_cube_positions(0, 60)
+	cube_positions := get_cube_positions()
 	cube_shape.positions = cube_positions[:]
 	
 	cube_shape.colors = make([]u8vec4, len(cube_positions))
-	for &color in cube_shape.colors {
-		color = rand_color()
-	}
+	rand_vert_colors_gray(cube_shape.colors)
 
 	cube_shape.vao = gl.CreateVertexArray()
 	gl.BindVertexArray(cube_shape.vao)
@@ -61,10 +83,55 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 
 
 	/*
+	Pyramid
+	*/
+	pyramid_shape: Shape
+
+	pyramid_positions := get_pyramid_positions()
+	pyramid_shape.positions = pyramid_positions[:]
+
+	pyramid_shape.colors = make([]u8vec4, len(pyramid_positions))
+	rand_vert_colors_gray(pyramid_shape.colors)
+
+	pyramid_shape.vao = gl.CreateVertexArray()
+	gl.BindVertexArray(pyramid_shape.vao)
+
+	input_locations_candy(&pyramid_shape, program)
+
+	attribute(pyramid_shape.a_position, gl.CreateBuffer(), pyramid_shape.positions)
+	attribute(pyramid_shape.a_color   , gl.CreateBuffer(), pyramid_shape.colors)
+
+
+	/*
+	Sphere
+	*/
+
+	sphere_shape: Shape
+
+	segments :: 6
+	sphere_vertices  := get_sphere_vertices(segments)
+	sphere_shape.positions = make([]vec3, sphere_vertices)
+	sphere_normals        := make([]vec3, sphere_vertices)
+	get_sphere_base_triangle(sphere_shape.positions, sphere_normals, 1, segments)
+
+	sphere_shape.colors = make([]u8vec4, sphere_vertices)
+	rand_vert_colors_gray(sphere_shape.colors)
+
+	sphere_shape.vao = gl.CreateVertexArray()
+	gl.BindVertexArray(sphere_shape.vao)
+
+	input_locations_candy(&sphere_shape, program)
+
+	attribute(sphere_shape.a_position, gl.CreateBuffer(), sphere_shape.positions)
+	attribute(sphere_shape.a_color   , gl.CreateBuffer(), sphere_shape.colors)
+
+	/*
 	Objects
 	*/
-	s.objects = make([]Object, 20)
-	for &o in s.objects {
+	s.objects = make([]Object, 60)
+
+	oi := 0
+	for &o in s.objects[oi:oi+20] {
 		o.shape = cube_shape
 		o.translation = {
 			rand.float32_range(-200, 200),
@@ -76,8 +143,47 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 			rand.float32_range(-1, 1),
 			rand.float32_range(-1, 1),
 		}
+		o.scale = rand.float32_range(30, 60)
 		o.u_color_mult = rgba_to_vec4(rand_color())
-		o.u_local = mat4_translate(o.translation)
+		o.u_local = 1
+		o.u_view  = 1
+	}
+	oi += 20
+
+	for &o in s.objects[oi:oi+20] {
+		o.shape = pyramid_shape
+		o.translation = {
+			rand.float32_range(-200, 200),
+			rand.float32_range(-200, 200),
+			rand.float32_range(-200, 200),
+		}
+		o.rotation_speed = {
+			rand.float32_range(-1, 1),
+			rand.float32_range(-1, 1),
+			rand.float32_range(-1, 1),
+		}
+		o.scale = rand.float32_range(30, 60)
+		o.u_color_mult = rgba_to_vec4(rand_color())
+		o.u_local = 1
+		o.u_view  = 1
+	}
+	oi += 20
+
+	for &o in s.objects[oi:oi+20] {
+		o.shape = sphere_shape
+		o.translation = {
+			rand.float32_range(-200, 200),
+			rand.float32_range(-200, 200),
+			rand.float32_range(-200, 200),
+		}
+		o.rotation_speed = {
+			rand.float32_range(-1, 1),
+			rand.float32_range(-1, 1),
+			rand.float32_range(-1, 1),
+		}
+		o.scale = rand.float32_range(20, 40)
+		o.u_color_mult = rgba_to_vec4(rand_color())
+		o.u_local = 1
 		o.u_view  = 1
 	}
 }
@@ -104,8 +210,9 @@ frame_candy :: proc(s: ^State_Candy, delta: f32) {
 
 
 	for &o in s.objects {
-		o.u_local *= mat4_rotate_vec(delta * 0.002 * o.rotation_speed)
-		o.u_view   = view_mat
+		o.rotation += o.rotation_speed * delta * 0.002
+		o.u_local = mat4_translate(o.translation) * mat4_rotate_vec(o.rotation) * mat4_scale(o.scale)
+		o.u_view  = view_mat
 
 		gl.BindVertexArray(o.shape.vao)
 
