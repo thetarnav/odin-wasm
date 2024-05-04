@@ -27,28 +27,30 @@ Example selection
 
 /** @enum {(typeof Example_Kind)[keyof typeof Example_Kind]} */
 const Example_Kind = /** @type {const} */ ({
-	Rectangle: 0,
-	Pyramid  : 1,
-	Boxes    : 2,
-	Camera   : 3,
-	Lighting : 4,
-	Specular : 5,
-	Spotlight: 6,
-	Candy    : 7,
+	Rectangle : 0,
+	Pyramid   : 1,
+	Boxes     : 2,
+	Camera    : 3,
+	Lighting  : 4,
+	Specular  : 5,
+	Spotlight : 6,
+	Candy     : 7,
+	Sol_System: 8,
 })
 /** @type {Example_Kind[]} */
 const example_kinds = Object.values(Example_Kind)
 
 /** @type {Record<Example_Kind, string>} */
 const example_kind_href_hashes = {
-	[Example_Kind.Rectangle]: "#rectangle",
-	[Example_Kind.Pyramid]  : "#pyramid",
-	[Example_Kind.Boxes]    : "#boxes",
-	[Example_Kind.Camera]   : "#camera",
-	[Example_Kind.Lighting] : "#lighting",
-	[Example_Kind.Specular] : "#specular",
-	[Example_Kind.Spotlight]: "#spotlight",
-	[Example_Kind.Candy]    : "#candy",
+	[Example_Kind.Rectangle] : "#rectangle",
+	[Example_Kind.Pyramid]   : "#pyramid",
+	[Example_Kind.Boxes]     : "#boxes",
+	[Example_Kind.Camera]    : "#camera",
+	[Example_Kind.Lighting]  : "#lighting",
+	[Example_Kind.Specular]  : "#specular",
+	[Example_Kind.Spotlight] : "#spotlight",
+	[Example_Kind.Candy]     : "#candy",
+	[Example_Kind.Sol_System]: "#sol-system",
 }
 
 /** @type {Example_Kind} */

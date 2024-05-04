@@ -36,6 +36,37 @@ Attribute_Values_Rectangle :: struct {
 	a_color: vec4,
 }
 
+Input_Locations_Sol_System :: struct {
+	a_position: Attribute_vec3,
+	a_color   : Attribute_vec4,
+	u_matrix    : Uniform_mat4,
+	u_color_mult: Uniform_vec4,
+}
+
+input_locations_sol_system :: proc(s: ^Input_Locations_Sol_System, program: gl.Program) {
+	s.a_position    = attribute_location_vec3(program, "a_position")
+	s.a_color       = attribute_location_vec4(program, "a_color")
+	s.u_matrix        = uniform_location_mat4(program, "u_matrix")
+	s.u_color_mult    = uniform_location_vec4(program, "u_color_mult")
+}
+
+Uniform_Values_Sol_System :: struct {
+	u_matrix    : mat4,
+	u_color_mult: vec4,
+}
+
+uniforms_sol_system :: proc(loc: Input_Locations_Sol_System, v: Uniform_Values_Sol_System) {
+	@static last: Uniform_Values_Sol_System
+	if v.u_matrix        != last.u_matrix        do uniform_mat4(loc.u_matrix       , v.u_matrix       )
+	if v.u_color_mult    != last.u_color_mult    do uniform_vec4(loc.u_color_mult   , v.u_color_mult   )
+	last = v
+}
+
+Attribute_Values_Sol_System :: struct {
+	a_position: vec3,
+	a_color: vec4,
+}
+
 Input_Locations_Lighting :: struct {
 	a_position: Attribute_vec3,
 	a_normal  : Attribute_vec3,
