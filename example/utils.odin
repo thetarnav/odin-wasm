@@ -392,7 +392,7 @@ rand_color :: proc(r: ^rand.Rand = nil) -> u8vec4 {
 	return color
 }
 rand_color_gray :: proc(r: ^rand.Rand = nil) -> u8vec4 {
-	l := u8(rand.uint64(r)) / 4 + 256/2
+	l := u8(rand.uint64(r))/4 + 256/2 + 256/4
 	return {l, l, l, 255}
 }
 rand_colors :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {

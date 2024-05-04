@@ -26,9 +26,10 @@ Planet :: struct {
 	using uniforms: Uniform_Values_Sol_System,
 	shape         : ^Shape,
 	rotation      : f32,
+	rotation_speed: f32,
+	orbit_rotation: f32,
 	orbit_speed   : f32,
 	orbit_distance: f32,
-	rotation_speed: f32,
 	size          : f32,
 	parent_idx    : int,
 	color		  : u8vec4,
@@ -114,7 +115,7 @@ setup_sol_system :: proc(s: ^State_Sol_System, program: gl.Program) {
 	s.planets[5] = {
 		shape          = &s.shape_sphere,
 		orbit_speed    = 0.1,
-		orbit_distance = 50,
+		orbit_distance = 100,
 		rotation_speed = 0.1,
 		size           = 20,
 		parent_idx     = 4,
@@ -143,30 +144,47 @@ frame_sol_system :: proc(s: ^State_Sol_System, delta: f32) {
 	view_mat *= mat4_rotate_x(s.rotation.x)
 	view_mat *= mat4_rotate_y(s.rotation.y)
 
+	/*
+	Progress local rotations
+	*/
+	for &p in s.planets {
+		p.rotation += p.rotation_speed * delta * 0.01
+		p.rotation = p.rotation if p.rotation < 360 else p.rotation - 360
 
-	for &planet in s.planets {
-		planet.rotation += planet.rotation_speed * delta * 0.01
-		planet.rotation = planet.rotation if planet.rotation < 360 else planet.rotation - 360
+		p.orbit_rotation += p.orbit_speed * delta * 0.01
+		p.orbit_rotation = p.orbit_rotation if p.orbit_rotation < 360 else p.orbit_rotation - 360
+	}
 
+	/*
+	Draw planets
+	*/
+	for &p in s.planets {
+		if p.shape == nil do continue
+
+		p.u_matrix = view_mat
 		
-		if planet.shape != nil {
-			parent := s.planets[planet.parent_idx]
-
-			planet.u_matrix =
-				view_mat *
-				mat4_rotate_y(parent.orbit_speed * delta) *
+		parent := s.planets[p.parent_idx]
+		for {
+			p.u_matrix *=
+				mat4_rotate_y(parent.orbit_rotation) *
 				mat4_translate({parent.orbit_distance, 0, 0}) *
-				mat4_rotate_y(parent.rotation) *
-				mat4_rotate_y(planet.orbit_speed * delta) *
-				mat4_translate({planet.orbit_distance, 0, 0}) *
-				mat4_rotate_y(planet.rotation) *
-				mat4_scale(planet.size)
-			
-			planet.u_color_mult = u8vec4_to_vec4(planet.color)
+				mat4_rotate_y(parent.rotation)
 
-			gl.BindVertexArray(planet.shape.vao)
-			uniforms_sol_system(planet.shape, planet)
-			gl.DrawArrays(gl.TRIANGLES, 0, len(planet.shape.positions))
+			if parent.parent_idx > 0 {
+				parent = s.planets[parent.parent_idx]
+			} else do break
 		}
+
+		p.u_matrix *=
+			mat4_rotate_y(parent.orbit_rotation) *
+			mat4_translate({p.orbit_distance, 0, 0}) *
+			mat4_rotate_y(p.rotation) *
+			mat4_scale(p.size)
+		
+		p.u_color_mult = u8vec4_to_vec4(p.color)
+
+		gl.BindVertexArray(p.shape.vao)
+		uniforms_sol_system(p.shape, p)
+		gl.DrawArrays(gl.TRIANGLES, 0, len(p.shape.positions))
 	}
 }
