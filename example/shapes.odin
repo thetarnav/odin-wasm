@@ -11,6 +11,7 @@ ORANGE      :: RGBA{250, 150,  50, 255}
 PURPLE      :: RGBA{160, 100, 200, 255}
 PURPLE_DARK :: RGBA{ 80,  30,  30, 255}
 BLACK       :: RGBA{  0,   0,   0, 255}
+GRAY		:: RGBA{ 80,  80,  80, 255}
 
 
 CUBE_TRIANGLES :: 6 * 2
@@ -138,7 +139,7 @@ get_pyramid_positions :: proc(pos: vec3 = 0, h: f32 = 1) -> [PYRAMID_VERTICES]ve
 	}
 }
 
-get_sphere_vertices :: proc (segments: int) -> int {
+get_sphere_vertices :: #force_inline proc(segments: int) -> int {
 	return 6 * segments * segments
 }
 
