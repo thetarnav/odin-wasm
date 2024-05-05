@@ -198,9 +198,8 @@ frame_sol_system :: proc(s: ^State_Sol_System, delta: f32) {
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	view_mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
-	view_mat *= mat4_rotate_x(s.rotation.x)
-	view_mat *= mat4_rotate_y(s.rotation.y)
+	view_mat *= mat4_translate({0, 0, -1400 + scale * 1000})
+	view_mat *= mat4_rotate_x(PI/2 + mouse_rel.y + 0.5)
 
 	/*
 	Draw planets
