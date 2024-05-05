@@ -39,32 +39,47 @@ Attribute_Values_Rectangle :: struct {
 Input_Locations_Sol_System :: struct {
 	a_position: Attribute_vec3,
 	a_color   : Attribute_vec4,
-	u_matrix    : Uniform_mat4,
-	u_color_mult: Uniform_vec4,
+	a_normal  : Attribute_vec3,
+	u_light_pos   : Uniform_vec3,
+	u_view        : Uniform_mat4,
+	u_world       : Uniform_mat4,
+	u_color       : Uniform_vec4,
+	u_light_factor: Uniform_float,
 }
 
 input_locations_sol_system :: proc(s: ^Input_Locations_Sol_System, program: gl.Program) {
 	s.a_position    = attribute_location_vec3(program, "a_position")
 	s.a_color       = attribute_location_vec4(program, "a_color")
-	s.u_matrix        = uniform_location_mat4(program, "u_matrix")
-	s.u_color_mult    = uniform_location_vec4(program, "u_color_mult")
+	s.a_normal      = attribute_location_vec3(program, "a_normal")
+	s.u_light_pos       = uniform_location_vec3(program, "u_light_pos")
+	s.u_view            = uniform_location_mat4(program, "u_view")
+	s.u_world           = uniform_location_mat4(program, "u_world")
+	s.u_color           = uniform_location_vec4(program, "u_color")
+	s.u_light_factor    = uniform_location_float(program, "u_light_factor")
 }
 
 Uniform_Values_Sol_System :: struct {
-	u_matrix    : mat4,
-	u_color_mult: vec4,
+	u_light_pos   : vec3,
+	u_view        : mat4,
+	u_world       : mat4,
+	u_color       : vec4,
+	u_light_factor: float,
 }
 
 uniforms_sol_system :: proc(loc: Input_Locations_Sol_System, v: Uniform_Values_Sol_System) {
 	@static last: Uniform_Values_Sol_System
-	if v.u_matrix        != last.u_matrix        do uniform_mat4(loc.u_matrix       , v.u_matrix       )
-	if v.u_color_mult    != last.u_color_mult    do uniform_vec4(loc.u_color_mult   , v.u_color_mult   )
+	if v.u_light_pos       != last.u_light_pos       do uniform_vec3(loc.u_light_pos      , v.u_light_pos      )
+	if v.u_view            != last.u_view            do uniform_mat4(loc.u_view           , v.u_view           )
+	if v.u_world           != last.u_world           do uniform_mat4(loc.u_world          , v.u_world          )
+	if v.u_color           != last.u_color           do uniform_vec4(loc.u_color          , v.u_color          )
+	if v.u_light_factor    != last.u_light_factor    do uniform_float(loc.u_light_factor   , v.u_light_factor   )
 	last = v
 }
 
 Attribute_Values_Sol_System :: struct {
 	a_position: vec3,
 	a_color: vec4,
+	a_normal: vec3,
 }
 
 Input_Locations_Lighting :: struct {

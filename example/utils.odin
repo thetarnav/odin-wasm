@@ -361,7 +361,7 @@ uniform :: proc {
 }
 
 
-u8vec4_to_vec4 :: proc "contextless" (rgba: u8vec4) -> vec4 {
+u8vec4_to_vec4 :: #force_inline proc "contextless" (rgba: u8vec4) -> vec4 {
 	return {f32(rgba.r)/255, f32(rgba.g)/255, f32(rgba.b)/255, f32(rgba.a)/255}
 }
 rgba_to_vec4 :: u8vec4_to_vec4
