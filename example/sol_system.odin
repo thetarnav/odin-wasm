@@ -181,7 +181,7 @@ frame_sol_system :: proc(s: ^State_Sol_System, delta: f32) {
 		near   = 1,
 	)
 	view_mat *= mat4_translate({0, 0, -1400 + scale * 1000})
-	view_mat *= mat4_rotate_x(PI/2 + mouse_rel.y + 0.5)
+	view_mat *= mat4_rotate_x(PI/2 + PI/2 * (mouse_rel.y+0.5))
 
 	/*
 	Draw planets
