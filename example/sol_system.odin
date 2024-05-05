@@ -4,7 +4,7 @@ package example
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-PLANETS_COUNT :: 1 + 1 + 4 // root + sun + planets
+PLANETS_COUNT :: 1 + 1 + 8 // root + sun + planets
 SPHERE_SEGMENTS :: 8
 
 @private
@@ -25,14 +25,15 @@ Shape :: struct {
 Planet :: struct {
 	using uniforms: Uniform_Values_Sol_System,
 	shape         : ^Shape,
+	transform	  : mat4,
 	rotation      : f32,
 	rotation_speed: f32,
 	orbit_rotation: f32,
 	orbit_speed   : f32,
 	orbit_distance: f32,
 	size          : f32,
-	parent_idx    : int,
 	color		  : u8vec4,
+	parent_idx	  : int,
 }
 
 
@@ -67,24 +68,30 @@ setup_sol_system :: proc(s: ^State_Sol_System, program: gl.Program) {
 	Planets
 	*/
 
+	s.planets[0] = {
+		transform = 1,
+	}
+
 	/* Sun */
 	s.planets[1] = {
 		shape          = &s.shape_sphere,
+		transform      = 1,
 		orbit_speed    = 0,
 		orbit_distance = 0,
 		rotation_speed = 0.1,
 		size           = 200,
 		parent_idx     = 0,
-		color		   = YELLOW,
+		color		   = WHITE,
 	}
 
 	/* Mercury */
 	s.planets[2] = {
 		shape          = &s.shape_sphere,
+		transform      = 1,
 		orbit_speed    = 0.1,
-		orbit_distance = 100,
+		orbit_distance = 300,
 		rotation_speed = 0.1,
-		size           = 40,
+		size           = 30,
 		parent_idx     = 1,
 		color          = GRAY,
 	}
@@ -92,10 +99,11 @@ setup_sol_system :: proc(s: ^State_Sol_System, program: gl.Program) {
 	/* Venus */
 	s.planets[3] = {
 		shape          = &s.shape_sphere,
+		transform      = 1,
 		orbit_speed    = 0.05,
-		orbit_distance = 200,
+		orbit_distance = 400,
 		rotation_speed = 0.1,
-		size           = 30,
+		size           = 50,
 		parent_idx     = 1,
 		color          = ORANGE,
 	}
@@ -103,10 +111,11 @@ setup_sol_system :: proc(s: ^State_Sol_System, program: gl.Program) {
 	/* Earth */
 	s.planets[4] = {
 		shape          = &s.shape_sphere,
+		transform      = 1,
 		orbit_speed    = 0.03,
-		orbit_distance = 300,
+		orbit_distance = 600,
 		rotation_speed = 0.1,
-		size           = 80,
+		size           = 60,
 		parent_idx     = 1,
 		color          = BLUE,
 	}
@@ -114,11 +123,60 @@ setup_sol_system :: proc(s: ^State_Sol_System, program: gl.Program) {
 	/* Moon */
 	s.planets[5] = {
 		shape          = &s.shape_sphere,
+		transform      = 1,
 		orbit_speed    = 0.1,
 		orbit_distance = 100,
 		rotation_speed = 0.1,
 		size           = 20,
 		parent_idx     = 4,
+		color          = GRAY,
+	}
+
+	/* Mars */
+	s.planets[6] = {
+		shape          = &s.shape_sphere,
+		transform      = 1,
+		orbit_speed    = 0.02,
+		orbit_distance = 800,
+		rotation_speed = 0.1,
+		size           = 40,
+		parent_idx     = 1,
+		color          = RED,
+	}
+
+	/* Saturn */
+	s.planets[7] = {
+		shape          = &s.shape_sphere,
+		transform      = 1,
+		orbit_speed    = 0.01,
+		orbit_distance = 1000,
+		rotation_speed = 0.1,
+		size           = 80,
+		parent_idx     = 1,
+		color          = YELLOW,
+	}
+
+	/* Saturn satelite 1 */
+	s.planets[8] = {
+		shape          = &s.shape_sphere,
+		transform      = 1,
+		orbit_speed    = 0.1,
+		orbit_distance = 110,
+		rotation_speed = 0.1,
+		size           = 20,
+		parent_idx     = 7,
+		color          = GRAY,
+	}
+
+	/* Saturn satelite 2 */
+	s.planets[9] = {
+		shape          = &s.shape_sphere,
+		transform      = 1,
+		orbit_speed    = 0.02,
+		orbit_distance = 150,
+		rotation_speed = 0.1,
+		size           = 16,
+		parent_idx     = 7,
 		color          = GRAY,
 	}
 
@@ -145,42 +203,24 @@ frame_sol_system :: proc(s: ^State_Sol_System, delta: f32) {
 	view_mat *= mat4_rotate_y(s.rotation.y)
 
 	/*
-	Progress local rotations
+	Draw planets
 	*/
-	for &p in s.planets {
+	for &p in s.planets[1:] {
 		p.rotation += p.rotation_speed * delta * 0.01
 		p.rotation = p.rotation if p.rotation < 360 else p.rotation - 360
 
 		p.orbit_rotation += p.orbit_speed * delta * 0.01
 		p.orbit_rotation = p.orbit_rotation if p.orbit_rotation < 360 else p.orbit_rotation - 360
-	}
-
-	/*
-	Draw planets
-	*/
-	for &p in s.planets {
+		
+		p.transform =
+			s.planets[p.parent_idx].transform *
+			mat4_rotate_y(p.orbit_rotation) *
+			mat4_translate({p.orbit_distance, 0, 0}) *
+			mat4_rotate_y(p.rotation)
+		
 		if p.shape == nil do continue
 
-		p.u_matrix = view_mat
-		
-		parent := s.planets[p.parent_idx]
-		for {
-			p.u_matrix *=
-				mat4_rotate_y(parent.orbit_rotation) *
-				mat4_translate({parent.orbit_distance, 0, 0}) *
-				mat4_rotate_y(parent.rotation)
-
-			if parent.parent_idx > 0 {
-				parent = s.planets[parent.parent_idx]
-			} else do break
-		}
-
-		p.u_matrix *=
-			mat4_rotate_y(parent.orbit_rotation) *
-			mat4_translate({p.orbit_distance, 0, 0}) *
-			mat4_rotate_y(p.rotation) *
-			mat4_scale(p.size)
-		
+		p.u_matrix = view_mat * p.transform * mat4_scale(p.size)
 		p.u_color_mult = u8vec4_to_vec4(p.color)
 
 		gl.BindVertexArray(p.shape.vao)
