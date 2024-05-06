@@ -7,8 +7,8 @@ import {EMPTY_U8_ARRAY, INVALID_OPERATION, newId, recordError} from "./interface
 
 /** @returns WebGL 2 bindings for Odin */
 export function makeOdinWegGL2(
-	/** @type {t.WebGLState} */ _webgl,
 	/** @type {import("../types.js").WasmState} */ wasm,
+	/** @type {t.WebGLState} */ _webgl,
 ) {
 	const webgl = /** @type {t.WebGL2State} */ (_webgl)
 

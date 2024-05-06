@@ -29,6 +29,7 @@ Example_Kind :: enum {
 	Spotlight,
 	Candy,
 	Sol_System,
+	Bezier_Curve,
 }
 example: Example_Kind
 
@@ -71,19 +72,21 @@ demos: [Example_Kind]struct {
 		vs_sources = {#load("./sol_system.vert", string)},
 		fs_sources = {#load("./sol_system.frag", string)},
 	},
+	.Bezier_Curve = {},
 }
 
 // state is a union because it is being used by only one of the examples
 demo_state: struct #raw_union {
-	rectangle:  State_Rectangle,
-	pyramid:    State_Pyramid,
-	boxes:      State_Boxes,
-	camera:     State_Camera,
-	lighting:   State_Lighting,
-	specular:   State_Specular,
-	spotlight:  State_Spotlight,
-	candy:      State_Candy,
-	sol_system: State_Sol_System,
+	rectangle:    State_Rectangle,
+	pyramid:      State_Pyramid,
+	boxes:        State_Boxes,
+	camera:       State_Camera,
+	lighting:     State_Lighting,
+	specular:     State_Specular,
+	spotlight:    State_Spotlight,
+	candy:        State_Candy,
+	sol_system:   State_Sol_System,
+	bezier_curve: State_Bezier_Curve,
 }
 
 
@@ -163,15 +166,16 @@ start :: proc "c" (ctx: ^runtime.Context, example_kind: Example_Kind) -> (ok: bo
 	gl.UseProgram(program)
 
 	switch example {
-	case .Rectangle:  setup_rectangle (&demo_state.rectangle,  program)
-	case .Pyramid:    setup_pyramid   (&demo_state.pyramid,    program)
-	case .Boxes:      setup_boxes     (&demo_state.boxes,      program)
-	case .Camera:     setup_camera    (&demo_state.camera,     program)
-	case .Lighting:   setup_lighting  (&demo_state.lighting,   program)
-	case .Specular:   setup_specular  (&demo_state.specular,   program)
-	case .Spotlight:  setup_spotlight (&demo_state.spotlight,  program)
-	case .Candy:      setup_candy     (&demo_state.candy,      program)
-	case .Sol_System: setup_sol_system(&demo_state.sol_system, program)
+	case .Rectangle:    setup_rectangle   (&demo_state.rectangle,    program)
+	case .Pyramid:      setup_pyramid     (&demo_state.pyramid,      program)
+	case .Boxes:        setup_boxes       (&demo_state.boxes,        program)
+	case .Camera:       setup_camera      (&demo_state.camera,       program)
+	case .Lighting:     setup_lighting    (&demo_state.lighting,     program)
+	case .Specular:     setup_specular    (&demo_state.specular,     program)
+	case .Spotlight:    setup_spotlight   (&demo_state.spotlight,    program)
+	case .Candy:        setup_candy       (&demo_state.candy,        program)
+	case .Sol_System:   setup_sol_system  (&demo_state.sol_system,   program)
+	case .Bezier_Curve: setup_bezier_curve(&demo_state.bezier_curve, program)
 	}
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
@@ -195,14 +199,15 @@ frame :: proc "c" (ctx: ^runtime.Context, delta: f32) {
 	}
 
 	switch example {
-	case .Rectangle:  frame_rectangle (&demo_state.rectangle,  delta)
-	case .Pyramid:    frame_pyramid   (&demo_state.pyramid,    delta)
-	case .Boxes:      frame_boxes     (&demo_state.boxes,      delta)
-	case .Camera:     frame_camera    (&demo_state.camera,     delta)
-	case .Lighting:   frame_lighting  (&demo_state.lighting,   delta)
-	case .Specular:   frame_specular  (&demo_state.specular,   delta)
-	case .Spotlight:  frame_spotlight (&demo_state.spotlight,  delta)
-	case .Candy:      frame_candy     (&demo_state.candy,      delta)
-	case .Sol_System: frame_sol_system(&demo_state.sol_system, delta)
+	case .Rectangle:    frame_rectangle   (&demo_state.rectangle,    delta)
+	case .Pyramid:      frame_pyramid     (&demo_state.pyramid,      delta)
+	case .Boxes:        frame_boxes       (&demo_state.boxes,        delta)
+	case .Camera:       frame_camera      (&demo_state.camera,       delta)
+	case .Lighting:     frame_lighting    (&demo_state.lighting,     delta)
+	case .Specular:     frame_specular    (&demo_state.specular,     delta)
+	case .Spotlight:    frame_spotlight   (&demo_state.spotlight,    delta)
+	case .Candy:        frame_candy       (&demo_state.candy,        delta)
+	case .Sol_System:   frame_sol_system  (&demo_state.sol_system,   delta)
+	case .Bezier_Curve: frame_bezier_curve(&demo_state.bezier_curve, delta)
 	}
 }

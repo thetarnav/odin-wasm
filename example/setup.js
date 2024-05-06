@@ -121,8 +121,8 @@ const src_instance = await wasm.fetchInstanciateWasm(WASM_FILENAME, {
 	env: {}, // TODO
 	odin_env: wasm.env.makeOdinEnv(wasm_state),
 	odin_dom: wasm.dom.makeOdinDOM(wasm_state),
-	webgl   : wasm.webgl.makeOdinWebGL(webgl_state, wasm_state),
-	webgl2  : wasm.webgl.makeOdinWegGL2(webgl_state, wasm_state),
+	webgl   : wasm.webgl.makeOdinWebGL(wasm_state, webgl_state),
+	webgl2  : wasm.webgl.makeOdinWegGL2(wasm_state, webgl_state),
 })
 
 wasm.initWasmState(wasm_state, src_instance)

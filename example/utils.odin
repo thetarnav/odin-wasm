@@ -574,7 +574,7 @@ vec3_rotate :: proc "contextless" (v, axis: vec3, angle: f32) -> vec3 {
 }
 
 vec3_transform :: proc "contextless" (v: vec3, m: mat4) -> vec3 {
-    w := m[0][3] * v.x + m[1][3] * v.y + m[2][3] * v.z + m[3][3] // assume v[3] is 1
+    w := m[0][3] * v.x + m[1][3] * v.y + m[2][3] * v.z + m[3][3]
 
     return {
         (m[0][0] * v.x + m[1][0] * v.y + m[2][0] * v.z + m[3][0]) / w,

@@ -6,25 +6,24 @@ import * as t from "./types.js"
 /** @returns {t.WebGLState} */
 export function makeWebGLState() {
 	return {
-		element: null,
-		/* will be set later, most of the time we want to assert that it's not null */
-		ctx: /** @type {any} */ (null),
-		version: 1,
-		id_counter: 1,
-		last_error: 0,
-		buffers: [null],
-		programs: [null],
-		framebuffers: [null],
-		renderbuffers: [null],
-		textures: [null],
-		uniforms: [null],
-		shaders: [null],
-		vaos: [null],
-		queries: [null],
-		samplers: [null],
-		transform_feedbacks: [null],
-		syncs: [null],
-		program_infos: [null],
+		element:                 null,
+		ctx: /** @type {any} */ (null), // will be set later, most of the time we want to assert that it's not null
+		version:                 1,
+		id_counter:              1,
+		last_error:              0,
+		buffers:                 [null],
+		programs:                [null],
+		framebuffers:            [null],
+		renderbuffers:           [null],
+		textures:                [null],
+		uniforms:                [null],
+		shaders:                 [null],
+		vaos:                    [null],
+		queries:                 [null],
+		samplers:                [null],
+		transform_feedbacks:     [null],
+		syncs:                   [null],
+		program_infos:           [null],
 	}
 }
 
@@ -33,26 +32,44 @@ export const EMPTY_U8_ARRAY = new Uint8Array(0)
 export const INVALID_VALUE = 0x0501
 export const INVALID_OPERATION = 0x0502
 
+/** @type {WebGLContextAttributes} */
+export const DEFAULT_CONTEXT_ATTRIBUTES = {
+	alpha:              true,
+	antialias:          true,
+	depth:              true,
+	premultipliedAlpha: true,
+}
+
 /**
  * @param   {t.WebGLState}                       webgl
  * @param   {HTMLElement | null}                 element
- * @param   {WebGLContextAttributes | undefined} context_settings
- * @returns {boolean}
+ * @param   {WebGLContextAttributes | undefined} attributes
+ * @returns {boolean} success
  */
-export function setCurrentContext(webgl, element, context_settings) {
+export function setCurrentContext(webgl, element, attributes) {
 	if (!(element instanceof HTMLCanvasElement)) return false
 	if (webgl.element === element) return true
+	
+	/** @type {WebGLRenderingContext | WebGL2RenderingContext | null} */
+	let ctx
 
-	const ctx =
-		element.getContext("webgl2", context_settings) ||
-		element.getContext("webgl", context_settings)
-	if (!ctx) return false
+	ctx = element.getContext("webgl2", attributes)
+	if (ctx) {
+		webgl.ctx = ctx
+		webgl.version = 2
+		webgl.element = element
+		return true
+	}
 
-	webgl.ctx = ctx
-	webgl.element = element
-	webgl.version = webgl.ctx.getParameter(0x1f02).indexOf("WebGL 2.0") !== -1 ? 2 : 1
+	ctx = element.getContext("webgl", attributes)
+	if (ctx) {
+		webgl.ctx = ctx
+		webgl.version = 1
+		webgl.element = element
+		return true
+	}
 
-	return true
+	return false
 }
 
 /**

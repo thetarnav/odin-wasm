@@ -1,59 +1,43 @@
 import * as mem from "../memory.js"
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as t from "./types.js"
+import * as t   from "./types.js"
 
 import {
-	setCurrentContext,
-	EMPTY_U8_ARRAY,
-	recordError,
-	newId,
-	populateUniformTable,
-	getSource,
-	INVALID_VALUE,
-	INVALID_OPERATION,
+	setCurrentContext, recordError, newId, populateUniformTable, getSource,
+	EMPTY_U8_ARRAY, INVALID_VALUE, INVALID_OPERATION, DEFAULT_CONTEXT_ATTRIBUTES,
 } from "./interface.js"
 
-/** @typedef{import("../types.js").WasmState}WasmInstance */
+/** @typedef {import("../types.js").WasmState} WasmInstance */
 
 /**
- * @param   {t.WebGLState} webgl
  * @param   {WasmInstance} wasm
- * @returns       WebGL bindings for Odin.
+ * @param   {t.WebGLState} webgl
+ * @returns WebGL bindings for Odin.
  */
-export function makeOdinWebGL(webgl, wasm) {
+export function makeOdinWebGL(wasm, webgl) {
 	return {
 		/**
-		 * @param   {number}  name_ptr
-		 * @param   {number}  name_len
+		 * Sets the current WebGL context with the default attributes.
+		 * @param   {number}  id_ptr
+		 * @param   {number}  id_len
 		 * @returns {boolean}
 		 */
-		SetCurrentContextById: (name_ptr, name_len) => {
-			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
-			const element = document.getElementById(name)
+		SetCurrentContextById: (id_ptr, id_len) => {
+			const id      = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+			const element = document.getElementById(id)
 
-			return setCurrentContext(webgl, element, {
-				alpha: true,
-				antialias: true,
-				depth: true,
-				premultipliedAlpha: true,
-			})
+			return setCurrentContext(webgl, element, DEFAULT_CONTEXT_ATTRIBUTES)
 		},
 		/**
-		 * @param   {number}  name_ptr ElementId
-		 * @param   {number}  name_len
+		 * @param   {number}  id_ptr ElementId
+		 * @param   {number}  id_len
 		 * @param   {number}  attrs    Bitset
 		 * @returns {boolean}
 		 */
-		CreateCurrentContextById: (name_ptr, name_len, attrs) => {
-			const name = mem.load_string_raw(wasm.memory.buffer, name_ptr, name_len)
-			const element = document.getElementById(name)
+		CreateCurrentContextById: (id_ptr, id_len, attrs) => {
+			const id      = mem.load_string_raw(wasm.memory.buffer, id_ptr, id_len)
+			const element = document.getElementById(id)
 
-			return setCurrentContext(
-				webgl,
-				element,
-				// prettier-ignore
-				{
+			return setCurrentContext(webgl, element, {
 				alpha: 						   !(attrs & (1 << 0)),
 				antialias: 					   !(attrs & (1 << 1)),
 				depth: 						   !(attrs & (1 << 2)),
@@ -62,13 +46,11 @@ export function makeOdinWebGL(webgl, wasm) {
 				preserveDrawingBuffer: 		  !!(attrs & (1 << 5)),
 				stencil: 					  !!(attrs & (1 << 6)),
 				desynchronized: 			  !!(attrs & (1 << 7)),
-				},
-			)
+			})
 		},
 		/** @returns {number} */
 		// prettier-ignore
 		GetCurrentContextAttributes() {
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 			if (!webgl.ctx) return 0
 
 			const attrs = webgl.ctx.getContextAttributes()
