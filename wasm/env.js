@@ -87,8 +87,8 @@ export function makeOdinEnv(wasm) {
 		},
 		/** @returns {bigint} */
 		time_now: () => BigInt(Date.now()),
-		/** @returns {bigint} */
-		tick_now: () => BigInt(performance.now()),
+		/** @returns {number} */
+		tick_now: () => performance.now(),
 		/**
 		 * @param   {number} duration_ms
 		 * @returns {void}
