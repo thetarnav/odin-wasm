@@ -28,7 +28,7 @@ BOXES_AMOUNT :: BOXES_ROWS * BOXES_ROWS * BOXES_ROWS
 State_Boxes :: struct {
 	using locations: Input_Locations_Boxes,
 	vao     : VAO,
-	rotation: [2]f32,
+	rotation: mat4,
 }
 
 @private
@@ -59,6 +59,9 @@ setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
 
 	attribute(s.a_position, gl.CreateBuffer(), positions[:])
 	attribute(s.a_color   , gl.CreateBuffer(), colors[:])
+
+	/* Init rotation */
+	s.rotation = 1
 }
 
 @private
@@ -71,7 +74,8 @@ frame_boxes :: proc(s: ^State_Boxes, delta: f32) {
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	s.rotation -= 0.01 * delta * mouse_rel.yx
+	rotation := -0.01 * delta * mouse_rel.yx
+	s.rotation = mat4_rotate_x(rotation.x) * mat4_rotate_y(rotation.y) * s.rotation
 
 	mat: mat4 = 1
 	mat *= glm.mat4PerspectiveInfinite(
@@ -80,8 +84,7 @@ frame_boxes :: proc(s: ^State_Boxes, delta: f32) {
 		near   = 1,
 	)
 	mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
-	mat *= mat4_rotate_x(s.rotation.x)
-	mat *= mat4_rotate_y(s.rotation.y)
+	mat *= s.rotation
 
 	uniform(s.u_matrix, mat)
 
