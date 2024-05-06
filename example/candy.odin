@@ -9,7 +9,7 @@ import gl  "../wasm/webgl"
 @private
 State_Candy :: struct {
 	objects : []Object,
-	rotation: [2]f32,
+	rotation: mat4,
 }
 
 Shape :: struct {
@@ -148,7 +148,8 @@ frame_candy :: proc(s: ^State_Candy, delta: f32) {
 	gl.ClearColor(0, 0, 0, 0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	s.rotation -= 0.01 * delta * mouse_rel.yx
+	rotation := -0.01 * delta * mouse_rel.yx
+	s.rotation = mat4_rotate_x(rotation.x) * mat4_rotate_y(rotation.y) * s.rotation
 
 	view_mat: mat4 = 1
 	view_mat *= glm.mat4PerspectiveInfinite(
@@ -157,8 +158,7 @@ frame_candy :: proc(s: ^State_Candy, delta: f32) {
 		near   = 1,
 	)
 	view_mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
-	view_mat *= mat4_rotate_x(s.rotation.x)
-	view_mat *= mat4_rotate_y(s.rotation.y)
+	view_mat *= s.rotation
 
 
 	for &o in s.objects {
