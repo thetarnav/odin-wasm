@@ -106,33 +106,37 @@ export function make_odin_ctx2d(wasm, s) {
 		},
 		/**
 		 * Clips the current path.
-		 * @param {number} fill_rule
-		 * @returns {void}             */
-		clip(fill_rule) {
+		 * @returns {void} */
+		clip(
+			/** @type {number} */ fill_rule,
+		) {
 			s.ctx.clip(CANVAS_FILL_RULE[fill_rule]);
 		},
 		/**
 		 * Fills the current path.
-		 * @param   {number} fill_rule
-		 * @returns {void}               */
-		fill(fill_rule) {
+		 * @returns {void} */
+		fill(
+			/** @type {number} */ fill_rule,
+		) {
 			s.ctx.fill(CANVAS_FILL_RULE[fill_rule])
 		},
 		/**
 		 * Checks if the given point is inside the current path.
-		 * @param   {number}             x
-		 * @param   {number}             y
-		 * @param   {number} fill_rule
-		 * @returns {boolean}            */
-		isPointInPath(x, y, fill_rule) {
+		 * @returns {boolean} */
+		isPointInPath(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+			/** @type {number} */ fill_rule,
+		) {
 			return s.ctx.isPointInPath(x, y, CANVAS_FILL_RULE[fill_rule])
 		},
 		/**
 		 * Checks if the given point is inside the current stroke.
-		 * @param   {number}  x
-		 * @param   {number}  y
 		 * @returns {boolean} */
-		isPointInStroke(x, y) {
+		isPointInStroke(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+		) {
 			return s.ctx.isPointInStroke(x, y)
 		},
 		/**
@@ -146,16 +150,16 @@ export function make_odin_ctx2d(wasm, s) {
 		//      FILL STROKE STYLES        /
 		// ------------------------------ /
 
-		/**
-		 * @param   {string} color
-		 * @returns {void}   */
-		fillStyle(color) {
+		/** @returns {void} */
+		fillStyle(
+			/** @type {string} */ color,
+		) {
 			s.ctx.fillStyle = color
 		},
-		/**
-		 * @param   {string} color
-		 * @returns {void}   */
-		strokeStyle(color) {
+		/** @returns {void} */
+		strokeStyle(
+			/** @type {string} */ color,
+		) {
 			s.ctx.strokeStyle = color
 		},
 
@@ -163,10 +167,10 @@ export function make_odin_ctx2d(wasm, s) {
 		//            FILTERS             /
 		// ------------------------------ /
 
-		/**
-		 * @param   {string} filter
-		 * @returns {void}   */
-		filter(filter) {
+		/** @returns {void} */
+		filter(
+			/** @type {string} */ filter,
+		) {
 			s.ctx.filter = filter
 		},
 
