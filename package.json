@@ -32,13 +32,13 @@
 		"build-test": "npm run build && npm run typecheck:ts && npm run test"
 	},
 	"devDependencies": {
-		"@types/node": "^20.10.7",
+		"@types/node": "^20.12.10",
 		"@types/ws": "^8.5.10",
-		"chokidar": "^3.5.3",
-		"rollup": "^4.9.4",
-		"@swc/core": "^1.4.1",
-		"typescript": "^5.3.3",
-		"ws": "^8.16.0"
+		"chokidar": "^3.6.0",
+		"rollup": "^4.17.2",
+		"@swc/core": "^1.5.3",
+		"typescript": "^5.4.5",
+		"ws": "^8.17.0"
 	},
 	"engines": {
 		"node": ">=20"
