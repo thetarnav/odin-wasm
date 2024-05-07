@@ -8,16 +8,24 @@ export function Ctx2d_State() {
 	this.ctx = /** @type {CanvasRenderingContext2D} */ (/** @type {*} */(null))
 }
 
-/** @enum {typeof CanvasFillRuleEnum[keyof typeof CanvasFillRuleEnum]} */
-const CanvasFillRuleEnum = /** @type {const} */({
-	nonzero: 0,
-	evenodd: 1,
-})
-
-/** @type {Record<CanvasFillRuleEnum, CanvasFillRule>} */
+/** @type {Record<number, CanvasFillRule>} */
 const CANVAS_FILL_RULE = {
 	0: "nonzero",
 	1: "evenodd",
+}
+
+/** @type {Record<number, CanvasLineCap>} */
+const CANVAS_LINE_CAP = {
+	0: "butt",
+	1: "round",
+	2: "square",
+}
+
+/** @type {Record<number, CanvasLineJoin>} */
+const CANVAS_LINE_JOIN = {
+	0: "miter",
+	1: "round",
+	2: "bevel",
 }
 
 
@@ -48,51 +56,16 @@ export function make_odin_ctx2d(wasm, s) {
 		// ------------------------------ /
 		//           COMPOSITING          /
 		// ------------------------------ /
-		/** @returns {number} */
-		getGlobalAlpha() {
-			return s.ctx.globalAlpha
-		},
 		/**
 		 * @param   {number} alpha
 		 * @returns {void}   */
-		setGlobalAlpha(alpha) {
+		globalAlpha(alpha) {
 			s.ctx.globalAlpha = alpha
-		},
-		/** @returns {number} */
-		getGlobalCompositeOperation() {
-			switch (s.ctx.globalCompositeOperation) {
-			case "source-over":       return  0
-			case "source-in":         return  1
-			case "source-out":        return  2
-			case "source-atop":       return  3
-			case "destination-over":  return  4
-			case "destination-in":    return  5
-			case "destination-out":   return  6
-			case "destination-atop":  return  7
-			case "lighter":           return  8
-			case "copy":              return  9
-			case "xor":               return 10
-			case "multiply":          return 11
-			case "screen":            return 12
-			case "overlay":           return 13
-			case "darken":            return 14
-			case "lighten":           return 15
-			case "color-dodge":       return 16
-			case "color-burn":        return 17
-			case "hard-light":        return 18
-			case "soft-light":        return 19
-			case "difference":        return 20
-			case "exclusion":         return 21
-			case "hue":               return 22
-			case "saturation":        return 23
-			case "color":             return 24
-			case "luminosity":        return 25
-			}
 		},
 		/**
 		 * @param   {number} op
 		 * @returns {void}   */
-		setGlobalCompositeOperation(op) {
+		globalCompositeOperation(op) {
 			switch (op) {
 			case  0: s.ctx.globalCompositeOperation = "source-over"      ;break
 			case  1: s.ctx.globalCompositeOperation = "source-in"        ;break
@@ -127,52 +100,214 @@ export function make_odin_ctx2d(wasm, s) {
 		// ------------------------------ /
 		/**
 		 * Begins a new path.
-		 * @returns {void}
-		 */
+		 * @returns {void} */
 		beginPath() {
 			s.ctx.beginPath();
 		},
 		/**
 		 * Clips the current path.
-		 * @param {CanvasFillRuleEnum} fill_rule
-		 * @returns {void}
-		 */
+		 * @param {number} fill_rule
+		 * @returns {void}             */
 		clip(fill_rule) {
 			s.ctx.clip(CANVAS_FILL_RULE[fill_rule]);
 		},
 		/**
 		 * Fills the current path.
-		 * @param {CanvasFillRuleEnum} fill_rule
-		 * @returns {void}
-		 */
+		 * @param   {number} fill_rule
+		 * @returns {void}               */
 		fill(fill_rule) {
 			s.ctx.fill(CANVAS_FILL_RULE[fill_rule])
 		},
 		/**
 		 * Checks if the given point is inside the current path.
-		 * @param {number} x
-		 * @param {number} y
-		 * @param {CanvasFillRuleEnum} fill_rule
-		 * @returns {boolean}
-		 */
+		 * @param   {number}             x
+		 * @param   {number}             y
+		 * @param   {number} fill_rule
+		 * @returns {boolean}            */
 		isPointInPath(x, y, fill_rule) {
 			return s.ctx.isPointInPath(x, y, CANVAS_FILL_RULE[fill_rule])
 		},
 		/**
 		 * Checks if the given point is inside the current stroke.
-		 * @param {number} x
-		 * @param {number} y
-		 * @returns {boolean}
-		 */
+		 * @param   {number}  x
+		 * @param   {number}  y
+		 * @returns {boolean} */
 		isPointInStroke(x, y) {
 			return s.ctx.isPointInStroke(x, y)
 		},
 		/**
 		 * Strokes the current path.
-		 * @returns {void}
-		 */
+		 * @returns {void} */
 		stroke() {
 			s.ctx.stroke()
+		},
+
+		// ------------------------------ /
+		//      FILL STROKE STYLES        /
+		// ------------------------------ /
+
+		/**
+		 * @param   {string} color
+		 * @returns {void}   */
+		fillStyle(color) {
+			s.ctx.fillStyle = color
+		},
+		/**
+		 * @param   {string} color
+		 * @returns {void}   */
+		strokeStyle(color) {
+			s.ctx.strokeStyle = color
+		},
+
+		// ------------------------------ /
+		//            FILTERS             /
+		// ------------------------------ /
+
+		/**
+		 * @param   {string} filter
+		 * @returns {void}   */
+		filter(filter) {
+			s.ctx.filter = filter
+		},
+
+		// ------------------------------ /
+		//              PATH              /
+		// ------------------------------ /
+
+		/**
+		 * @param   {number}  x
+		 * @param   {number}  y
+		 * @param   {number}  radius
+		 * @param   {number}  angle_start
+		 * @param   {number}  angle_end
+		 * @param   {boolean} counterclockwise
+		 * @returns {void}     */
+		arc(x, y, radius, angle_start, angle_end, counterclockwise) {
+			s.ctx.arc(x, y, radius, angle_start, angle_end, counterclockwise)
+		},
+		/**
+		 * @param   {number} x1
+		 * @param   {number} y1
+		 * @param   {number} x2
+		 * @param   {number} y2
+		 * @param   {number} radius
+		 * @returns {void}   */
+		arcTo(x1, y1, x2, y2, radius) {
+			s.ctx.arcTo(x1, y1, x2, y2, radius)
+		},
+		/**
+		 * @param   {number} cp1x
+		 * @param   {number} cp1y
+		 * @param   {number} cp2x
+		 * @param   {number} cp2y
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @returns {void}   */
+		bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) {
+			s.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
+		},
+		/** @returns {void} */
+		closePath() {
+			s.ctx.closePath()
+		},
+		/**
+		 * @param   {number}  x
+		 * @param   {number}  y
+		 * @param   {number}  radius_x
+		 * @param   {number}  radius_y
+		 * @param   {number}  rotation
+		 * @param   {number}  angle_start
+		 * @param   {number}  angle_end
+		 * @param   {boolean} counterclockwise
+		 * @returns {void}
+		 */
+		ellipse(x, y, radius_x, radius_y, rotation, angle_start, angle_end, counterclockwise) {
+			s.ctx.ellipse(x, y, radius_x, radius_y, rotation, angle_start, angle_end, counterclockwise)
+		},
+		/**
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @returns {void}   */
+		lineTo(x, y) {
+			s.ctx.lineTo(x, y)
+		},
+		/**
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @returns {void}   */
+		moveTo(x, y) {
+			s.ctx.moveTo(x, y)
+		},
+		/**
+		 * @param   {number} cpx
+		 * @param   {number} cpy
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @returns {void}   */
+		quadraticCurveTo(cpx, cpy, x, y) {
+			s.ctx.quadraticCurveTo(cpx, cpy, x, y)
+		},
+		/**
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} w
+		 * @param   {number} h
+		 * @returns {void}   */
+		rect(x, y, w, h) {
+			s.ctx.rect(x, y, w, h)
+		},
+		/**
+		 * @param   {number} x
+		 * @param   {number} y
+		 * @param   {number} w
+		 * @param   {number} h
+		 * @param   {number} radii
+		 * @returns {void}   */
+		roundRect(x, y, w, h, radii) {
+			s.ctx.roundRect(x, y, w, h, radii)
+		},
+
+		// ------------------------------ /
+		//      PATH DRAWING STYLES       /
+		// ------------------------------ /
+
+		/**
+		 * @param   {number} cap
+		 * @returns {void}          */
+		lineCap(cap) {
+			s.ctx.lineCap = CANVAS_LINE_CAP[cap]
+		},
+		/**
+		 * @param   {number} offset
+		 * @returns {void}   */
+		lineDashOffset(offset) {
+			s.ctx.lineDashOffset = offset
+		},
+		/**
+		 * @param   {number} join
+		 * @returns {void}           */
+		lineJoin(join) {
+			s.ctx.lineJoin = CANVAS_LINE_JOIN[join]
+		},
+		/**
+		 * @param   {number} width
+		 * @returns {void}   */
+		lineWidth(width) {
+			s.ctx.lineWidth = width
+		},
+		/**
+		 * @param   {number} limit
+		 * @returns {void}   */
+		miterLimit(limit) {
+			s.ctx.miterLimit = limit
+		},
+		/**
+		 * @param   {number} ptr
+		 * @param   {number} len
+		 * @returns {void}     */
+		setLineDash(ptr, len) {
+			const data = new Float32Array(wasm.memory.buffer, ptr, len)
+			s.ctx.setLineDash(/** @type {*} */ (data))
 		},
 	}
 }
