@@ -9,25 +9,89 @@ export function Ctx2d_State() {
 }
 
 /** @type {Record<number, CanvasFillRule>} */
-const CANVAS_FILL_RULE = {
+const FILL_RULE = {
 	0: "nonzero",
 	1: "evenodd",
 }
 
 /** @type {Record<number, CanvasLineCap>} */
-const CANVAS_LINE_CAP = {
+const LINE_CAP = {
 	0: "butt",
 	1: "round",
 	2: "square",
 }
 
 /** @type {Record<number, CanvasLineJoin>} */
-const CANVAS_LINE_JOIN = {
+const LINE_JOIN = {
 	0: "miter",
 	1: "round",
 	2: "bevel",
 }
 
+/** @type {Record<number, CanvasDirection>} */
+const DIRECTION = {
+	0: "inherit",
+	1: "ltr",
+	2: "rtl",
+}
+
+/** @type {Record<number, CanvasFontKerning>} */
+const FONT_KERNING = {
+	0: "auto",
+	1: "none",
+	2: "normal",
+}
+
+/** @type {Record<number, CanvasFontStretch>} */
+const FONT_STRETCH = {
+	0: "normal",
+	1: "ultra-condensed",
+	2: "extra-condensed",
+	3: "condensed",
+	4: "semi-condensed",
+	5: "semi-expanded",
+	6: "expanded",
+	7: "extra-expanded",
+	8: "ultra-expanded",
+}
+
+/** @type {Record<number, CanvasFontVariantCaps>} */
+const FONT_VARIANT_CAPS = {
+	0: "normal",
+	1: "petite-caps",
+	2: "all-petite-caps",
+	3: "small-caps",
+	4: "all-small-caps",
+	5: "titling-caps",
+	6: "unicase",
+}
+
+/** @type {Record<number, CanvasTextAlign>} */
+const TEXT_ALIGN = {
+	0: "start",
+	1: "end",
+	2: "left",
+	3: "right",
+	4: "center",
+}
+
+/** @type {Record<number, CanvasTextBaseline>} */
+const TEXT_BASELINE = {
+	0: "alphabetic",
+	1: "top",
+	2: "hanging",
+	3: "middle",
+	4: "ideographic",
+	5: "bottom",
+}
+
+/** @type {Record<number, CanvasTextRendering>} */
+const TEXT_RENDERING = {
+	0: "auto",
+	1: "optimizeSpeed",
+	2: "optimizeLegibility",
+	3: "geometricPrecision",
+}
 
 /**
  * @param   {Wasm_State}  wasm
@@ -110,7 +174,7 @@ export function make_odin_ctx2d(wasm, s) {
 		clip(
 			/** @type {number} */ fill_rule,
 		) {
-			s.ctx.clip(CANVAS_FILL_RULE[fill_rule]);
+			s.ctx.clip(FILL_RULE[fill_rule]);
 		},
 		/**
 		 * Fills the current path.
@@ -118,7 +182,7 @@ export function make_odin_ctx2d(wasm, s) {
 		fill(
 			/** @type {number} */ fill_rule,
 		) {
-			s.ctx.fill(CANVAS_FILL_RULE[fill_rule])
+			s.ctx.fill(FILL_RULE[fill_rule])
 		},
 		/**
 		 * Checks if the given point is inside the current path.
@@ -128,7 +192,7 @@ export function make_odin_ctx2d(wasm, s) {
 			/** @type {number} */ y,
 			/** @type {number} */ fill_rule,
 		) {
-			return s.ctx.isPointInPath(x, y, CANVAS_FILL_RULE[fill_rule])
+			return s.ctx.isPointInPath(x, y, FILL_RULE[fill_rule])
 		},
 		/**
 		 * Checks if the given point is inside the current stroke.
@@ -278,7 +342,7 @@ export function make_odin_ctx2d(wasm, s) {
 		lineCap(
 			/** @type {number} */ cap,
 		) {
-			s.ctx.lineCap = CANVAS_LINE_CAP[cap]
+			s.ctx.lineCap = LINE_CAP[cap]
 		},
 		/** @returns {void} */
 		lineDashOffset(
@@ -290,7 +354,7 @@ export function make_odin_ctx2d(wasm, s) {
 		lineJoin(
 			/** @type {number} */ join,
 		) {
-			s.ctx.lineJoin = CANVAS_LINE_JOIN[join]
+			s.ctx.lineJoin = LINE_JOIN[join]
 		},
 		/** @returns {void} */
 		lineWidth(
@@ -450,6 +514,74 @@ export function make_odin_ctx2d(wasm, s) {
 			mem.store_offset_f32(data, offset, metrics.hangingBaseline)
 			mem.store_offset_f32(data, offset, metrics.ideographicBaseline)
 			mem.store_offset_f32(data, offset, metrics.width)
+		},
+
+		// ------------------------------ /
+		//      TEXT DRAWING STYLES       /
+		// ------------------------------ /
+
+		/** @returns {void} */
+		direction(
+			/** @type {number} */ value,
+		) {
+			s.ctx.direction = DIRECTION[value]
+		},
+		/** @returns {void} */
+		font(
+			/** @type {number} */ ptr,
+			/** @type {number} */ len,
+		) {
+			s.ctx.font = mem.load_string_raw(wasm.memory.buffer, ptr, len)
+		},
+		/** @returns {void} */
+		fontKerning(
+			/** @type {number} */ value,
+		) {
+			s.ctx.fontKerning = FONT_KERNING[value]
+		},
+		/** @returns {void} */
+		fontStretch(
+			/** @type {number} */ value,
+		) {
+			s.ctx.fontStretch = FONT_STRETCH[value]
+		},
+		/** @returns {void} */
+		fontVariantCaps(
+			/** @type {number} */ value,
+		) {
+			s.ctx.fontVariantCaps = FONT_VARIANT_CAPS[value]
+		},
+		/** @returns {void} */
+		letterSpacing(
+			/** @type {number} */ ptr,
+			/** @type {number} */ len,
+		) {
+			s.ctx.letterSpacing = mem.load_string_raw(wasm.memory.buffer, ptr, len)
+		},
+		/** @returns {void} */
+		textAlign(
+			/** @type {number} */ value,
+		) {
+			s.ctx.textAlign = TEXT_ALIGN[value]
+		},
+		/** @returns {void} */
+		textBaseline(
+			/** @type {number} */ value,
+		) {
+			s.ctx.textBaseline = TEXT_BASELINE[value]
+		},
+		/** @returns {void} */
+		textRendering(
+			/** @type {number} */ value,
+		) {
+			s.ctx.textRendering = TEXT_RENDERING[value]
+		},
+		/** @returns {void} */
+		wordSpacing(
+			/** @type {number} */ ptr,
+			/** @type {number} */ len,
+		) {
+			s.ctx.wordSpacing = mem.load_string_raw(wasm.memory.buffer, ptr, len)
 		},
 	}
 }

@@ -1,5 +1,7 @@
 package ctx2d
 
+import "core:strconv"
+
 foreign import "ctx2d"
 
 @(default_calling_convention="contextless")
@@ -51,7 +53,7 @@ foreign ctx2d {
 //            DRAW PATH           /
 // ------------------------------ /
 
-CanvasFillRule :: enum {
+FillRule :: enum {
 	nonzero = 0,
 	evenodd = 1,
 }
@@ -61,11 +63,11 @@ foreign ctx2d {
 	// Begins a new path.
 	beginPath       :: proc () ---
 	// Clips the current path.
-	clip            :: proc (fill_rule: CanvasFillRule = .nonzero) ---
+	clip            :: proc (fill_rule: FillRule = .nonzero) ---
 	// Fills the current path.
-	fill            :: proc (fill_rule: CanvasFillRule = .nonzero) ---
+	fill            :: proc (fill_rule: FillRule = .nonzero) ---
 	// Checks if the given point is inside the current path.
-	isPointInPath   :: proc (x, y: f32, fill_rule: CanvasFillRule = .nonzero) -> bool ---
+	isPointInPath   :: proc (x, y: f32, fill_rule: FillRule = .nonzero) -> bool ---
 	// Checks if the given point is inside the current stroke.
 	isPointInStroke :: proc (x, y: f32) -> bool ---
 	// Strokes the current path.
@@ -106,13 +108,13 @@ foreign ctx2d {
 //      PATH DRAWING STYLES       /
 // ------------------------------ /
 
-CanvasLineCap :: enum {
+LineCap :: enum {
 	butt   = 0,
 	round  = 1,
 	square = 2,
 }
 
-CanvasLineJoin :: enum {
+LineJoin :: enum {
 	miter = 0,
 	round = 1,
 	bevel = 2,
@@ -120,9 +122,9 @@ CanvasLineJoin :: enum {
 
 @(default_calling_convention="contextless")
 foreign ctx2d {
-	lineCap        :: proc (cap: CanvasLineCap) ---
+	lineCap        :: proc (cap: LineCap) ---
 	lineDashOffset :: proc (offset: f32) ---
-	lineJoin       :: proc (join: CanvasLineJoin) ---
+	lineJoin       :: proc (join: LineJoin) ---
 	lineWidth      :: proc (width: f32) ---
 	miterLimit     :: proc (limit: f32) ---
 	setLineDash    :: proc (segments: []f32) ---
@@ -199,3 +201,101 @@ getTextMetrics :: proc (text: string) -> (metrics: TextMetrics) {
 	return
 }
 
+// ------------------------------ /
+//      TEXT DRAWING STYLES       /
+// ------------------------------ /
+
+Direction :: enum {
+	inherit = 0,
+	ltr     = 1,
+	rtl     = 2,
+}
+
+FontKerning :: enum {
+	auto   = 0,
+	none   = 1,
+	normal = 2,
+}
+
+FontStretch :: enum {
+	normal          = 0,
+	ultra_condensed = 1,
+	extra_condensed = 2,
+	condensed       = 3,
+	semi_condensed  = 4,
+	semi_expanded   = 5,
+	expanded        = 6,
+	extra_expanded  = 7,
+	ultra_expanded  = 8,
+}
+
+FontVariantCaps :: enum {
+	normal          = 0,
+	petite_caps     = 1,
+	all_petite_caps = 2,
+	small_caps      = 3,
+	all_small_caps  = 4,
+	titling_caps    = 5,
+	unicase         = 6,
+}
+
+TextAlign :: enum {
+	start  = 0,
+	end    = 1,
+	left   = 2,
+	right  = 3,
+	center = 4,
+}
+
+TextBaseline :: enum {
+	alphabetic  = 0,
+	top         = 1,
+	hanging     = 2,
+	middle      = 3,
+	ideographic = 4,
+	bottom      = 5,
+}
+
+TextRendering :: enum {
+	auto               = 0,
+	optimizeSpeed      = 1,
+	optimizeLegibility = 2,
+	geometricPrecision = 3,
+}
+
+@(default_calling_convention="contextless")
+foreign ctx2d {
+	direction           :: proc (Direction)       ---
+	font                :: proc (string)          ---
+	fontKerning         :: proc (FontKerning)     ---
+	fontStretch         :: proc (FontStretch)     ---
+	fontVariantCaps     :: proc (FontVariantCaps) ---
+	@(link_name="letterSpacing")
+	letterSpacingString :: proc (string)          ---
+	textAlign           :: proc (TextAlign)       ---
+	textBaseline        :: proc (TextBaseline)    ---
+	textRendering       :: proc (TextRendering)   ---
+	@(link_name="wordSpacing")
+	wordSpacingString   :: proc (string)          ---
+}
+
+px_to_string :: proc (buf: []byte, val: int) -> string {
+	val_str := strconv.append_int(buf, i64(val), 10)
+	val_len := len(val_str)
+	buf[val_len+0] = 'p'
+	buf[val_len+1] = 'x'
+	return string(buf[:val_len+2])
+}
+
+letterSpacingPx :: proc (val: int) {
+	buf: [32]byte
+	letterSpacingString(px_to_string(buf[:], val))
+}
+
+wordSpacingPx :: proc (val: int) {
+	buf: [32]byte
+	wordSpacingString(px_to_string(buf[:], val))
+}
+
+letterSpacing :: proc {letterSpacingString, letterSpacingPx}
+wordSpacing   :: proc {wordSpacingString, wordSpacingPx}
