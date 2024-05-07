@@ -1,6 +1,6 @@
 package ctx2d
 
-import "core:strconv"
+import "core:testing"
 
 foreign import "ctx2d"
 
@@ -279,22 +279,69 @@ foreign ctx2d {
 	wordSpacingString   :: proc (string)          ---
 }
 
-px_to_string :: proc (buf: []byte, val: int) -> string {
-	val_str := strconv.append_int(buf, i64(val), 10)
-	val_len := len(val_str)
+@private
+int_digits := "0123456789"
+
+px_to_string :: proc (buf: []byte, val: int) -> string #no_bounds_check {
+	assert(len(buf) >= 32, "buffer too small")
+
+	u     := u64(val)
+	start := 0
+
+	switch {
+	case val == 0:
+		copy(buf, "0px")
+		return string(buf[:3])
+	case val < 0:
+		buf[0] = '-'
+		start  = 1
+		u      = u64(-val)
+	}
+
+	i := len(buf)
+	
+	B :: 10
+	for u >= B {
+		i -= 1
+		buf[i] = int_digits[u % B]
+		u /= B
+	}
+	i -= 1
+	buf[i] = int_digits[u % B]
+
+	copy(buf[start:], buf[i:])
+
+	val_len := len(buf) - i + start
 	buf[val_len+0] = 'p'
 	buf[val_len+1] = 'x'
+
 	return string(buf[:val_len+2])
 }
 
-letterSpacingPx :: proc (val: int) {
+@test
+test_px_to_string :: proc (t: ^testing.T) {
 	buf: [32]byte
-	letterSpacingString(px_to_string(buf[:], val))
+	testing.expect_value(t, px_to_string(buf[:],           1),           "1px")
+	testing.expect_value(t, px_to_string(buf[:],           0),           "0px")
+	testing.expect_value(t, px_to_string(buf[:],          10),          "10px")
+	testing.expect_value(t, px_to_string(buf[:],         100),         "100px")
+	testing.expect_value(t, px_to_string(buf[:],        1000),        "1000px")
+	testing.expect_value(t, px_to_string(buf[:],  2147483647),  "2147483647px")
+	testing.expect_value(t, px_to_string(buf[:],          -1),          "-1px")
+	testing.expect_value(t, px_to_string(buf[:],         -10),         "-10px")
+	testing.expect_value(t, px_to_string(buf[:],        -100),        "-100px")
+	testing.expect_value(t, px_to_string(buf[:],       -1000),       "-1000px")
+	testing.expect_value(t, px_to_string(buf[:], -2147483647), "-2147483647px")
 }
 
-wordSpacingPx :: proc (val: int) {
+letterSpacingPx :: proc (px: int) {
 	buf: [32]byte
-	wordSpacingString(px_to_string(buf[:], val))
+	letterSpacingString(px_to_string(buf[:], px))
+}
+
+wordSpacingPx :: proc (px: int) {
+	buf: [32]byte
+	wordSpacingString(px_to_string(buf[:], px))
 }
 
 letterSpacing :: proc {letterSpacingString, letterSpacingPx}

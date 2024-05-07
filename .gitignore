@@ -1,4 +1,15 @@
-# Editor
+# Ignore all extensionless files
+*
+!*.*
+!*/
+
+# generated files
+_*
+*.wasm
+*.o
+*.bin
+
+# Vscode config
 .vscode/settings.json
 
 node_modules
@@ -7,10 +18,5 @@ dist
 
 .env
 
+# OLS config
 /ols.json
-
-# generated files
-_*
-*.wasm
-*.o
-*.bin
