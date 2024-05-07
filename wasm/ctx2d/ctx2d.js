@@ -174,96 +174,95 @@ export function make_odin_ctx2d(wasm, s) {
 		//              PATH              /
 		// ------------------------------ /
 
-		/**
-		 * @param   {number}  x
-		 * @param   {number}  y
-		 * @param   {number}  radius
-		 * @param   {number}  angle_start
-		 * @param   {number}  angle_end
-		 * @param   {boolean} counterclockwise
-		 * @returns {void}     */
-		arc(x, y, radius, angle_start, angle_end, counterclockwise) {
-			s.ctx.arc(x, y, radius, angle_start, angle_end, counterclockwise)
+		/** @returns {void} */
+		arc(
+			/** @type {number}  */ x,
+			/** @type {number}  */ y,
+			/** @type {number}  */ radius,
+			/** @type {number}  */ angle_start,
+			/** @type {number}  */ angle_end,
+			/** @type {boolean} */ counter_clockwise,
+		) {
+			s.ctx.arc(x, y, radius, angle_start, angle_end, counter_clockwise)
 		},
-		/**
-		 * @param   {number} x1
-		 * @param   {number} y1
-		 * @param   {number} x2
-		 * @param   {number} y2
-		 * @param   {number} radius
-		 * @returns {void}   */
-		arcTo(x1, y1, x2, y2, radius) {
+		/** @returns {void} */
+		arcTo(
+			/** @type {number} */ x1,
+			/** @type {number} */ y1,
+			/** @type {number} */ x2,
+			/** @type {number} */ y2,
+			/** @type {number} */ radius,
+		) {
 			s.ctx.arcTo(x1, y1, x2, y2, radius)
 		},
-		/**
-		 * @param   {number} cp1x
-		 * @param   {number} cp1y
-		 * @param   {number} cp2x
-		 * @param   {number} cp2y
-		 * @param   {number} x
-		 * @param   {number} y
-		 * @returns {void}   */
-		bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) {
+		/** @returns {void} */
+		bezierCurveTo(
+			/** @type {number} */ cp1x,
+			/** @type {number} */ cp1y,
+			/** @type {number} */ cp2x,
+			/** @type {number} */ cp2y,
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+		) {
 			s.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
 		},
 		/** @returns {void} */
 		closePath() {
 			s.ctx.closePath()
 		},
-		/**
-		 * @param   {number}  x
-		 * @param   {number}  y
-		 * @param   {number}  radius_x
-		 * @param   {number}  radius_y
-		 * @param   {number}  rotation
-		 * @param   {number}  angle_start
-		 * @param   {number}  angle_end
-		 * @param   {boolean} counterclockwise
-		 * @returns {void}
-		 */
-		ellipse(x, y, radius_x, radius_y, rotation, angle_start, angle_end, counterclockwise) {
+		/** @returns {void} */
+		ellipse(	
+			/** @type {number}  */ x,
+			/** @type {number}  */ y,
+			/** @type {number}  */ radius_x,
+			/** @type {number}  */ radius_y,
+			/** @type {number}  */ rotation,
+			/** @type {number}  */ angle_start,
+			/** @type {number}  */ angle_end,
+			/** @type {boolean} */ counterclockwise,
+		) {
 			s.ctx.ellipse(x, y, radius_x, radius_y, rotation, angle_start, angle_end, counterclockwise)
 		},
-		/**
-		 * @param   {number} x
-		 * @param   {number} y
-		 * @returns {void}   */
-		lineTo(x, y) {
+		/** @returns {void} */
+		lineTo(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+		) {
 			s.ctx.lineTo(x, y)
 		},
-		/**
-		 * @param   {number} x
-		 * @param   {number} y
-		 * @returns {void}   */
-		moveTo(x, y) {
+		/** @returns {void} */
+		moveTo(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+		) {
 			s.ctx.moveTo(x, y)
 		},
-		/**
-		 * @param   {number} cpx
-		 * @param   {number} cpy
-		 * @param   {number} x
-		 * @param   {number} y
-		 * @returns {void}   */
-		quadraticCurveTo(cpx, cpy, x, y) {
+		/** @returns {void} */
+		quadraticCurveTo(
+			/** @type {number} */ cpx,
+			/** @type {number} */ cpy,
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+		) {
 			s.ctx.quadraticCurveTo(cpx, cpy, x, y)
 		},
-		/**
-		 * @param   {number} x
-		 * @param   {number} y
-		 * @param   {number} w
-		 * @param   {number} h
-		 * @returns {void}   */
-		rect(x, y, w, h) {
+		/** @returns {void} */
+		rect(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+			/** @type {number} */ w,
+			/** @type {number} */ h,
+		) {
 			s.ctx.rect(x, y, w, h)
 		},
-		/**
-		 * @param   {number} x
-		 * @param   {number} y
-		 * @param   {number} w
-		 * @param   {number} h
-		 * @param   {number} radii
-		 * @returns {void}   */
-		roundRect(x, y, w, h, radii) {
+		/** @returns {void} */
+		roundRect(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+			/** @type {number} */ w,
+			/** @type {number} */ h,
+			/** @type {number} */ radii,
+		) {
 			s.ctx.roundRect(x, y, w, h, radii)
 		},
 
@@ -271,43 +270,182 @@ export function make_odin_ctx2d(wasm, s) {
 		//      PATH DRAWING STYLES       /
 		// ------------------------------ /
 
-		/**
-		 * @param   {number} cap
-		 * @returns {void}          */
-		lineCap(cap) {
+		/** @returns {void} */
+		lineCap(
+			/** @type {number} */ cap,
+		) {
 			s.ctx.lineCap = CANVAS_LINE_CAP[cap]
 		},
-		/**
-		 * @param   {number} offset
-		 * @returns {void}   */
-		lineDashOffset(offset) {
+		/** @returns {void} */
+		lineDashOffset(
+			/** @type {number} */ offset,
+		) {
 			s.ctx.lineDashOffset = offset
 		},
-		/**
-		 * @param   {number} join
-		 * @returns {void}           */
-		lineJoin(join) {
+		/** @returns {void} */
+		lineJoin(
+			/** @type {number} */ join,
+		) {
 			s.ctx.lineJoin = CANVAS_LINE_JOIN[join]
 		},
-		/**
-		 * @param   {number} width
-		 * @returns {void}   */
-		lineWidth(width) {
+		/** @returns {void} */
+		lineWidth(
+			/** @type {number} */ width,
+		) {
 			s.ctx.lineWidth = width
 		},
-		/**
-		 * @param   {number} limit
-		 * @returns {void}   */
-		miterLimit(limit) {
+		/** @returns {void} */
+		miterLimit(
+			/** @type {number} */ limit,
+		) {
 			s.ctx.miterLimit = limit
 		},
-		/**
-		 * @param   {number} ptr
-		 * @param   {number} len
-		 * @returns {void}     */
-		setLineDash(ptr, len) {
+		/** @returns {void} */
+		setLineDash(
+			/** @type {number} */ ptr,
+			/** @type {number} */ len,
+		) {
 			const data = new Float32Array(wasm.memory.buffer, ptr, len)
 			s.ctx.setLineDash(/** @type {*} */ (data))
+		},
+
+		// ------------------------------ /
+		//              RECT              /
+		// ------------------------------ /
+
+		/** @returns {void} */
+		clearRect(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+			/** @type {number} */ w,
+			/** @type {number} */ h,
+		) {
+			s.ctx.clearRect(x, y, w, h)
+		},
+		/** @returns {void} */
+		fillRect(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+			/** @type {number} */ w,
+			/** @type {number} */ h,
+		) {
+			s.ctx.fillRect(x, y, w, h)
+		},
+		/** @returns {void} */
+		strokeRect(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+			/** @type {number} */ w,
+			/** @type {number} */ h,
+		) {
+			s.ctx.strokeRect(x, y, w, h)
+		},
+
+		// ------------------------------ /
+		//         SHADOW STYLES          /
+		// ------------------------------ /
+
+		/** @returns {void} */
+		shadowBlur(
+			/** @type {number} */ blur,
+		) {
+			s.ctx.shadowBlur = blur
+		},
+		/** @returns {void} */
+		shadowColor(
+			/** @type {string} */ color,
+		) {
+			s.ctx.shadowColor = color
+		},
+		/** @returns {void} */
+		shadowOffsetX(
+			/** @type {number} */ offset_x,
+		) {
+			s.ctx.shadowOffsetX = offset_x
+		},
+		/** @returns {void} */
+		shadowOffsetY(
+			/** @type {number} */ offset_y,
+		) {
+			s.ctx.shadowOffsetY = offset_y
+		},
+
+		// ------------------------------ /
+		//              STATE             /
+		// ------------------------------ /
+
+		/** @returns {void} */
+		reset() {
+			s.ctx.reset()
+		},
+		/** @returns {void} */
+		restore() {
+			s.ctx.restore()
+		},
+		/** @returns {void} */
+		save() {
+			s.ctx.save()
+		},
+
+		// ------------------------------ /
+		//              TEXT              /
+		// ------------------------------ /
+
+		/** @returns {void} */
+		fillTextNoMax(
+			/** @type {string} */ text,
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+		) {
+			s.ctx.fillText(text, x, y)
+		},
+		/** @returns {void} */
+		fillTextMaxWidth(
+			/** @type {string} */ text,
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+			/** @type {number} */ max_width,
+		) {
+			s.ctx.fillText(text, x, y, max_width)
+		},
+		/** @returns {void} */
+		strokeTextNoMax(
+			/** @type {string} */ text,
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+		) {
+			s.ctx.strokeText(text, x, y)
+		},
+		/** @returns {void} */
+		strokeTextMaxWidth(
+			/** @type {string} */ text,
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+			/** @type {number} */ max_width,
+		) {
+			s.ctx.strokeText(text, x, y, max_width || undefined)
+		},
+		/** @returns {void} */
+		measureText(
+			/** @type {string} */ text,
+			/** @type {number} */ ptr,
+		) {
+			const metrics = s.ctx.measureText(text)
+			const offset  = new mem.ByteOffset(ptr)
+			const data    = new DataView(wasm.memory.buffer)
+
+			mem.store_offset_f32(data, offset, metrics.actualBoundingBoxAscent)
+			mem.store_offset_f32(data, offset, metrics.actualBoundingBoxDescent)
+			mem.store_offset_f32(data, offset, metrics.actualBoundingBoxLeft)
+			mem.store_offset_f32(data, offset, metrics.actualBoundingBoxRight)
+			mem.store_offset_f32(data, offset, metrics.alphabeticBaseline)
+			mem.store_offset_f32(data, offset, metrics.emHeightAscent)
+			mem.store_offset_f32(data, offset, metrics.emHeightDescent)
+			mem.store_offset_f32(data, offset, metrics.fontBoundingBoxAscent)
+			mem.store_offset_f32(data, offset, metrics.fontBoundingBoxDescent)
+			mem.store_offset_f32(data, offset, metrics.hangingBaseline)
+			mem.store_offset_f32(data, offset, metrics.ideographicBaseline)
+			mem.store_offset_f32(data, offset, metrics.width)
 		},
 	}
 }

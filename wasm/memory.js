@@ -14,15 +14,13 @@ export const LITTLE_ENDIAN = /*#__PURE__*/ (() => {
 
 export const STRING_SIZE = 2 * REG_SIZE
 
-export class ByteOffset {
-	/**
-	 * @param {number} offset
-	 * @param {number} alignment
-	 */
-	constructor(offset = 0, alignment = ALIGNMENT) {
-		this.offset = offset
-		this.alignment = alignment
-	}
+/**
+ * @param {number} offset
+ * @param {number} alignment
+ */
+export function ByteOffset(offset = 0, alignment = ALIGNMENT) {
+	this.offset    = offset
+	this.alignment = alignment
 }
 
 /**

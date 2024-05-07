@@ -128,3 +128,74 @@ foreign ctx2d {
 	setLineDash    :: proc (segments: []f32) ---
 }
 
+// ------------------------------ /
+//              RECT              /
+// ------------------------------ /
+
+@(default_calling_convention="contextless")
+foreign ctx2d {
+	clearRect  :: proc (x, y, w, h: f32) ---
+	fillRect   :: proc (x, y, w, h: f32) ---
+	strokeRect :: proc (x, y, w, h: f32) ---
+}
+
+// ------------------------------ /
+//         SHADOW STYLES          /
+// ------------------------------ /
+
+@(default_calling_convention="contextless")
+foreign ctx2d {
+	shadowBlur    :: proc (blur: f32) ---
+	shadowColor   :: proc (color: string) ---
+	shadowOffsetX :: proc (offset: f32) ---
+	shadowOffsetY :: proc (offset: f32) ---
+}
+
+// ------------------------------ /
+//              STATE             /
+// ------------------------------ /
+
+@(default_calling_convention="contextless")
+foreign ctx2d {
+	reset   :: proc () ---
+	restore :: proc () ---
+	save    :: proc () ---
+}
+
+// ------------------------------ /
+//              TEXT              /
+// ------------------------------ /
+
+// The dimensions of a piece of text in the canvas, as created by the CanvasRenderingContext2D.measureText() method.
+TextMetrics :: struct {
+    actualBoundingBoxAscent:  f32,
+    actualBoundingBoxDescent: f32,
+    actualBoundingBoxLeft:    f32,
+    actualBoundingBoxRight:   f32,
+    alphabeticBaseline:       f32,
+    emHeightAscent:           f32,
+    emHeightDescent:          f32,
+    fontBoundingBoxAscent:    f32,
+    fontBoundingBoxDescent:   f32,
+    hangingBaseline:          f32,
+    ideographicBaseline:      f32,
+    width:                    f32,
+}
+
+@(default_calling_convention="contextless")
+foreign ctx2d {
+	fillTextNoMax      :: proc (text: string, x, y: f32) ---
+	fillTextMaxWidth   :: proc (text: string, x, y: f32, max_width: f32) ---
+	strokeTextNoMax    :: proc (text: string, x, y: f32) ---
+	strokeTextMaxWidth :: proc (text: string, x, y: f32, max_width: f32) ---
+	measureText        :: proc (text: string, metrics: ^TextMetrics) ---
+}
+
+fillText   :: proc {fillTextNoMax, fillTextMaxWidth}
+strokeText :: proc {strokeTextNoMax, strokeTextMaxWidth}
+
+getTextMetrics :: proc (text: string) -> (metrics: TextMetrics) {
+	measureText(text, &metrics)
+	return
+}
+
