@@ -583,6 +583,13 @@ vec3_transform :: proc "contextless" (v: vec3, m: mat4) -> vec3 {
 	}
 }
 
+vec2_transform :: proc "contextless" (v: vec2, m: mat3) -> vec2 {
+	return {
+		v.x * m[0].x + v.y * m[1].x + m[2].x,
+		v.x * m[0].y + v.y * m[1].y + m[2].y,
+	}
+}
+
 normals_from_positions :: proc(dst, src: []vec3) {
 	assert(len(dst) >= len(src))
 	assert(len(src) % 3 == 0)
