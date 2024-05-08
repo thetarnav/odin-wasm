@@ -167,10 +167,22 @@ foreign ctx2d {
 
 @(default_calling_convention="contextless")
 foreign ctx2d {
-	// Sets the fill style color.
-	fillStyle            :: proc (color: string) ---
-	// Sets the stroke style color.
-	strokeStyle          :: proc (color: string) ---
+	@(link_name="fillStyle")
+	_fillStyle            :: proc (color: string) ---
+	@(link_name="strokeStyle")
+	_strokeStyle          :: proc (color: string) ---
+}
+
+// Sets the fill style color.
+fillStyle :: proc (color: rgba) {
+	buf: Buf_rgba
+	_fillStyle(rgba_to_string(buf[:], color))
+}
+
+// Sets the stroke style color.
+strokeStyle :: proc (color: rgba) {
+	buf: Buf_rgba
+	_strokeStyle(rgba_to_string(buf[:], color))
 }
 
 // ------------------------------ /
@@ -234,19 +246,17 @@ foreign ctx2d {
 
 @(default_calling_convention="contextless")
 foreign ctx2d {
-	shadowBlur        :: proc (blur: f32) ---
+	shadowBlur    :: proc (blur: f32) ---
 	@(link_name="shadowColor")
-	shadowColorString :: proc (color: string) ---
-	shadowOffsetX     :: proc (offset: f32) ---
-	shadowOffsetY     :: proc (offset: f32) ---
+	_shadowColor  :: proc (color: string) ---
+	shadowOffsetX :: proc (offset: f32) ---
+	shadowOffsetY :: proc (offset: f32) ---
 }
 
-shadowColorRgba :: proc (color: rgba) {
+shadowColor :: proc (color: rgba) {
 	buf: Buf_rgba
-	shadowColorString(rgba_to_string(buf[:], color))
+	_shadowColor(rgba_to_string(buf[:], color))
 }
-
-shadowColor :: proc {shadowColorString, shadowColorRgba}
 
 // ------------------------------ /
 //              STATE             /
@@ -386,3 +396,37 @@ wordSpacingPx :: proc (px: int) {
 
 letterSpacing :: proc {letterSpacingString, letterSpacingPx}
 wordSpacing   :: proc {wordSpacingString, wordSpacingPx}
+
+// ------------------------------ /
+//           TRANSFORM            /
+// ------------------------------ /
+
+Transform :: matrix[3,3]f32
+
+@(default_calling_convention="contextless")
+foreign ctx2d {
+	resetTransform :: proc ()                      ---
+	@(link_name="getTransform")
+	_getTransform  :: proc (^Transform)            ---
+	@(link_name="setTransform")
+	_setTransform  :: proc (a, b, c, d, e, f: f32) ---
+	@(link_name="transform")
+	_transform     :: proc (a, b, c, d, e, f: f32) ---
+	rotate         :: proc (angle: f32)            ---
+	scale          :: proc (x, y: f32)             ---
+	translate      :: proc (x, y: f32)             ---
+}
+
+getTransform :: proc () -> (m: Transform) {
+	m = 1
+	_getTransform(&m)
+	return
+}
+
+setTransform :: proc (m: Transform) {
+	_setTransform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1])
+}
+
+transform :: proc (m: Transform) {
+	_transform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1])
+}

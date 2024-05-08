@@ -583,5 +583,71 @@ export function make_odin_ctx2d(wasm, s) {
 		) {
 			s.ctx.wordSpacing = mem.load_string_raw(wasm.memory.buffer, ptr, len)
 		},
+
+		// ------------------------------ /
+		//           TRANSFORM            /
+		// ------------------------------ /
+
+		/** @returns {void} */
+		resetTransform() {
+			s.ctx.resetTransform()
+		},
+		/** @returns {void} */
+		getTransform(
+			/** @type {number} */ ptr,
+		) {
+			const t      = s.ctx.getTransform()
+			const data   = new DataView(wasm.memory.buffer)
+			const offset = new mem.ByteOffset(ptr)
+
+			mem.store_offset_f32(data, offset, t.a)
+			mem.store_offset_f32(data, offset, t.b)
+			mem.store_offset_f32(data, offset, t.c)
+			mem.store_offset_f32(data, offset, t.d)
+			mem.store_offset_f32(data, offset, t.e)
+			mem.store_offset_f32(data, offset, t.f)
+		},
+		/** @returns {void} */
+		setTransform(
+			/** @type {number} */ a,
+			/** @type {number} */ b,
+			/** @type {number} */ c,
+			/** @type {number} */ d,
+			/** @type {number} */ e,
+			/** @type {number} */ f,
+		) {
+			s.ctx.setTransform(a, b, c, d, e, f)
+		},
+		/** @returns {void} */
+		transform(
+			/** @type {number} */ a,
+			/** @type {number} */ b,
+			/** @type {number} */ c,
+			/** @type {number} */ d,
+			/** @type {number} */ e,
+			/** @type {number} */ f,
+		) {
+			s.ctx.transform(a, b, c, d, e, f)
+		},
+		/** @returns {void} */
+		rotate(
+			/** @type {number} */ angle,
+		) {
+			s.ctx.rotate(angle)
+		},
+		/** @returns {void} */
+		scale(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+		) {
+			s.ctx.scale(x, y)
+		},
+		/** @returns {void} */
+		translate(
+			/** @type {number} */ x,
+			/** @type {number} */ y,
+		) {
+			s.ctx.translate(x, y)
+		},
 	}
 }
