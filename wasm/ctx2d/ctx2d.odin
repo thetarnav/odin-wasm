@@ -4,6 +4,93 @@ import "core:testing"
 
 foreign import "ctx2d"
 
+
+@private
+digits := "0123456789abcdef"
+
+Buf_px   :: [32]byte
+Buf_rgba :: [9]byte
+
+rgba :: [4]u8
+
+px_to_string :: proc (buf: []byte, val: int) -> string #no_bounds_check {
+	assert(len(buf) >= 32, "buffer too small")
+
+	if val == 0 {
+		copy(buf, "0px")
+		return string(buf[:3])
+	}
+
+	i := len(buf)
+	u := u64(val)
+	buf[0] = '+'
+
+	if val < 0 {
+		buf[0] = '-'
+		u      = u64(-val)
+	}
+	
+	B :: 10
+	for u >= B {
+		i -= 1
+		buf[i] = digits[u % B]
+		u /= B
+	}
+	i -= 1
+	buf[i] = digits[u % B]
+
+	copy(buf[1:], buf[i:])
+
+	val_len := len(buf) - i + 1
+	buf[val_len+0] = 'p'
+	buf[val_len+1] = 'x'
+
+	return string(buf[:val_len+2])
+}
+
+@test
+test_px_to_string :: proc (t: ^testing.T) {
+	buf: Buf_px
+	testing.expect_value(t, px_to_string(buf[:],           0),           "0px")
+	testing.expect_value(t, px_to_string(buf[:],           1),          "+1px")
+	testing.expect_value(t, px_to_string(buf[:],          10),         "+10px")
+	testing.expect_value(t, px_to_string(buf[:],         100),        "+100px")
+	testing.expect_value(t, px_to_string(buf[:],        1000),       "+1000px")
+	testing.expect_value(t, px_to_string(buf[:],  2147483647), "+2147483647px")
+	testing.expect_value(t, px_to_string(buf[:],          -1),          "-1px")
+	testing.expect_value(t, px_to_string(buf[:],         -10),         "-10px")
+	testing.expect_value(t, px_to_string(buf[:],        -100),        "-100px")
+	testing.expect_value(t, px_to_string(buf[:],       -1000),       "-1000px")
+	testing.expect_value(t, px_to_string(buf[:], -2147483647), "-2147483647px")
+}
+
+rgba_to_string :: proc (buf: []byte, color: rgba) -> string #no_bounds_check {
+	assert(len(buf) >= 9, "buffer too small")
+
+	i := len(buf)
+	buf[0] = '#'
+
+	for j := 3; j >= 0; j -= 1 {
+		i -= 2
+		buf[i+0] = digits[color[j] >> 4]  // high nibble
+		buf[i+1] = digits[color[j] & 0xF] // low nibble
+	}
+
+	return string(buf[:9])
+}
+
+@test
+test_rgba_to_string :: proc (t: ^testing.T) {
+	buf: Buf_rgba
+	testing.expect_value(t, rgba_to_string(buf[:], {  0,   0,   0,   0}), "#00000000")
+	testing.expect_value(t, rgba_to_string(buf[:], {255,   0,   0,  47}), "#ff00002f")
+	testing.expect_value(t, rgba_to_string(buf[:], {  0, 255,  47,   0}), "#00ff2f00")
+	testing.expect_value(t, rgba_to_string(buf[:], {  0,  47, 255,   0}), "#002fff00")
+	testing.expect_value(t, rgba_to_string(buf[:], { 47,   0,   0, 255}), "#2f0000ff")
+	testing.expect_value(t, rgba_to_string(buf[:], {255, 255, 255, 255}), "#ffffffff")
+}
+
+
 @(default_calling_convention="contextless")
 foreign ctx2d {
 	// Sets the current 2d context by canvas id.
@@ -147,11 +234,19 @@ foreign ctx2d {
 
 @(default_calling_convention="contextless")
 foreign ctx2d {
-	shadowBlur    :: proc (blur: f32) ---
-	shadowColor   :: proc (color: string) ---
-	shadowOffsetX :: proc (offset: f32) ---
-	shadowOffsetY :: proc (offset: f32) ---
+	shadowBlur        :: proc (blur: f32) ---
+	@(link_name="shadowColor")
+	shadowColorString :: proc (color: string) ---
+	shadowOffsetX     :: proc (offset: f32) ---
+	shadowOffsetY     :: proc (offset: f32) ---
 }
+
+shadowColorRgba :: proc (color: rgba) {
+	buf: Buf_rgba
+	shadowColorString(rgba_to_string(buf[:], color))
+}
+
+shadowColor :: proc {shadowColorString, shadowColorRgba}
 
 // ------------------------------ /
 //              STATE             /
@@ -279,68 +374,13 @@ foreign ctx2d {
 	wordSpacingString   :: proc (string)          ---
 }
 
-@private
-int_digits := "0123456789"
-
-px_to_string :: proc (buf: []byte, val: int) -> string #no_bounds_check {
-	assert(len(buf) >= 32, "buffer too small")
-
-	u     := u64(val)
-	start := 0
-
-	switch {
-	case val == 0:
-		copy(buf, "0px")
-		return string(buf[:3])
-	case val < 0:
-		buf[0] = '-'
-		start  = 1
-		u      = u64(-val)
-	}
-
-	i := len(buf)
-	
-	B :: 10
-	for u >= B {
-		i -= 1
-		buf[i] = int_digits[u % B]
-		u /= B
-	}
-	i -= 1
-	buf[i] = int_digits[u % B]
-
-	copy(buf[start:], buf[i:])
-
-	val_len := len(buf) - i + start
-	buf[val_len+0] = 'p'
-	buf[val_len+1] = 'x'
-
-	return string(buf[:val_len+2])
-}
-
-@test
-test_px_to_string :: proc (t: ^testing.T) {
-	buf: [32]byte
-	testing.expect_value(t, px_to_string(buf[:],           1),           "1px")
-	testing.expect_value(t, px_to_string(buf[:],           0),           "0px")
-	testing.expect_value(t, px_to_string(buf[:],          10),          "10px")
-	testing.expect_value(t, px_to_string(buf[:],         100),         "100px")
-	testing.expect_value(t, px_to_string(buf[:],        1000),        "1000px")
-	testing.expect_value(t, px_to_string(buf[:],  2147483647),  "2147483647px")
-	testing.expect_value(t, px_to_string(buf[:],          -1),          "-1px")
-	testing.expect_value(t, px_to_string(buf[:],         -10),         "-10px")
-	testing.expect_value(t, px_to_string(buf[:],        -100),        "-100px")
-	testing.expect_value(t, px_to_string(buf[:],       -1000),       "-1000px")
-	testing.expect_value(t, px_to_string(buf[:], -2147483647), "-2147483647px")
-}
-
 letterSpacingPx :: proc (px: int) {
-	buf: [32]byte
+	buf: Buf_px
 	letterSpacingString(px_to_string(buf[:], px))
 }
 
 wordSpacingPx :: proc (px: int) {
-	buf: [32]byte
+	buf: Buf_px
 	wordSpacingString(px_to_string(buf[:], px))
 }
 
