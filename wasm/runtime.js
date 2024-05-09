@@ -5,11 +5,12 @@ https://github.com/odin-lang/Odin/blob/master/vendor/wasm/js/runtime.js
 
 */
 
-export * as env from "./env.js"
-export * as mem from "./memory.js"
-export * as dom from "./dom/dom.js"
-export * as ls from "./ls/local_storage.js"
+export * as env   from "./env.js"
+export * as mem   from "./memory.js"
+export * as dom   from "./dom/dom.js"
+export * as ls    from "./ls/local_storage.js"
 export * as webgl from "./webgl/index.js"
+export * as ctx2d from "./ctx2d/ctx2d.js"
 
 export * from "./types.js"
 export * from "./console.js"

@@ -168,21 +168,21 @@ foreign ctx2d {
 @(default_calling_convention="contextless")
 foreign ctx2d {
 	@(link_name="fillStyle")
-	_fillStyle            :: proc (color: string) ---
+	fillStyleString   :: proc (color: string) ---
 	@(link_name="strokeStyle")
-	_strokeStyle          :: proc (color: string) ---
+	strokeStyleString :: proc (color: string) ---
 }
 
 // Sets the fill style color.
 fillStyle :: proc (color: rgba) {
 	buf: Buf_rgba
-	_fillStyle(rgba_to_string(buf[:], color))
+	fillStyleString(rgba_to_string(buf[:], color))
 }
 
 // Sets the stroke style color.
 strokeStyle :: proc (color: rgba) {
 	buf: Buf_rgba
-	_strokeStyle(rgba_to_string(buf[:], color))
+	strokeStyleString(rgba_to_string(buf[:], color))
 }
 
 // ------------------------------ /
@@ -191,17 +191,41 @@ strokeStyle :: proc (color: rgba) {
 
 @(default_calling_convention="contextless")
 foreign ctx2d {
-	arc              :: proc (x, y, radius, angle_start, angle_end: f32, counter_clockwise: bool = false) ---
-	arcTo            :: proc (x1, y1, x2, y2, radius: f32) ---
+	@(link_name="arc")
+	arcXY            :: proc (x, y, radius, angle_start, angle_end: f32, counter_clockwise: bool = false) ---
+	@(link_name="arcTo")
+	arcToXY          :: proc (x1, y1, x2, y2, radius: f32) ---
 	bezierCurveTo    :: proc (cp1x, cp1y, cp2x, cp2y, x, y: f32) ---
 	closePath        :: proc () ---
 	ellipse          :: proc (x, y, radius_x, radius_y, rotation, angle_start, angle_end: f32, counter_clockwise: bool = false) ---
-	lineTo           :: proc (x, y: f32) ---
-	moveTo           :: proc (x, y: f32) ---
+	@(link_name="lineTo")
+	lineToXY         :: proc (x, y: f32) ---
+	@(link_name="moveTo")
+	moveToXY         :: proc (x, y: f32) ---
 	quadraticCurveTo :: proc (cpx, cpy, x, y: f32) ---
 	rect             :: proc (x, y, w, h: f32) ---
 	roundRect        :: proc (x, y, w, h: f32, radii: f32 = 0) ---
 }
+
+arcVec :: proc (v: [2]f32, radius, angle_start, angle_end: f32, counter_clockwise: bool = false) {
+	arcXY(v.x, v.y, radius, angle_start, angle_end, counter_clockwise)
+}
+arc :: proc {arcXY, arcVec}
+
+arcToVec :: proc (v1, v2: [2]f32, radius: f32) {
+	arcToXY(v1.x, v1.y, v2.x, v2.y, radius)
+}
+arcTo :: proc {arcToXY, arcToVec}
+
+lineToVec :: proc (v: [2]f32) {
+	lineToXY(v.x, v.y)
+}
+lineTo :: proc {lineToXY, lineToVec}
+
+moveToVec :: proc (v: [2]f32) {
+	moveToXY(v.x, v.y)
+}
+moveTo :: proc {moveToXY, moveToVec}
 
 // ------------------------------ /
 //      PATH DRAWING STYLES       /

@@ -216,15 +216,19 @@ export function make_odin_ctx2d(wasm, s) {
 
 		/** @returns {void} */
 		fillStyle(
-			/** @type {string} */ color,
+			/** @type {number} */ ptr,
+			/** @type {number} */ len,
 		) {
-			s.ctx.fillStyle = color
+			const str = mem.load_string_raw(wasm.memory.buffer, ptr, len)
+			s.ctx.fillStyle = str
 		},
 		/** @returns {void} */
 		strokeStyle(
-			/** @type {string} */ color,
+			/** @type {number} */ ptr,
+			/** @type {number} */ len,
 		) {
-			s.ctx.strokeStyle = color
+			const str = mem.load_string_raw(wasm.memory.buffer, ptr, len)
+			s.ctx.strokeStyle = str
 		},
 
 		// ------------------------------ /
@@ -233,9 +237,11 @@ export function make_odin_ctx2d(wasm, s) {
 
 		/** @returns {void} */
 		filter(
-			/** @type {string} */ filter,
+			/** @type {number} */ ptr,
+			/** @type {number} */ len,
 		) {
-			s.ctx.filter = filter
+			const str = mem.load_string_raw(wasm.memory.buffer, ptr, len)
+			s.ctx.filter = str
 		},
 
 		// ------------------------------ /
