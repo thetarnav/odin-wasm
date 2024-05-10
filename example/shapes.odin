@@ -12,6 +12,7 @@ PURPLE      :: rgba{160, 100, 200, 255}
 PURPLE_DARK :: rgba{ 80,  30,  30, 255}
 BLACK       :: rgba{  0,   0,   0, 255}
 GRAY		:: rgba{ 80,  80,  80, 255}
+TRANSPARENT :: rgba{  0,   0,   0,   0}
 
 
 CUBE_TRIANGLES :: 6 * 2

@@ -196,7 +196,8 @@ foreign ctx2d {
 	arcXY            :: proc (x, y, radius, angle_start, angle_end: f32, counter_clockwise: bool = false) ---
 	@(link_name="arcTo")
 	arcToXY          :: proc (x1, y1, x2, y2, radius: f32) ---
-	bezierCurveTo    :: proc (cp1x, cp1y, cp2x, cp2y, x, y: f32) ---
+	@(link_name="bezierCurveTo")
+	bezierCurveToXY  :: proc (cp1x, cp1y, cp2x, cp2y, x, y: f32) ---
 	closePath        :: proc () ---
 	ellipse          :: proc (x, y, radius_x, radius_y, rotation, angle_start, angle_end: f32, counter_clockwise: bool = false) ---
 	@(link_name="lineTo")
@@ -217,6 +218,11 @@ arcToVec :: proc (v1, v2: glm.vec2, radius: f32) {
 	arcToXY(v1.x, v1.y, v2.x, v2.y, radius)
 }
 arcTo :: proc {arcToXY, arcToVec}
+
+bezierCurveToVec :: proc (cp1, cp2, v: glm.vec2) {
+	bezierCurveToXY(cp1.x, cp1.y, cp2.x, cp2.y, v.x, v.y)
+}
+bezierCurveTo :: proc {bezierCurveToXY, bezierCurveToVec}
 
 lineToVec :: proc (v: glm.vec2) {
 	lineToXY(v.x, v.y)

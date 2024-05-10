@@ -1,7 +1,7 @@
 package example
 
-import "base:intrinsics"
-import "core:math/rand"
+import     "base:intrinsics"
+import     "core:math/rand"
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
@@ -25,6 +25,7 @@ mat4   :: glm.mat4
 u8vec4 :: [4]u8
 rgba   :: u8vec4
 
+TAU	   :: glm.TAU
 PI     :: glm.PI
 VAO    :: gl.VertexArrayObject
 
