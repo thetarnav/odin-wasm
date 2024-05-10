@@ -36,6 +36,7 @@ tan       :: glm.tan
 dot       :: glm.dot
 cross     :: glm.cross
 normalize :: glm.normalize
+lerp      :: glm.lerp
 
 UP    :: vec3{ 0, 1, 0}
 DOWN  :: vec3{ 0,-1, 0}

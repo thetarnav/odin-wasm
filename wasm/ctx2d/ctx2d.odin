@@ -94,6 +94,10 @@ test_rgba_to_string :: proc (t: ^testing.T) {
 }
 
 
+// ------------------------------ /
+//             CONTEXT            /
+// ------------------------------ /
+
 @(default_calling_convention="contextless")
 foreign ctx2d {
 	// Sets the current 2d context by canvas id.

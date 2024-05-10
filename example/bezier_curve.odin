@@ -1,9 +1,8 @@
 //+private file
 package example
 
-import     "core:fmt"
-import     "core:math"
-import glm "core:math/linalg/glsl"
+import "core:fmt"
+import "core:math"
 
 import gl  "../wasm/webgl"
 import ctx "../wasm/ctx2d"
@@ -44,11 +43,6 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	// update t
 	s.t = math.mod(s.t + delta * 0.0008, 1.0)
 
-	ctx.resetTransform()
-	ctx.clearRect(0, 0, canvas_size.x * dpr, canvas_size.y * dpr)
-	ctx.translate(vec2(canvas_size * dpr / 2))
-	ctx.lineWidth(2)
-
 	px_points: [4]vec2
 	for p, i in s.points {
 		px_points[i] = to_px(p - 0.5)
@@ -58,14 +52,19 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	p3 := px_points[2]
 	p4 := px_points[3]
 
-	q1 := glm.lerp(p1, p2, s.t)
-	q2 := glm.lerp(p2, p3, s.t)
-	q3 := glm.lerp(p3, p4, s.t)
+	q1 := lerp(p1, p2, s.t)
+	q2 := lerp(p2, p3, s.t)
+	q3 := lerp(p3, p4, s.t)
 	
-	r1 := glm.lerp(q1, q2, s.t)
-	r2 := glm.lerp(q2, q3, s.t)
+	r1 := lerp(q1, q2, s.t)
+	r2 := lerp(q2, q3, s.t)
 
-	tp := glm.lerp(r1, r2, s.t)
+	tp := lerp(r1, r2, s.t)
+
+	ctx.resetTransform()
+	ctx.clearRect(0, 0, canvas_size.x * dpr, canvas_size.y * dpr)
+	ctx.translate(vec2(canvas_size * dpr / 2))
+	ctx.lineWidth(2)
 
 	SHADOWS :: 8
 	for shadow in f32(0)..<SHADOWS {
