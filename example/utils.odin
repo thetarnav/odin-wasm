@@ -417,7 +417,7 @@ rand_colors_gray :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
 }
 
 @(require_results)
-mat3_translate :: proc "contextless" (v: [2]f32) -> mat3 {
+mat3_translate :: proc "contextless" (v: vec2) -> mat3 {
 	return {
 		1, 0, v.x,
 		0, 1, v.y,
@@ -425,7 +425,7 @@ mat3_translate :: proc "contextless" (v: [2]f32) -> mat3 {
    	}
 }
 @(require_results)
-mat3_scale :: proc "contextless" (v: [2]f32) -> mat3 {
+mat3_scale :: proc "contextless" (v: vec2) -> mat3 {
 	return {
 		v.x, 0,   0,
 		0,   v.y, 0,
@@ -443,7 +443,7 @@ mat3_rotate :: proc "contextless" (angle: f32) -> mat3 {
 	}
 }
 @(require_results)
-mat3_projection :: proc "contextless" (size: [2]f32) -> mat3 {
+mat3_projection :: proc "contextless" (size: vec2) -> mat3 {
 	return {
 		2/size.x, 0,       -1,
 		0,       -2/size.y, 1,

@@ -44,10 +44,14 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	// update t
 	s.t = math.mod(s.t + delta * 0.0008, 1.0)
 
+	ctx.resetTransform()
+	ctx.clearRect(0, 0, canvas_size.x * dpr, canvas_size.y * dpr)
+	ctx.translate(vec2(canvas_size * dpr / 2))
+	ctx.lineWidth(2)
 
 	px_points: [4]vec2
 	for p, i in s.points {
-		px_points[i] = to_px(p)
+		px_points[i] = to_px(p - 0.5)
 	}
 	p1 := px_points[0]
 	p2 := px_points[1]
@@ -63,67 +67,79 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	tp := glm.lerp(r1, r2, s.t)
 
-	ctx.clearRect(0, 0, canvas_size.x, canvas_size.y)
-	ctx.lineWidth(2)
+	SHADOWS :: 8
+	for shadow in f32(0)..<SHADOWS {
+		ctx.globalAlpha(1.0 - shadow/SHADOWS)
 
-	ctx.strokeStyle(GRAY)
-	for p, i in px_points[1:] {
+		defer {
+			m: mat3 = 1
+			m *= mat3_translate(p4 - p1)
+			m *= mat3_translate((p1 - p3)/2)
+			m *= mat3_rotate(-PI/3)
+			m *= mat3_scale(0.8)
+			m *= mat3_translate((p3 - p1)/2)
+			ctx.transform(m)
+		}
+	
+		ctx.strokeStyle(GRAY)
+		for p, i in px_points[1:] {
+			ctx.beginPath()
+			ctx.moveTo(p)
+			ctx.lineTo(px_points[i])
+			ctx.stroke()
+		}
+	
+		ctx.strokeStyle(BLUE)
 		ctx.beginPath()
-		ctx.moveTo(p)
-		ctx.lineTo(px_points[i])
+		ctx.moveTo(q1)
+		ctx.lineTo(q2)
+		ctx.lineTo(q3)
 		ctx.stroke()
-	}
-
-	ctx.strokeStyle(BLUE)
-	ctx.beginPath()
-	ctx.moveTo(q1)
-	ctx.lineTo(q2)
-	ctx.lineTo(q3)
-	ctx.stroke()
-
-	ctx.strokeStyle(GREEN)
-	ctx.beginPath()
-	ctx.moveTo(r1)
-	ctx.lineTo(r2)
-	ctx.stroke()
-
-	ctx.strokeStyle(RED)
-	ctx.beginPath()
-	ctx.moveTo(p1)
-	ctx.bezierCurveTo(p2, p3, p4)
-	ctx.stroke()
-
-	ctx.fillStyle(GRAY)
-	ctx.strokeStyle(WHITE)
-	for p in px_points {
+	
+		ctx.strokeStyle(GREEN)
 		ctx.beginPath()
-		ctx.arc(p, 6, 0, TAU)
+		ctx.moveTo(r1)
+		ctx.lineTo(r2)
+		ctx.stroke()
+	
+		ctx.strokeStyle(RED)
+		ctx.beginPath()
+		ctx.moveTo(p1)
+		ctx.bezierCurveTo(p2, p3, p4)
+		ctx.stroke()
+	
+		ctx.fillStyle(GRAY)
+		ctx.strokeStyle(WHITE)
+		for p in px_points {
+			ctx.beginPath()
+			ctx.arc(p, 6, 0, TAU)
+			ctx.fill()
+			ctx.stroke()
+		}
+	
+		ctx.fillStyle(BLUE)
+		ctx.strokeStyle(TRANSPARENT)
+		for p in ([]vec2{q1, q2, q3}) {
+			ctx.beginPath()
+			ctx.arc(p, 6, 0, TAU)
+			ctx.fill()
+			ctx.stroke()
+		}
+	
+		ctx.fillStyle(GREEN)
+		ctx.strokeStyle(TRANSPARENT)
+		for p in ([]vec2{r1, r2}) {
+			ctx.beginPath()
+			ctx.arc(p, 6, 0, TAU)
+			ctx.fill()
+			ctx.stroke()
+		}
+	
+		ctx.fillStyle(RED)
+		ctx.strokeStyle(TRANSPARENT)
+		ctx.beginPath()	
+		ctx.arc(tp, 8, 0, TAU)
 		ctx.fill()
 		ctx.stroke()
 	}
-
-	ctx.fillStyle(BLUE)
-	ctx.strokeStyle(TRANSPARENT)
-	for p in ([]vec2{q1, q2, q3}) {
-		ctx.beginPath()
-		ctx.arc(p, 6, 0, TAU)
-		ctx.fill()
-		ctx.stroke()
-	}
-
-	ctx.fillStyle(GREEN)
-	ctx.strokeStyle(TRANSPARENT)
-	for p in ([]vec2{r1, r2}) {
-		ctx.beginPath()
-		ctx.arc(p, 6, 0, TAU)
-		ctx.fill()
-		ctx.stroke()
-	}
-
-	ctx.fillStyle(RED)
-	ctx.strokeStyle(TRANSPARENT)
-	ctx.beginPath()	
-	ctx.arc(tp, 6, 0, TAU)
-	ctx.fill()
-	ctx.stroke()
 }

@@ -187,6 +187,16 @@ strokeStyle :: proc (color: rgba) {
 }
 
 // ------------------------------ /
+//            FILTERS             /
+// ------------------------------ /
+
+@(default_calling_convention="contextless")
+foreign ctx2d {
+	// Sets the filter to apply to the canvas.
+	filter :: proc (filter: string) ---
+}
+
+// ------------------------------ /
 //              PATH              /
 // ------------------------------ /
 
@@ -444,8 +454,18 @@ foreign ctx2d {
 	@(link_name="transform")
 	_transform     :: proc (a, b, c, d, e, f: f32) ---
 	rotate         :: proc (angle: f32)            ---
-	scale          :: proc (x, y: f32)             ---
-	translate      :: proc (x, y: f32)             ---
+	@(link_name="scale")
+	scaleXY        :: proc (x, y: f32)             ---
+	@(link_name="translate")
+	translateXY    :: proc (x, y: f32)             ---
+}
+
+scale :: proc (v: glm.vec2) {
+	scaleXY(v.x, v.y)
+}
+
+translate :: proc (v: glm.vec2) {
+	translateXY(v.x, v.y)
 }
 
 getTransform :: proc () -> (m: Transform) {
