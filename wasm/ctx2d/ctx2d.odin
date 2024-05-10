@@ -6,13 +6,15 @@ import glm "core:math/linalg/glsl"
 foreign import "ctx2d"
 
 
+vec2 :: glm.vec2
+mat3 :: glm.mat3
+rgba :: [4]u8
+
 @private
 digits := "0123456789abcdef"
 
 Buf_px   :: [32]byte
 Buf_rgba :: [9]byte
-
-rgba :: [4]u8
 
 px_to_string :: proc (buf: []byte, val: int) -> string #no_bounds_check {
 	assert(len(buf) >= 32, "buffer too small")
@@ -442,42 +444,66 @@ wordSpacing   :: proc {wordSpacingString, wordSpacingPx}
 //           TRANSFORM            /
 // ------------------------------ /
 
-Transform :: matrix[3,3]f32
-
 @(default_calling_convention="contextless")
 foreign ctx2d {
-	resetTransform :: proc ()                      ---
-	@(link_name="getTransform")
-	_getTransform  :: proc (^Transform)            ---
 	@(link_name="setTransform")
 	_setTransform  :: proc (a, b, c, d, e, f: f32) ---
-	@(link_name="transform")
-	_transform     :: proc (a, b, c, d, e, f: f32) ---
-	rotate         :: proc (angle: f32)            ---
-	@(link_name="scale")
-	scaleXY        :: proc (x, y: f32)             ---
-	@(link_name="translate")
-	translateXY    :: proc (x, y: f32)             ---
 }
 
-scale :: proc (v: glm.vec2) {
-	scaleXY(v.x, v.y)
+@(require_results)
+mat3_translate :: proc "contextless" (v: vec2) -> mat3 {
+	return {
+		1, 0, v.x,
+		0, 1, v.y,
+		0, 0, 1,
+   	}
+}
+@(require_results)
+mat3_scale :: proc "contextless" (v: vec2) -> mat3 {
+	return {
+		v.x, 0,   0,
+		0,   v.y, 0,
+		0,   0,   1,
+   	}
+}
+@(require_results)
+mat3_rotate :: proc "contextless" (angle: f32) -> mat3 {
+	c := glm.cos(angle)
+	s := glm.sin(angle)
+	return {
+		 c, s, 0,
+		-s, c, 0,
+		 0, 0, 1,
+	}
 }
 
-translate :: proc (v: glm.vec2) {
-	translateXY(v.x, v.y)
+mat: mat3
+
+getTransform :: proc () -> mat3 {
+	return mat
 }
 
-getTransform :: proc () -> (m: Transform) {
-	m = 1
-	_getTransform(&m)
-	return
-}
-
-setTransform :: proc (m: Transform) {
+setTransform :: proc (m: mat3) {
+	mat = m
 	_setTransform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1])
 }
 
-transform :: proc (m: Transform) {
-	_transform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1])
+resetTransform :: proc () {
+	setTransform(1)
+}
+
+scale :: proc (v: vec2) {
+	setTransform(mat * mat3_scale(v))
+}
+
+translate :: proc (v: vec2) {
+	setTransform(mat * mat3_translate(v))
+}
+
+rotate :: proc (angle: f32) {
+	setTransform(mat * mat3_rotate(angle))
+}
+
+transform :: proc (m: mat3) {
+	setTransform(mat * m)
 }
