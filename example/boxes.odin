@@ -4,7 +4,7 @@ package example
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 
-CUBE_COLORS: [CUBE_VERTICES]RGBA : {
+CUBE_COLORS: [CUBE_VERTICES]rgba : {
 	GREEN,  GREEN,  GREEN,  // 0
 	GREEN,  GREEN,  GREEN,  // 1
 	YELLOW, YELLOW, YELLOW, // 2
@@ -42,7 +42,7 @@ setup_boxes :: proc(s: ^State_Boxes, program: gl.Program) {
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
 	positions: [BOXES_AMOUNT * CUBE_VERTICES]vec3
-	colors   : [BOXES_AMOUNT * CUBE_VERTICES]RGBA
+	colors   : [BOXES_AMOUNT * CUBE_VERTICES]rgba
 
 	for i in 0..<BOXES_AMOUNT {
 		cube_positions := get_cube_positions(

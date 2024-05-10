@@ -27,30 +27,32 @@ Example selection
 
 /** @enum {(typeof Example_Kind)[keyof typeof Example_Kind]} */
 const Example_Kind = /** @type {const} */ ({
-	Rectangle : 0,
-	Pyramid   : 1,
-	Boxes     : 2,
-	Camera    : 3,
-	Lighting  : 4,
-	Specular  : 5,
-	Spotlight : 6,
-	Candy     : 7,
-	Sol_System: 8,
+	Rectangle   : 0,
+	Pyramid     : 1,
+	Boxes       : 2,
+	Camera      : 3,
+	Lighting    : 4,
+	Specular    : 5,
+	Spotlight   : 6,
+	Candy       : 7,
+	Sol_System  : 8,
+	Bezier_Curve: 9,
 })
 /** @type {Example_Kind[]} */
 const example_kinds = Object.values(Example_Kind)
 
 /** @type {Record<Example_Kind, string>} */
 const example_kind_href_hashes = {
-	[Example_Kind.Rectangle] : "#rectangle",
-	[Example_Kind.Pyramid]   : "#pyramid",
-	[Example_Kind.Boxes]     : "#boxes",
-	[Example_Kind.Camera]    : "#camera",
-	[Example_Kind.Lighting]  : "#lighting",
-	[Example_Kind.Specular]  : "#specular",
-	[Example_Kind.Spotlight] : "#spotlight",
-	[Example_Kind.Candy]     : "#candy",
-	[Example_Kind.Sol_System]: "#sol-system",
+	[Example_Kind.Rectangle]   : "#rectangle",
+	[Example_Kind.Pyramid]     : "#pyramid",
+	[Example_Kind.Boxes]       : "#boxes",
+	[Example_Kind.Camera]      : "#camera",
+	[Example_Kind.Lighting]    : "#lighting",
+	[Example_Kind.Specular]    : "#specular",
+	[Example_Kind.Spotlight]   : "#spotlight",
+	[Example_Kind.Candy]       : "#candy",
+	[Example_Kind.Sol_System]  : "#sol-system",
+	[Example_Kind.Bezier_Curve]: "#bezier-curve",
 }
 
 /** @type {Example_Kind} */
@@ -114,15 +116,17 @@ Wasm instance
  * @returns {void    }
  */
 
-const wasm_state = wasm.makeWasmState()
+const wasm_state  = wasm.makeWasmState()
 const webgl_state = wasm.webgl.makeWebGLState()
+const ctx2d_state = new wasm.ctx2d.Ctx2d_State()
 
 const src_instance = await wasm.fetchInstanciateWasm(WASM_FILENAME, {
 	env: {}, // TODO
-	odin_env: wasm.env.makeOdinEnv(wasm_state),
-	odin_dom: wasm.dom.makeOdinDOM(wasm_state),
-	webgl   : wasm.webgl.makeOdinWebGL(wasm_state, webgl_state),
-	webgl2  : wasm.webgl.makeOdinWegGL2(wasm_state, webgl_state),
+	odin_env: wasm.env  .makeOdinEnv    (wasm_state),
+	odin_dom: wasm.dom  .makeOdinDOM    (wasm_state),
+	webgl   : wasm.webgl.makeOdinWebGL  (wasm_state, webgl_state),
+	webgl2  : wasm.webgl.makeOdinWegGL2 (wasm_state, webgl_state),
+	ctx2d   : wasm.ctx2d.make_odin_ctx2d(wasm_state, ctx2d_state),
 })
 
 wasm.initWasmState(wasm_state, src_instance)
@@ -157,13 +161,19 @@ void requestAnimationFrame(prev_time => {
 	void requestAnimationFrame(frame)
 })
 
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas"))
+/* One canvas for webgl and the other for 2d */
+const canvas_0 = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas-1"))
+const canvas_1 = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas-0"))
 const dpr = window.devicePixelRatio || 1
 
 function updateCanvasSize() {
-	const rect = canvas.getBoundingClientRect()
-	canvas.width  = rect.width * dpr
-	canvas.height = rect.height * dpr
+	const rect = canvas_0.getBoundingClientRect()
+
+	canvas_0.width  = rect.width  * dpr
+	canvas_0.height = rect.height * dpr
+	canvas_1.width  = rect.width  * dpr
+	canvas_1.height = rect.height * dpr
+
 	exports.on_window_resize(
 		window.innerWidth,
 		window.innerHeight,

@@ -5,7 +5,7 @@ import "core:mem"
 import "core:runtime"
 import "core:math/rand"
 
-import "../wasm/dom"
+import    "../wasm/dom"
 import gl "../wasm/webgl"
 
 canvas_res:  [2]i32
@@ -20,16 +20,16 @@ aspect_ratio: f32
 scale: f32 = 0.5
 
 Example_Kind :: enum {
-	Rectangle,
-	Pyramid,
-	Boxes,
-	Camera,
-	Lighting,
-	Specular,
-	Spotlight,
-	Candy,
-	Sol_System,
-	Bezier_Curve,
+	Rectangle    = 0,
+	Pyramid      = 1,
+	Boxes        = 2,
+	Camera       = 3,
+	Lighting     = 4,
+	Specular     = 5,
+	Spotlight    = 6,
+	Candy        = 7,
+	Sol_System   = 8,
+	Bezier_Curve = 9,
 }
 example: Example_Kind
 
@@ -142,23 +142,32 @@ on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: f32) {
 
 @export
 start :: proc "c" (ctx: ^runtime.Context, example_kind: Example_Kind) -> (ok: bool) {
+	example = example_kind
+	demo := demos[example]
+
 	context = ctx^
 	context.allocator      = forever_arena_allocator
 	context.temp_allocator = temp_arena_allocator
 	defer free_all(context.temp_allocator)
 
-	example = example_kind
+	program: gl.Program
 
 	// Make sure that this matches the id of your canvas.
-	if ok = gl.SetCurrentContextById("canvas"); !ok {
+	if ok = gl.SetCurrentContextById("canvas-1"); !ok {
 		fmt.eprintln("Failed to set current context!")
 		return false
 	}
+	
+	// Some examples don't use webgl shaders
+	if len(demo.vs_sources) == 0 {
+		demo.vs_sources = {"void main() {}"}
+	}
+	if len(demo.fs_sources) == 0 {
+		demo.fs_sources = {"void main() {}"}
+	}
 
-	demo := demos[example]
-
-	program, program_ok := gl.CreateProgramFromStrings(demo.vs_sources, demo.fs_sources)
-	if !program_ok {
+	program, ok = gl.CreateProgramFromStrings(demo.vs_sources, demo.fs_sources)
+	if !ok {
 		fmt.eprintln("Failed to create program!")
 		return false
 	}

@@ -22,7 +22,7 @@ State_Specular :: struct {
 	ball_angle: f32,
 	positions : [ALL_VERTICES]vec3,
 	normals   : [ALL_VERTICES]vec3,
-	colors    : [ALL_VERTICES]RGBA,
+	colors    : [ALL_VERTICES]rgba,
 }
 
 @private
@@ -48,7 +48,7 @@ setup_specular :: proc(s: ^State_Specular, program: gl.Program) {
 	ball_colors    := s.colors   [CUBE_VERTICES:]
 
 	get_sphere_base_triangle(ball_positions, ball_normals, BALL_RADIUS, BALL_SEGMENTS)
-	copy_pattern(ball_colors, []RGBA{PURPLE, CYAN, CYAN, PURPLE, CYAN, PURPLE})
+	copy_pattern(ball_colors, []rgba{PURPLE, CYAN, CYAN, PURPLE, CYAN, PURPLE})
 
 	attribute(s.a_position, gl.CreateBuffer(), s.positions[:])
 	attribute(s.a_normal  , gl.CreateBuffer(), s.normals[:])

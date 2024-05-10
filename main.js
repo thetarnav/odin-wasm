@@ -43,6 +43,8 @@ const ODIN_ARGS_SHARED = [
 ]
 /** @type {string[]} */
 const ODIN_ARGS_DEV    = [
+	"-o:none",
+	"-use-separate-modules",
 ]
 /** @type {string[]} */
 const ODIN_ARGS_RELESE = [

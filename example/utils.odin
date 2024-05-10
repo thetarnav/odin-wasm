@@ -22,8 +22,8 @@ bvec4  :: distinct [4]b32
 mat2   :: glm.mat2
 mat3   :: glm.mat3
 mat4   :: glm.mat4
-u8vec4 :: distinct [4]u8
-RGBA   :: u8vec4
+u8vec4 :: [4]u8
+rgba   :: u8vec4
 
 PI     :: glm.PI
 VAO    :: gl.VertexArrayObject
@@ -378,7 +378,8 @@ copy_pattern :: #force_inline proc "contextless" (dst: []$S, src: []S) #no_bound
 }
 
 cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
-	where intrinsics.type_is_numeric(S) && intrinsics.type_is_numeric(D) {
+	where intrinsics.type_is_numeric(S),
+	      intrinsics.type_is_numeric(D) {
 	return {D(v.x), D(v.y)}
 }
 

@@ -32,7 +32,7 @@ positions: [VERTICES]vec3 = {
 	{ 0,      0,  -SIDE/2},
 	{ 0,      0,   SIDE/2},
 }
-colors: [VERTICES]RGBA = {
+colors: [VERTICES]rgba = {
 	GREEN, YELLOW, BLUE,
 	RED, BLUE, YELLOW,
 	GREEN, RED, YELLOW,

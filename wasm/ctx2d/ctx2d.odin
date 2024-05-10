@@ -1,6 +1,7 @@
 package ctx2d
 
-import "core:testing"
+import     "core:testing"
+import glm "core:math/linalg/glsl"
 
 foreign import "ctx2d"
 
@@ -207,22 +208,22 @@ foreign ctx2d {
 	roundRect        :: proc (x, y, w, h: f32, radii: f32 = 0) ---
 }
 
-arcVec :: proc (v: [2]f32, radius, angle_start, angle_end: f32, counter_clockwise: bool = false) {
+arcVec :: proc (v: glm.vec2, radius, angle_start, angle_end: f32, counter_clockwise: bool = false) {
 	arcXY(v.x, v.y, radius, angle_start, angle_end, counter_clockwise)
 }
 arc :: proc {arcXY, arcVec}
 
-arcToVec :: proc (v1, v2: [2]f32, radius: f32) {
+arcToVec :: proc (v1, v2: glm.vec2, radius: f32) {
 	arcToXY(v1.x, v1.y, v2.x, v2.y, radius)
 }
 arcTo :: proc {arcToXY, arcToVec}
 
-lineToVec :: proc (v: [2]f32) {
+lineToVec :: proc (v: glm.vec2) {
 	lineToXY(v.x, v.y)
 }
 lineTo :: proc {lineToXY, lineToVec}
 
-moveToVec :: proc (v: [2]f32) {
+moveToVec :: proc (v: glm.vec2) {
 	moveToXY(v.x, v.y)
 }
 moveTo :: proc {moveToXY, moveToVec}

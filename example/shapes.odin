@@ -1,17 +1,17 @@
 package example
 
 
-WHITE       :: RGBA{255, 255, 255, 255}
-GREEN       :: RGBA{ 60, 210,   0, 255}
-YELLOW      :: RGBA{210, 200,   0, 255}
-BLUE        :: RGBA{  0,  80, 190, 255}
-CYAN        :: RGBA{  0, 210, 210, 255}
-RED         :: RGBA{230,  20,   0, 255}
-ORANGE      :: RGBA{250, 150,  50, 255}
-PURPLE      :: RGBA{160, 100, 200, 255}
-PURPLE_DARK :: RGBA{ 80,  30,  30, 255}
-BLACK       :: RGBA{  0,   0,   0, 255}
-GRAY		:: RGBA{ 80,  80,  80, 255}
+WHITE       :: rgba{255, 255, 255, 255}
+GREEN       :: rgba{ 60, 210,   0, 255}
+YELLOW      :: rgba{210, 200,   0, 255}
+BLUE        :: rgba{  0,  80, 190, 255}
+CYAN        :: rgba{  0, 210, 210, 255}
+RED         :: rgba{230,  20,   0, 255}
+ORANGE      :: rgba{250, 150,  50, 255}
+PURPLE      :: rgba{160, 100, 200, 255}
+PURPLE_DARK :: rgba{ 80,  30,  30, 255}
+BLACK       :: rgba{  0,   0,   0, 255}
+GRAY		:: rgba{ 80,  80,  80, 255}
 
 
 CUBE_TRIANGLES :: 6 * 2

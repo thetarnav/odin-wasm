@@ -8,7 +8,7 @@ import gl  "../wasm/webgl"
 ALL_PYRAMID_VERTICES :: AMOUNT * PYRAMID_VERTICES
 ALL_VERTICES :: ALL_PYRAMID_VERTICES + CUBE_VERTICES
 
-PYRAMID_COLORS: [PYRAMID_VERTICES]RGBA : {
+PYRAMID_COLORS: [PYRAMID_VERTICES]rgba : {
 	BLUE,   BLUE,   BLUE,   // 0
 	BLUE,   BLUE,   BLUE,   // 1
 	YELLOW, YELLOW, YELLOW, // 2
@@ -40,7 +40,7 @@ setup_camera :: proc(s: ^State_Camera, program: gl.Program) {
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
 	positions: [ALL_VERTICES]vec3
-	colors   : [ALL_VERTICES]RGBA
+	colors   : [ALL_VERTICES]rgba
 
 	/* Pyramids */
 	for i in 0..<AMOUNT {

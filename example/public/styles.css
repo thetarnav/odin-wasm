@@ -99,11 +99,14 @@ code {
 	right: 0;
 }
 
-#canvas {
+canvas, #canvas-bg {
 	position: absolute;
 	top: 10%;
 	left: 10%;
 	width: 80%;
 	height: 80%;
+}
+
+#canvas-bg {
 	background-color: rgba(30, 40, 50, 0.1);
 }

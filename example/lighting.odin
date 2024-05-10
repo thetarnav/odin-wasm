@@ -28,7 +28,7 @@ State_Lighting :: struct {
 	ring_angle: f32,
 	positions : [ALL_VERTICES]vec3,
 	normals   : [ALL_VERTICES]vec3,
-	colors    : [ALL_VERTICES]RGBA,
+	colors    : [ALL_VERTICES]rgba,
 }
 
 @private
