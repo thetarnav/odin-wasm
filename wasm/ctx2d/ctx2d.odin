@@ -338,15 +338,32 @@ TextMetrics :: struct {
 
 @(default_calling_convention="contextless")
 foreign ctx2d {
-	fillTextNoMax      :: proc (text: string, x, y: f32) ---
-	fillTextMaxWidth   :: proc (text: string, x, y: f32, max_width: f32) ---
-	strokeTextNoMax    :: proc (text: string, x, y: f32) ---
-	strokeTextMaxWidth :: proc (text: string, x, y: f32, max_width: f32) ---
-	measureText        :: proc (text: string, metrics: ^TextMetrics) ---
+	@(link_name="fillTextNoMax")
+	fillTextNoMaxXY      :: proc (text: string, x, y: f32) ---
+	@(link_name="fillTextMaxWidth")
+	fillTextMaxWidthXY   :: proc (text: string, x, y: f32, max_width: f32) ---
+	@(link_name="strokeTextNoMax")
+	strokeTextNoMaxXY    :: proc (text: string, x, y: f32) ---
+	@(link_name="strokeTextMaxWidth")
+	strokeTextMaxWidthXY :: proc (text: string, x, y: f32, max_width: f32) ---
+	measureText          :: proc (text: string, metrics: ^TextMetrics) ---
 }
 
-fillText   :: proc {fillTextNoMax, fillTextMaxWidth}
-strokeText :: proc {strokeTextNoMax, strokeTextMaxWidth}
+fillTextNoMax :: proc (text: string, v: glm.vec2) {
+	fillTextNoMaxXY(text, v.x, v.y)
+}
+fillTextMaxWidth :: proc (text: string, v: glm.vec2, max_width: f32) {
+	fillTextMaxWidthXY(text, v.x, v.y, max_width)
+}
+fillText :: proc {fillTextNoMax, fillTextMaxWidth, fillTextNoMaxXY, fillTextMaxWidthXY}
+
+strokeTextNoMax :: proc (text: string, v: glm.vec2) {
+	strokeTextNoMaxXY(text, v.x, v.y)
+}
+strokeTextMaxWidth :: proc (text: string, v: glm.vec2, max_width: f32) {
+	strokeTextMaxWidthXY(text, v.x, v.y, max_width)
+}
+strokeText :: proc {strokeTextNoMax, strokeTextMaxWidth, strokeTextNoMaxXY, strokeTextMaxWidthXY}
 
 getTextMetrics :: proc (text: string) -> (metrics: TextMetrics) {
 	measureText(text, &metrics)

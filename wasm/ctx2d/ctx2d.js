@@ -467,43 +467,53 @@ export function make_odin_ctx2d(wasm, s) {
 
 		/** @returns {void} */
 		fillTextNoMax(
-			/** @type {string} */ text,
+			/** @type {number} */ text_ptr,
+			/** @type {number} */ text_len,
 			/** @type {number} */ x,
 			/** @type {number} */ y,
 		) {
+			const text = mem.load_string_raw(wasm.memory.buffer, text_ptr, text_len)
 			s.ctx.fillText(text, x, y)
 		},
 		/** @returns {void} */
 		fillTextMaxWidth(
-			/** @type {string} */ text,
+			/** @type {number} */ text_ptr,
+			/** @type {number} */ text_len,
 			/** @type {number} */ x,
 			/** @type {number} */ y,
 			/** @type {number} */ max_width,
 		) {
+			const text = mem.load_string_raw(wasm.memory.buffer, text_ptr, text_len)
 			s.ctx.fillText(text, x, y, max_width)
 		},
 		/** @returns {void} */
 		strokeTextNoMax(
-			/** @type {string} */ text,
+			/** @type {number} */ text_ptr,
+			/** @type {number} */ text_len,
 			/** @type {number} */ x,
 			/** @type {number} */ y,
 		) {
+			const text = mem.load_string_raw(wasm.memory.buffer, text_ptr, text_len)
 			s.ctx.strokeText(text, x, y)
 		},
 		/** @returns {void} */
 		strokeTextMaxWidth(
-			/** @type {string} */ text,
+			/** @type {number} */ text_ptr,
+			/** @type {number} */ text_len,
 			/** @type {number} */ x,
 			/** @type {number} */ y,
 			/** @type {number} */ max_width,
 		) {
+			const text = mem.load_string_raw(wasm.memory.buffer, text_ptr, text_len)
 			s.ctx.strokeText(text, x, y, max_width || undefined)
 		},
 		/** @returns {void} */
 		measureText(
-			/** @type {string} */ text,
+			/** @type {number} */ text_ptr,
+			/** @type {number} */ text_len,
 			/** @type {number} */ ptr,
 		) {
+			const text    = mem.load_string_raw(wasm.memory.buffer, text_ptr, text_len)
 			const metrics = s.ctx.measureText(text)
 			const offset  = new mem.ByteOffset(ptr)
 			const data    = new DataView(wasm.memory.buffer)

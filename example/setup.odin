@@ -8,12 +8,13 @@ import "core:math/rand"
 import    "../wasm/dom"
 import gl "../wasm/webgl"
 
-canvas_res:  [2]i32
-canvas_pos:  [2]f32
-canvas_size: [2]f32
-window_size: [2]f32
-mouse_pos:   [2]f32 // Absolute mouse position
-mouse_rel:   [2]f32 // Relative mouse position -0.5 to 0.5
+canvas_res:  ivec2
+canvas_pos:  vec2
+canvas_size: vec2
+window_size: vec2
+mouse_pos:   vec2  // Absolute mouse position
+mouse_rel:   rvec2 // Relative mouse position -0.5 to 0.5
+mouse_down: bool
 dpr: f32
 aspect_ratio: f32
 
@@ -110,22 +111,30 @@ main :: proc() {
 		fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
 	}
 
-	dom.add_window_event_listener(.Wheel, {}, on_wheel)
+	dom.add_window_event_listener(.Wheel,      {}, on_wheel)
 	dom.add_window_event_listener(.Mouse_Move, {}, on_mouse_move)
+	dom.add_window_event_listener(.Mouse_Down, {}, on_mouse_down)
+	dom.add_window_event_listener(.Mouse_Up,   {}, on_mouse_up)
 
 
 	dpr = f32(dom.device_pixel_ratio())
-	window_size = cast_vec2(f32, dom.get_window_inner_size())
+	window_size = cast_vec2(dom.get_window_inner_size())
 	canvas_size = window_size - 200
-	mouse_pos   = window_size / 2
+	mouse_pos   = vec2(window_size / 2)
 
 
 	rand.set_global_seed(rand.uint64(&system_rand))
 }
 
 on_mouse_move :: proc(e: dom.Event) {
-	mouse_pos = cast_vec2(f32, e.mouse.client)
-	mouse_rel = (mouse_pos - window_size / 2) / window_size
+	mouse_pos = cast_vec2(e.mouse.client)
+	mouse_rel = rvec2((mouse_pos - window_size / 2) / window_size)
+}
+on_mouse_down :: proc(e: dom.Event) {
+	mouse_down = true
+}
+on_mouse_up :: proc(e: dom.Event) {
+	mouse_down = false
 }
 on_wheel :: proc(e: dom.Event) {
 	scale -= f32(e.wheel.delta.y) * 0.001
@@ -136,7 +145,7 @@ on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: f32) {
 	window_size  = {vw, vh}
 	canvas_size  = {cw, ch}
 	canvas_pos   = {cx, cy}
-	canvas_res   = cast_vec2(i32, canvas_size * dpr)
+	canvas_res   = cast_ivec2(canvas_size * dpr)
 	aspect_ratio = canvas_size.x / canvas_size.y
 }
 

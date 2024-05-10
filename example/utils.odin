@@ -45,6 +45,272 @@ RIGHT :: vec3{ 1, 0, 0}
 FRONT :: vec3{ 0, 0, 1}
 BACK  :: vec3{ 0, 0,-1}
 
+ratio :: distinct f32
+rvec2 :: distinct [2]f32
+
+to_px :: proc(r: rvec2) -> vec2 {
+	return vec2(r+0.5) * window_size
+}
+to_rvec2 :: proc(p: vec2) -> rvec2 {
+	return rvec2(p / window_size) - 0.5
+}
+
+u8vec4_to_vec4 :: #force_inline proc "contextless" (rgba: u8vec4) -> vec4 {
+	return {f32(rgba.r)/255, f32(rgba.g)/255, f32(rgba.b)/255, f32(rgba.a)/255}
+}
+rgba_to_vec4 :: u8vec4_to_vec4
+
+copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
+	src := src
+	copy(dst, src[:])
+}
+
+copy_pattern :: #force_inline proc "contextless" (dst: []$S, src: []S) #no_bounds_check {
+	for i in 0..<len(dst)/len(src) {
+		copy(dst[i*len(src):][:len(src)], src)
+	}
+}
+
+// cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
+// 	where intrinsics.type_is_numeric(S),
+// 	      intrinsics.type_is_numeric(D) {
+// 	return {D(v.x), D(v.y)}
+// }
+
+cast_vec2 :: #force_inline proc "contextless" (v: $T/[2]$S) -> vec2
+	where intrinsics.type_is_numeric(S) {
+	return {f32(v.x), f32(v.y)}
+}
+cast_ivec2 :: #force_inline proc "contextless" (v: $T/[2]$S) -> ivec2
+	where intrinsics.type_is_numeric(S) {
+	return {i32(v.x), i32(v.y)}
+}
+
+vec2_to_vec3 :: #force_inline proc "contextless" (v: $T/[2]f32, z: f32 = 0) -> vec3 {
+	return {v.x, v.y, z}
+}
+
+rand_color :: proc(r: ^rand.Rand = nil) -> u8vec4 {
+	color := transmute(u8vec4)rand.uint32(r)
+	color.a = 255
+	return color
+}
+rand_color_gray :: proc(r: ^rand.Rand = nil) -> u8vec4 {
+	l := u8(rand.uint64(r))/4 + 256/2 + 256/4
+	return {l, l, l, 255}
+}
+rand_colors :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
+	assert(len(colors)%3 == 0)
+	for i in 0..<len(colors)/3 {
+		color := rand_color(r)
+		colors[i*3+0] = color
+		colors[i*3+1] = color
+		colors[i*3+2] = color
+	}
+}
+rand_colors_gray :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
+	assert(len(colors)%3 == 0)
+	for i in 0..<len(colors)/3 {
+		color := rand_color_gray(r)
+		colors[i*3+0] = color
+		colors[i*3+1] = color
+		colors[i*3+2] = color
+	}
+}
+
+@(require_results)
+mat3_translate :: proc "contextless" (v: vec2) -> mat3 {
+	return {
+		1, 0, v.x,
+		0, 1, v.y,
+		0, 0, 1,
+   	}
+}
+@(require_results)
+mat3_scale :: proc "contextless" (v: vec2) -> mat3 {
+	return {
+		v.x, 0,   0,
+		0,   v.y, 0,
+		0,   0,   1,
+   	}
+}
+@(require_results)
+mat3_rotate :: proc "contextless" (angle: f32) -> mat3 {
+	c := cos(angle)
+	s := sin(angle)
+	return {
+		 c, s, 0,
+		-s, c, 0,
+		 0, 0, 1,
+	}
+}
+@(require_results)
+mat3_projection :: proc "contextless" (size: vec2) -> mat3 {
+	return {
+		2/size.x, 0,       -1,
+		0,       -2/size.y, 1,
+		0,        0,        1,
+	}
+}
+
+mat4_inverse   :: glm.inverse_mat4
+
+@(require_results)
+mat4_translate :: proc "contextless" (v: vec3) -> mat4 {
+	return {
+		1, 0, 0, v.x,
+		0, 1, 0, v.y,
+		0, 0, 1, v.z,
+		0, 0, 0, 1,
+	}
+}
+@(require_results)
+mat4_scale :: proc "contextless" (v: vec3) -> (m: mat4) {
+	return {
+		v.x, 0,   0,   0,
+		0,   v.y, 0,   0,
+		0,   0,   v.z, 0,
+		0,   0,   0,   1,
+	}
+}
+@(require_results)
+mat4_rotate_x :: proc "contextless" (radians: f32) -> mat4 {
+	c := cos(radians)
+	s := sin(radians)
+
+	return {
+		1, 0, 0, 0,
+		0, c, s, 0,
+		0,-s, c, 0,
+		0, 0, 0, 1,
+	}
+}
+@(require_results)
+mat4_rotate_y :: proc "contextless" (radians: f32) -> mat4 {
+	c := cos(radians)
+	s := sin(radians)
+
+	return {
+		c, 0,-s, 0,
+		0, 1, 0, 0,
+		s, 0, c, 0,
+		0, 0, 0, 1,
+	}
+}
+@(require_results)
+mat4_rotate_z :: proc "contextless" (radians: f32) -> mat4 {
+	c := cos(radians)
+	s := sin(radians)
+
+	return {
+		c,  s, 0, 0,
+		-s, c, 0, 0,
+		0,  0, 1, 0,
+		0,  0, 0, 1,
+	}
+}
+@(require_results)
+mat4_rotate_vec :: #force_inline proc "contextless" (v: vec3) -> mat4 {
+	return mat4_rotate_x(v.x) * mat4_rotate_y(v.y) * mat4_rotate_z(v.z)
+}
+@(require_results)
+mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> mat4 {
+    f    : f32 = tan(fov*0.5)
+    range: f32 = 1 / (near - far)
+
+    return {
+		f/aspect, 0, 0,                    0,
+		0,        f, 0,                    0,
+		0,        0, (near + far) * range, near * far * range * 2,
+		0,        0, -1,                   0,
+	}
+}
+@(require_results)
+mat4_look_at :: proc "contextless" (eye, target, up: vec3) -> mat4 {
+	// f  := normalize(target - eye)
+	// s  := normalize(cross(f, up))
+	// u  := cross(s, f)
+	// fe := dot(f, eye)
+
+	// return {
+	// 	+s.x, +s.y, +s.z, -dot(s, eye),
+	// 	+u.x, +u.y, +u.z, -dot(u, eye),
+	// 	-f.x, -f.y, -f.z, +fe,
+	// 	0,    0,    0,    1,
+	// }
+
+	z := normalize(eye - target)
+	x := normalize(cross(up, z))
+	y := normalize(cross(z, x))
+
+	return {
+		x.x, y.x, z.x, eye.x,
+		x.y, y.y, z.y, eye.y,
+		x.z, y.z, z.z, eye.z,
+		0,   0,   0,   1,
+	}
+}
+
+// Rotates a vector around an axis
+@(require_results)
+vec3_rotate :: proc "contextless" (v, axis: vec3, angle: f32) -> vec3 {
+	axis, angle := axis, angle
+
+	axis = normalize(axis)
+
+	angle *= 0.5
+	a := sin(angle)
+	b := axis.x*a
+	c := axis.y*a
+	d := axis.z*a
+	a = cos(angle)
+	w := vec3{b, c, d}
+
+	wv := cross(w, v)
+	wwv := cross(w, wv)
+
+	a *= 2
+	wv *= a
+
+	wwv *= 2
+
+	return v + wv + wwv
+}
+
+vec3_transform :: proc "contextless" (v: vec3, m: mat4) -> vec3 {
+    w := m[0][3] * v.x + m[1][3] * v.y + m[2][3] * v.z + m[3][3]
+
+    return {
+        (m[0][0] * v.x + m[1][0] * v.y + m[2][0] * v.z + m[3][0]) / w,
+        (m[0][1] * v.x + m[1][1] * v.y + m[2][1] * v.z + m[3][1]) / w,
+        (m[0][2] * v.x + m[1][2] * v.y + m[2][2] * v.z + m[3][2]) / w,
+	}
+}
+
+vec2_transform :: proc "contextless" (v: vec2, m: mat3) -> vec2 {
+	return {
+		v.x * m[0].x + v.y * m[1].x + m[2].x,
+		v.x * m[0].y + v.y * m[1].y + m[2].y,
+	}
+}
+
+normals_from_positions :: proc(dst, src: []vec3) {
+	assert(len(dst) >= len(src))
+	assert(len(src) % 3 == 0)
+
+	for i in 0..<len(src)/3 {
+		a := src[i*3+0]
+		b := src[i*3+1]
+		c := src[i*3+2]
+
+		normal := normalize(cross(b - a, c - a))
+
+		dst[i*3+0] = normal
+		dst[i*3+1] = normal
+		dst[i*3+2] = normal
+	}
+}
+
 Attribute_int   :: distinct i32
 Attribute_ivec2 :: distinct i32
 Attribute_ivec3 :: distinct i32
@@ -360,252 +626,4 @@ uniform :: proc {
 	uniform_mat2,
 	uniform_mat3,
 	uniform_mat4,
-}
-
-
-u8vec4_to_vec4 :: #force_inline proc "contextless" (rgba: u8vec4) -> vec4 {
-	return {f32(rgba.r)/255, f32(rgba.g)/255, f32(rgba.b)/255, f32(rgba.a)/255}
-}
-rgba_to_vec4 :: u8vec4_to_vec4
-
-copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
-	src := src
-	copy(dst, src[:])
-}
-
-copy_pattern :: #force_inline proc "contextless" (dst: []$S, src: []S) #no_bounds_check {
-	for i in 0..<len(dst)/len(src) {
-		copy(dst[i*len(src):][:len(src)], src)
-	}
-}
-
-cast_vec2 :: #force_inline proc "contextless" ($D: typeid, v: [2]$S) -> [2]D
-	where intrinsics.type_is_numeric(S),
-	      intrinsics.type_is_numeric(D) {
-	return {D(v.x), D(v.y)}
-}
-
-vec2_to_vec3 :: #force_inline proc "contextless" (v: $T/[2]f32, z: f32 = 0) -> vec3 {
-	return {v.x, v.y, z}
-}
-
-rand_color :: proc(r: ^rand.Rand = nil) -> u8vec4 {
-	color := transmute(u8vec4)rand.uint32(r)
-	color.a = 255
-	return color
-}
-rand_color_gray :: proc(r: ^rand.Rand = nil) -> u8vec4 {
-	l := u8(rand.uint64(r))/4 + 256/2 + 256/4
-	return {l, l, l, 255}
-}
-rand_colors :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
-	assert(len(colors)%3 == 0)
-	for i in 0..<len(colors)/3 {
-		color := rand_color(r)
-		colors[i*3+0] = color
-		colors[i*3+1] = color
-		colors[i*3+2] = color
-	}
-}
-rand_colors_gray :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
-	assert(len(colors)%3 == 0)
-	for i in 0..<len(colors)/3 {
-		color := rand_color_gray(r)
-		colors[i*3+0] = color
-		colors[i*3+1] = color
-		colors[i*3+2] = color
-	}
-}
-
-@(require_results)
-mat3_translate :: proc "contextless" (v: vec2) -> mat3 {
-	return {
-		1, 0, v.x,
-		0, 1, v.y,
-		0, 0, 1,
-   	}
-}
-@(require_results)
-mat3_scale :: proc "contextless" (v: vec2) -> mat3 {
-	return {
-		v.x, 0,   0,
-		0,   v.y, 0,
-		0,   0,   1,
-   	}
-}
-@(require_results)
-mat3_rotate :: proc "contextless" (angle: f32) -> mat3 {
-	c := cos(angle)
-	s := sin(angle)
-	return {
-		 c, s, 0,
-		-s, c, 0,
-		 0, 0, 1,
-	}
-}
-@(require_results)
-mat3_projection :: proc "contextless" (size: vec2) -> mat3 {
-	return {
-		2/size.x, 0,       -1,
-		0,       -2/size.y, 1,
-		0,        0,        1,
-	}
-}
-
-mat4_inverse   :: glm.inverse_mat4
-
-@(require_results)
-mat4_translate :: proc "contextless" (v: vec3) -> mat4 {
-	return {
-		1, 0, 0, v.x,
-		0, 1, 0, v.y,
-		0, 0, 1, v.z,
-		0, 0, 0, 1,
-	}
-}
-@(require_results)
-mat4_scale :: proc "contextless" (v: vec3) -> (m: mat4) {
-	return {
-		v.x, 0,   0,   0,
-		0,   v.y, 0,   0,
-		0,   0,   v.z, 0,
-		0,   0,   0,   1,
-	}
-}
-@(require_results)
-mat4_rotate_x :: proc "contextless" (radians: f32) -> mat4 {
-	c := cos(radians)
-	s := sin(radians)
-
-	return {
-		1, 0, 0, 0,
-		0, c, s, 0,
-		0,-s, c, 0,
-		0, 0, 0, 1,
-	}
-}
-@(require_results)
-mat4_rotate_y :: proc "contextless" (radians: f32) -> mat4 {
-	c := cos(radians)
-	s := sin(radians)
-
-	return {
-		c, 0,-s, 0,
-		0, 1, 0, 0,
-		s, 0, c, 0,
-		0, 0, 0, 1,
-	}
-}
-@(require_results)
-mat4_rotate_z :: proc "contextless" (radians: f32) -> mat4 {
-	c := cos(radians)
-	s := sin(radians)
-
-	return {
-		c,  s, 0, 0,
-		-s, c, 0, 0,
-		0,  0, 1, 0,
-		0,  0, 0, 1,
-	}
-}
-@(require_results)
-mat4_rotate_vec :: #force_inline proc "contextless" (v: vec3) -> mat4 {
-	return mat4_rotate_x(v.x) * mat4_rotate_y(v.y) * mat4_rotate_z(v.z)
-}
-@(require_results)
-mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> mat4 {
-    f    : f32 = tan(fov*0.5)
-    range: f32 = 1 / (near - far)
-
-    return {
-		f/aspect, 0, 0,                    0,
-		0,        f, 0,                    0,
-		0,        0, (near + far) * range, near * far * range * 2,
-		0,        0, -1,                   0,
-	}
-}
-@(require_results)
-mat4_look_at :: proc "contextless" (eye, target, up: vec3) -> mat4 {
-	// f  := normalize(target - eye)
-	// s  := normalize(cross(f, up))
-	// u  := cross(s, f)
-	// fe := dot(f, eye)
-
-	// return {
-	// 	+s.x, +s.y, +s.z, -dot(s, eye),
-	// 	+u.x, +u.y, +u.z, -dot(u, eye),
-	// 	-f.x, -f.y, -f.z, +fe,
-	// 	0,    0,    0,    1,
-	// }
-
-	z := normalize(eye - target)
-	x := normalize(cross(up, z))
-	y := normalize(cross(z, x))
-
-	return {
-		x.x, y.x, z.x, eye.x,
-		x.y, y.y, z.y, eye.y,
-		x.z, y.z, z.z, eye.z,
-		0,   0,   0,   1,
-	}
-}
-
-// Rotates a vector around an axis
-@(require_results)
-vec3_rotate :: proc "contextless" (v, axis: vec3, angle: f32) -> vec3 {
-	axis, angle := axis, angle
-
-	axis = normalize(axis)
-
-	angle *= 0.5
-	a := sin(angle)
-	b := axis.x*a
-	c := axis.y*a
-	d := axis.z*a
-	a = cos(angle)
-	w := vec3{b, c, d}
-
-	wv := cross(w, v)
-	wwv := cross(w, wv)
-
-	a *= 2
-	wv *= a
-
-	wwv *= 2
-
-	return v + wv + wwv
-}
-
-vec3_transform :: proc "contextless" (v: vec3, m: mat4) -> vec3 {
-    w := m[0][3] * v.x + m[1][3] * v.y + m[2][3] * v.z + m[3][3]
-
-    return {
-        (m[0][0] * v.x + m[1][0] * v.y + m[2][0] * v.z + m[3][0]) / w,
-        (m[0][1] * v.x + m[1][1] * v.y + m[2][1] * v.z + m[3][1]) / w,
-        (m[0][2] * v.x + m[1][2] * v.y + m[2][2] * v.z + m[3][2]) / w,
-	}
-}
-
-vec2_transform :: proc "contextless" (v: vec2, m: mat3) -> vec2 {
-	return {
-		v.x * m[0].x + v.y * m[1].x + m[2].x,
-		v.x * m[0].y + v.y * m[1].y + m[2].y,
-	}
-}
-
-normals_from_positions :: proc(dst, src: []vec3) {
-	assert(len(dst) >= len(src))
-	assert(len(src) % 3 == 0)
-
-	for i in 0..<len(src)/3 {
-		a := src[i*3+0]
-		b := src[i*3+1]
-		c := src[i*3+2]
-
-		normal := normalize(cross(b - a, c - a))
-
-		dst[i*3+0] = normal
-		dst[i*3+1] = normal
-		dst[i*3+2] = normal
-	}
 }

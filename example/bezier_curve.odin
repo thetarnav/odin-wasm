@@ -1,21 +1,12 @@
 //+private file
 package example
 
+import glm "core:math/linalg/glsl"
 import "core:fmt"
 import "core:math"
 
 import gl  "../wasm/webgl"
 import ctx "../wasm/ctx2d"
-
-ratio :: distinct f32
-rvec2 :: distinct [2]f32
-
-to_px :: proc(r: rvec2) -> vec2 {
-	return vec2(r) * vec2(canvas_size) * dpr
-}
-to_rvec2 :: proc(p: vec2) -> rvec2 {
-	return rvec2(p / vec2(canvas_size) / dpr)
-}
 
 @private
 State_Bezier_Curve :: struct {
@@ -31,10 +22,10 @@ setup_bezier_curve :: proc(s: ^State_Bezier_Curve, _: gl.Program) {
 		return
 	}
 
-	s.points[0] = {0.3, 0.7}
-	s.points[1] = {0.3, 0.3}
-	s.points[2] = {0.7, 0.3}
-	s.points[3] = {0.7, 0.7}
+	s.points[0] = {-0.2,  0.2}
+	s.points[1] = {-0.2, -0.2}
+	s.points[2] = { 0.2, -0.2}
+	s.points[3] = { 0.2,  0.2}
 }
 
 @private
@@ -43,9 +34,19 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	// update t
 	s.t = math.mod(s.t + delta * 0.0008, 1.0)
 
+	// dragging
+	if mouse_down {
+		for &p in s.points {
+			if glm.distance_vec2(to_px(p), mouse_pos) < 10 {
+				p = to_rvec2(mouse_pos)
+			}
+		}
+	}
+
+
 	px_points: [4]vec2
 	for p, i in s.points {
-		px_points[i] = to_px(p - 0.5)
+		px_points[i] = to_px(p)
 	}
 	p1 := px_points[0]
 	p2 := px_points[1]
@@ -61,10 +62,27 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	tp := lerp(r1, r2, s.t)
 
+	
 	ctx.resetTransform()
 	ctx.clearRect(0, 0, canvas_size.x * dpr, canvas_size.y * dpr)
-	ctx.translate(vec2(canvas_size * dpr / 2))
+
+	// debug info
+	
+	ctx.font("32px monospace")
 	ctx.lineWidth(2)
+	ctx.fillStyle(WHITE)
+	ctx.fillText(fmt.tprintf("mouse_pos:  %v", mouse_pos), 50, 50)
+	ctx.fillText(fmt.tprintf("mouse_rel:  %v", mouse_rel), 50, 100)
+	ctx.fillText(fmt.tprintf("mouse_down: %v", mouse_down), 50, 150)
+	ctx.fillText(fmt.tprintf("p1:         %v", p1), 50, 200)
+	ctx.fillText(fmt.tprintf("p2:         %v", p2), 50, 250)
+	ctx.fillText(fmt.tprintf("p3:         %v", p3), 50, 300)
+	ctx.fillText(fmt.tprintf("p4:         %v", p4), 50, 350)
+	// ctx.fillText(fmt.tprintf("dist:       %v", glm.distance_vec2(p1, mouse_pos)), 50, 200)
+	
+	// draw
+	
+	// ctx.translate(canvas_size/2 * dpr)
 
 	SHADOWS :: 8
 	for shadow in f32(0)..<SHADOWS {

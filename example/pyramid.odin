@@ -43,7 +43,7 @@ colors: [VERTICES]rgba = {
 State_Pyramid :: struct {
 	using locations: Input_Locations_Pyramid,
 	vao       : VAO,
-	rotation  : [2]f32,
+	rotation  : rvec2,
 }
 
 @private

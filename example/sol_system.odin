@@ -10,7 +10,7 @@ SPHERE_SEGMENTS :: 8
 @private
 State_Sol_System :: struct {
 	planets     : [PLANETS_COUNT]Planet,
-	rotation    : [2]f32,
+	rotation    : rvec2,
 	shape_sphere: Shape,
 }
 
