@@ -68,25 +68,29 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	// debug info
 	
-	ctx.font("32px monospace")
-	ctx.lineWidth(2)
-	ctx.fillStyle(WHITE)
-	ctx.fillText(fmt.tprintf("mouse_pos:  %v", mouse_pos), 50, 50)
-	ctx.fillText(fmt.tprintf("mouse_rel:  %v", mouse_rel), 50, 100)
-	ctx.fillText(fmt.tprintf("mouse_down: %v", mouse_down), 50, 150)
-	ctx.fillText(fmt.tprintf("p1:         %v", p1), 50, 200)
-	ctx.fillText(fmt.tprintf("p2:         %v", p2), 50, 250)
-	ctx.fillText(fmt.tprintf("p3:         %v", p3), 50, 300)
-	ctx.fillText(fmt.tprintf("p4:         %v", p4), 50, 350)
-	// ctx.fillText(fmt.tprintf("dist:       %v", glm.distance_vec2(p1, mouse_pos)), 50, 200)
+	{
+		ctx.font("26px monospace")
+		line_height: f32 = 30
+		ctx.fillStyle(to_rgba(WHITE.rgb, 100))
+		ctx.fillText(fmt.tprintf("mouse_pos:  %v", mouse_pos),  30, 50 + line_height*0)
+		ctx.fillText(fmt.tprintf("mouse_rel:  %v", mouse_rel),  30, 50 + line_height*1)
+		ctx.fillText(fmt.tprintf("mouse_down: %v", mouse_down), 30, 50 + line_height*2)
+		ctx.fillText(fmt.tprintf("p1:         %v", p1),         30, 50 + line_height*3)
+		ctx.fillText(fmt.tprintf("p2:         %v", p2),         30, 50 + line_height*4)
+		ctx.fillText(fmt.tprintf("p3:         %v", p3),         30, 50 + line_height*5)
+		ctx.fillText(fmt.tprintf("p4:         %v", p4),         30, 50 + line_height*6)
+		// ctx.fillText(fmt.tprintf("dist:       %v", glm.distance_vec2(p1, mouse_pos)), 50, 200)
+	}
 	
 	// draw
+
+	ctx.lineWidth(2)
 	
 	// ctx.translate(canvas_size/2 * dpr)
 
 	SHADOWS :: 8
 	for shadow in f32(0)..<SHADOWS {
-		ctx.globalAlpha(1.0 - shadow/SHADOWS)
+		alpha := u8(255 * SHADOWS/(shadow+1))
 
 		defer {
 			m: mat3 = 1
@@ -98,7 +102,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			ctx.transform(m)
 		}
 	
-		ctx.strokeStyle(GRAY)
+		ctx.strokeStyle(to_rgba(GRAY.rgb, alpha))
 		for p, i in px_points[1:] {
 			ctx.beginPath()
 			ctx.moveTo(p)
@@ -106,27 +110,27 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			ctx.stroke()
 		}
 	
-		ctx.strokeStyle(BLUE)
+		ctx.strokeStyle(to_rgba(BLUE.rgb, alpha))
 		ctx.beginPath()
 		ctx.moveTo(q1)
 		ctx.lineTo(q2)
 		ctx.lineTo(q3)
 		ctx.stroke()
 	
-		ctx.strokeStyle(GREEN)
+		ctx.strokeStyle(to_rgba(GREEN.rgb, alpha))
 		ctx.beginPath()
 		ctx.moveTo(r1)
 		ctx.lineTo(r2)
 		ctx.stroke()
 	
-		ctx.strokeStyle(RED)
+		ctx.strokeStyle(to_rgba(RED.rgb, alpha))
 		ctx.beginPath()
 		ctx.moveTo(p1)
 		ctx.bezierCurveTo(p2, p3, p4)
 		ctx.stroke()
 	
-		ctx.fillStyle(GRAY)
-		ctx.strokeStyle(WHITE)
+		ctx.fillStyle(to_rgba(GRAY.rgb, alpha))
+		ctx.strokeStyle(to_rgba(WHITE.rgb, alpha))
 		for p in px_points {
 			ctx.beginPath()
 			ctx.arc(p, 6, 0, TAU)
@@ -134,7 +138,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			ctx.stroke()
 		}
 	
-		ctx.fillStyle(BLUE)
+		ctx.fillStyle(to_rgba(BLUE.rgb, alpha))
 		ctx.strokeStyle(TRANSPARENT)
 		for p in ([]vec2{q1, q2, q3}) {
 			ctx.beginPath()
@@ -143,7 +147,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			ctx.stroke()
 		}
 	
-		ctx.fillStyle(GREEN)
+		ctx.fillStyle(to_rgba(GREEN.rgb, alpha))
 		ctx.strokeStyle(TRANSPARENT)
 		for p in ([]vec2{r1, r2}) {
 			ctx.beginPath()
@@ -152,7 +156,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			ctx.stroke()
 		}
 	
-		ctx.fillStyle(RED)
+		ctx.fillStyle(to_rgba(RED.rgb, alpha))
 		ctx.strokeStyle(TRANSPARENT)
 		ctx.beginPath()	
 		ctx.arc(tp, 8, 0, TAU)

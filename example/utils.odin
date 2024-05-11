@@ -60,6 +60,11 @@ u8vec4_to_vec4 :: #force_inline proc "contextless" (rgba: u8vec4) -> vec4 {
 }
 rgba_to_vec4 :: u8vec4_to_vec4
 
+to_rgba_3_1 :: #force_inline proc "contextless" (color: $A/[3]u8, a: u8) -> rgba {
+	return {color.r, color.g, color.b, a}
+}
+to_rgba :: proc {to_rgba_3_1}
+
 copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
 	src := src
 	copy(dst, src[:])
