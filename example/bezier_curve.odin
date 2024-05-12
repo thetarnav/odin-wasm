@@ -85,12 +85,13 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 		ctx.fillStyle(to_rgba(WHITE.rgb, 100))
 		ctx.fillText(fmt.tprintf("mouse_pos:  %v", to_px(mouse_rel)),  30, 50 + line_height*0)
 		ctx.fillText(fmt.tprintf("mouse_down: %v", mouse_down),        30, 50 + line_height*1)
-		ctx.fillText(fmt.tprintf("p1:         %v", p1),                30, 50 + line_height*2)
-		ctx.fillText(fmt.tprintf("p2:         %v", p2),                30, 50 + line_height*3)
-		ctx.fillText(fmt.tprintf("p3:         %v", p3),                30, 50 + line_height*4)
-		ctx.fillText(fmt.tprintf("p4:         %v", p4),                30, 50 + line_height*5)
-		ctx.fillText(fmt.tprintf("a12:        %v", a12),               30, 50 + line_height*6)
-		ctx.fillText(fmt.tprintf("a34:        %v", a34),               30, 50 + line_height*7)
+		ctx.fillText(fmt.tprintf("dragging:   %v", s.draggig),         30, 50 + line_height*2)
+		ctx.fillText(fmt.tprintf("p1:         %v", p1),                30, 50 + line_height*3)
+		ctx.fillText(fmt.tprintf("p2:         %v", p2),                30, 50 + line_height*4)
+		ctx.fillText(fmt.tprintf("p3:         %v", p3),                30, 50 + line_height*5)
+		ctx.fillText(fmt.tprintf("p4:         %v", p4),                30, 50 + line_height*6)
+		ctx.fillText(fmt.tprintf("a12:        %v", a12),               30, 50 + line_height*7)
+		ctx.fillText(fmt.tprintf("a34:        %v", a34),               30, 50 + line_height*8)
 	}
 	
 	// draw
