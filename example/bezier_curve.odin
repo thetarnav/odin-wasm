@@ -81,14 +81,12 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 		ctx.font("26px monospace")
 		line_height: f32 = 30
 		ctx.fillStyle(to_rgba(WHITE.rgb, 100))
-		ctx.fillText(fmt.tprintf("mouse_pos:  %v", mouse_pos),  30, 50 + line_height*0)
-		ctx.fillText(fmt.tprintf("mouse_rel:  %v", mouse_rel),  30, 50 + line_height*1)
-		ctx.fillText(fmt.tprintf("mouse_down: %v", mouse_down), 30, 50 + line_height*2)
-		ctx.fillText(fmt.tprintf("p1:         %v", p1),         30, 50 + line_height*3)
-		ctx.fillText(fmt.tprintf("p2:         %v", p2),         30, 50 + line_height*4)
-		ctx.fillText(fmt.tprintf("p3:         %v", p3),         30, 50 + line_height*5)
-		ctx.fillText(fmt.tprintf("p4:         %v", p4),         30, 50 + line_height*6)
-		// ctx.fillText(fmt.tprintf("dist:       %v", glm.distance_vec2(p1, mouse_pos)), 50, 200)
+		ctx.fillText(fmt.tprintf("mouse_pos:  %v", to_px(mouse_rel)),  30, 50 + line_height*0)
+		ctx.fillText(fmt.tprintf("mouse_down: %v", mouse_down),        30, 50 + line_height*1)
+		ctx.fillText(fmt.tprintf("p1:         %v", p1),                30, 50 + line_height*2)
+		ctx.fillText(fmt.tprintf("p2:         %v", p2),                30, 50 + line_height*3)
+		ctx.fillText(fmt.tprintf("p3:         %v", p3),                30, 50 + line_height*4)
+		ctx.fillText(fmt.tprintf("p4:         %v", p4),                30, 50 + line_height*5)
 	}
 	
 	// draw
@@ -104,10 +102,10 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 		defer {
 			m: mat3 = 1
 			m *= mat3_translate(p4 - p1)
-			m *= mat3_translate((p1 - p3)/2)
+			m *= mat3_translate(p1)
 			m *= mat3_rotate(-PI/3)
 			m *= mat3_scale(0.8)
-			m *= mat3_translate((p3 - p1)/2)
+			m *= mat3_translate(-p1)
 			ctx.transform(m)
 		}
 	
