@@ -10,8 +10,9 @@ import ctx "../wasm/ctx2d"
 
 @private
 State_Bezier_Curve :: struct {
-	points: [4]rvec2,
-	t:      f32,
+	points:  [4]rvec2,
+	t:       f32,
+	draggig: int,
 }
 
 @private
@@ -26,6 +27,8 @@ setup_bezier_curve :: proc(s: ^State_Bezier_Curve, _: gl.Program) {
 	s.points[1] = {-0.2, -0.2}
 	s.points[2] = { 0.2, -0.2}
 	s.points[3] = { 0.2,  0.2}
+
+	s.draggig = -1
 }
 
 @private
@@ -35,15 +38,22 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	s.t = math.mod(s.t + delta * 0.0008, 1.0)
 
 	// dragging
-	if mouse_down {
-		for &p in s.points {
+	switch {
+	case s.draggig == -1 && mouse_down:
+		for &p, i in s.points {
 			if glm.distance(to_px(p), to_px(mouse_rel)) < 10 {
 				p = mouse_rel
+				s.draggig = i
+				break
 			}
 		}
+	case s.draggig != -1 && mouse_down:
+		s.points[s.draggig] = mouse_rel
+	case s.draggig != -1 && !mouse_down:
+		s.draggig = -1
 	}
 
-
+	// calc
 	px_points: [4]vec2
 	for p, i in s.points {
 		px_points[i] = to_px(p)
@@ -67,7 +77,6 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	ctx.clearRect(0, canvas_size * dpr)
 
 	// debug info
-	
 	{
 		ctx.font("26px monospace")
 		line_height: f32 = 30
