@@ -37,8 +37,8 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	// dragging
 	if mouse_down {
 		for &p in s.points {
-			if glm.distance_vec2(to_px(p), mouse_pos) < 10 {
-				p = to_rvec2(mouse_pos)
+			if glm.distance(to_px(p), to_px(mouse_rel)) < 10 {
+				p = mouse_rel
 			}
 		}
 	}
@@ -64,7 +64,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	
 	ctx.resetTransform()
-	ctx.clearRect(0, 0, canvas_size.x * dpr, canvas_size.y * dpr)
+	ctx.clearRect(0, canvas_size * dpr)
 
 	// debug info
 	
@@ -86,7 +86,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	ctx.lineWidth(2)
 	
-	// ctx.translate(canvas_size/2 * dpr)
+	ctx.translate(canvas_size/2 * dpr)
 
 	SHADOWS :: 8
 	for shadow in f32(0)..<SHADOWS {
