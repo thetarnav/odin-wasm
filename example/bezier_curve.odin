@@ -22,10 +22,10 @@ setup_bezier_curve :: proc(s: ^State_Bezier_Curve, _: gl.Program) {
 		return
 	}
 
-	s.points[0] = {-0.2,  0.2}
-	s.points[1] = {-0.2, -0.2}
-	s.points[2] = { 0.2, -0.2}
-	s.points[3] = { 0.2,  0.2}
+	s.points[0] = {-0.15,  0  }
+	s.points[1] = {-0.10, -0.2}
+	s.points[2] = { 0.10,  0.2}
+	s.points[3] = { 0.15,  0  }
 
 	s.draggig = -1
 }
@@ -99,9 +99,9 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	
 	ctx.translate(canvas_size/2 * dpr)
 
-	SHADOWS :: 8
+	SHADOWS :: 12
 	for shadow in f32(0)..<SHADOWS {
-		alpha := u8(255 * 1/(shadow+1))
+		alpha := u8(255 * (SHADOWS-shadow)/SHADOWS   )
 
 		defer {
 			m: mat3 = 1
