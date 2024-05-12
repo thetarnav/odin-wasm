@@ -12,9 +12,11 @@
 
 The implementation is mostly the same as the original, here are the differences:
 
-- ESM - it was written to be used in a modern JS environment, assuming that the user will use a bundler like [Webpack](https://webpack.js.org/) or [Rollup](https://rollupjs.org/) to bundle the code, and tree-shake the unused parts.
-- JSDoc - the original bindings are not documented, so I added JSDoc to the bindings to make it easier to use them.
+- ESM - the bindings are written in multiple ES modules, mirroring Odin packages, so they need to be used in a modern JS environment, assuming that the user will use a bundler like [Webpack](https://webpack.js.org/) or [Rollup](https://rollupjs.org/) to bundle the code, and tree-shake the unused parts.
+- JSDoc - the original bindings are witout types, so I added JSDoc comments to the functions for basic typechecking (and some autocompletion).
 - [Improvements to getting window position and size](https://github.com/thetarnav/odin-wasm/commit/abd015822d0667ae7ebec7c0b7d4508a489b9c44#diff-70784127da28e4d9d43c91e03af22f56c23f45ec12af76e4deed68c37f7776e4)
+- [ctx2d](https://github.com/thetarnav/odin-wasm/tree/main/wasm/ctx2d) - Bindings to the [2d canvas context](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D), for drawing 2d graphics without webgl.
+- [ls](https://github.com/thetarnav/odin-wasm/tree/main/wasm/ls) - Bindings to the [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) API, for saving data in the browser.
 
 ### 2. Odin + WASM example
 
