@@ -124,6 +124,10 @@ rand_colors_gray :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
 }
 
 @(require_results)
+vec2_angle :: proc "contextless" (a, b: vec2) -> f32 {
+	return glm.atan2(a.y - b.y, a.x - b.x)
+}
+@(require_results)
 mat3_translate :: proc "contextless" (v: vec2) -> mat3 {
 	return {
 		1, 0, v.x,

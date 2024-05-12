@@ -3,7 +3,6 @@ package example
 
 import glm "core:math/linalg/glsl"
 import "core:fmt"
-import "core:math"
 
 import gl  "../wasm/webgl"
 import ctx "../wasm/ctx2d"
@@ -35,7 +34,7 @@ setup_bezier_curve :: proc(s: ^State_Bezier_Curve, _: gl.Program) {
 frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	// update t
-	s.t = math.mod(s.t + delta * 0.0008, 1.0)
+	s.t = glm.mod(s.t + delta * 0.0008, 1.0)
 
 	// dragging
 	switch {
@@ -72,6 +71,9 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	tp := lerp(r1, r2, s.t)
 
+	a12 := vec2_angle(p1, p2)
+	a34 := vec2_angle(p3, p4)
+
 	
 	ctx.resetTransform()
 	ctx.clearRect(0, canvas_size * dpr)
@@ -87,6 +89,8 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 		ctx.fillText(fmt.tprintf("p2:         %v", p2),                30, 50 + line_height*3)
 		ctx.fillText(fmt.tprintf("p3:         %v", p3),                30, 50 + line_height*4)
 		ctx.fillText(fmt.tprintf("p4:         %v", p4),                30, 50 + line_height*5)
+		ctx.fillText(fmt.tprintf("a12:        %v", a12),               30, 50 + line_height*6)
+		ctx.fillText(fmt.tprintf("a34:        %v", a34),               30, 50 + line_height*7)
 	}
 	
 	// draw
@@ -97,14 +101,14 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	SHADOWS :: 8
 	for shadow in f32(0)..<SHADOWS {
-		alpha := u8(255 * SHADOWS/(shadow+1))
+		alpha := u8(255 * 1/(shadow+1))
 
 		defer {
 			m: mat3 = 1
 			m *= mat3_translate(p4 - p1)
 			m *= mat3_translate(p1)
-			m *= mat3_rotate(-PI/3)
-			m *= mat3_scale(0.8)
+			m *= mat3_rotate(-a34 -a12)
+			m *= mat3_scale({0.8, -0.8})
 			m *= mat3_translate(-p1)
 			ctx.transform(m)
 		}
@@ -145,28 +149,10 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			ctx.stroke()
 		}
 	
-		ctx.fillStyle(to_rgba(BLUE.rgb, alpha))
-		ctx.strokeStyle(TRANSPARENT)
-		for p in ([]vec2{q1, q2, q3}) {
-			ctx.beginPath()
-			ctx.arc(p, 6, 0, TAU)
-			ctx.fill()
-			ctx.stroke()
-		}
-	
-		ctx.fillStyle(to_rgba(GREEN.rgb, alpha))
-		ctx.strokeStyle(TRANSPARENT)
-		for p in ([]vec2{r1, r2}) {
-			ctx.beginPath()
-			ctx.arc(p, 6, 0, TAU)
-			ctx.fill()
-			ctx.stroke()
-		}
-	
 		ctx.fillStyle(to_rgba(RED.rgb, alpha))
 		ctx.strokeStyle(TRANSPARENT)
 		ctx.beginPath()	
-		ctx.arc(tp, 8, 0, TAU)
+		ctx.arc(tp, 10, 0, TAU)
 		ctx.fill()
 		ctx.stroke()
 	}
