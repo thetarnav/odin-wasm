@@ -2,7 +2,7 @@ package example
 
 import "core:fmt"
 import "core:mem"
-import "core:runtime"
+import "base:runtime"
 import "core:math/rand"
 
 import    "../wasm/dom"
