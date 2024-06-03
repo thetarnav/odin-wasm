@@ -40,6 +40,7 @@ const ODIN_ARGS_SHARED = [
 	playground_path,
 	"-out:"+WASM_PATH,
 	"-target:js_wasm32",
+	"-error-pos-style:unix",
 ]
 /** @type {string[]} */
 const ODIN_ARGS_DEV    = [
@@ -68,6 +69,7 @@ const ODIN_ARGS_SHDC = [
 	"-disable-assert",
 	"-no-bounds-check",
 	"-obfuscate-source-code-locations",
+	"-error-pos-style:unix",
 ]
 
 /*
