@@ -97,23 +97,24 @@ Wasm instance
  * @typedef {wasm.OdinExports & Example_Exports} Wasm_Exports
  *
  * @callback Example_Start
- * @param   {wasm.rawptr } ctx_ptr
  * @param   {Example_Kind} example_type
+ * @param   {wasm.rawptr } ctx
  * @returns {wasm.bool   }
  *
  * @callback Example_Frame
- * @param   {wasm.rawptr} ctx_ptr
  * @param   {wasm.f32   } delta
+ * @param   {wasm.rawptr} ctx
  * @returns {void       }
  *
  * @callback Example_On_Window_Resize
- * @param   {wasm.f32} window_w
- * @param   {wasm.f32} window_h
- * @param   {wasm.f32} canvas_w
- * @param   {wasm.f32} canvas_h
- * @param   {wasm.f32} canvas_x
- * @param   {wasm.f32} canvas_y
- * @returns {void    }
+ * @param   {wasm.f32}    window_w
+ * @param   {wasm.f32}    window_h
+ * @param   {wasm.f32}    canvas_w
+ * @param   {wasm.f32}    canvas_h
+ * @param   {wasm.f32}    canvas_x
+ * @param   {wasm.f32}    canvas_y
+ * @param   {wasm.rawptr} ctx
+ * @returns {void}
  */
 
 const wasm_state  = wasm.makeWasmState()
@@ -146,7 +147,7 @@ const odin_ctx = exports.default_context_ptr()
 /* _end() should be called when the program is done */
 // exports._end()
 
-const ok = exports.start(odin_ctx, example_kind)
+const ok = exports.start(example_kind, odin_ctx)
 if (!ok) throw Error("Failed to start example")
 
 void requestAnimationFrame(prev_time => {
@@ -154,7 +155,7 @@ void requestAnimationFrame(prev_time => {
 	const frame = time => {
 		const delta = time - prev_time
 		prev_time = time
-		exports.frame(odin_ctx, delta)
+		exports.frame(delta, odin_ctx)
 		void requestAnimationFrame(frame)
 	}
 
@@ -181,6 +182,7 @@ function updateCanvasSize() {
 		rect.height,
 		rect.left,
 		rect.top,
+		odin_ctx,
 	)
 }
 updateCanvasSize()

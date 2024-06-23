@@ -123,8 +123,8 @@ export function makeOdinWebGL(wasm, webgl) {
 		/** @returns {void} */
 		AttachShader: (/** @type {number} */ program, /** @type {number} */ shader) => {
 			webgl.ctx.attachShader(
-				/** @type {WebGLProgram} */ (webgl.programs[program]),
-				/** @type {WebGLShader} */ (webgl.shaders[shader]),
+				/** @type {WebGLProgram} */(webgl.programs[program]),
+				/** @type {WebGLShader}  */(webgl.shaders [shader]),
 			)
 		},
 		/**

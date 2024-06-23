@@ -2,7 +2,6 @@ package example
 
 import "core:fmt"
 import "core:mem"
-import "base:runtime"
 import "core:math/rand"
 import "core:crypto"
 
@@ -142,7 +141,7 @@ on_wheel :: proc(e: dom.Event) {
 	scale = clamp(scale, 0, 1)
 }
 @export
-on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: f32) {
+on_window_resize :: proc (vw, vh, cw, ch, cx, cy: f32) {
 	window_size  = {vw, vh}
 	canvas_size  = {cw, ch}
 	canvas_pos   = {cx, cy}
@@ -151,11 +150,10 @@ on_window_resize :: proc "c" (vw, vh, cw, ch, cx, cy: f32) {
 }
 
 @export
-start :: proc "c" (ctx: ^runtime.Context, example_kind: Example_Kind) -> (ok: bool) {
+start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 	example = example_kind
 	demo := demos[example]
 
-	context = ctx^
 	context.allocator      = forever_arena_allocator
 	context.temp_allocator = temp_arena_allocator
 	defer free_all(context.temp_allocator)
@@ -206,8 +204,7 @@ start :: proc "c" (ctx: ^runtime.Context, example_kind: Example_Kind) -> (ok: bo
 }
 
 @export
-frame :: proc "c" (ctx: ^runtime.Context, delta: f32) {
-	context = ctx^
+frame :: proc (delta: f32) {
 	context.allocator      = forever_arena_allocator
 	context.temp_allocator = temp_arena_allocator
 	defer free_all(context.temp_allocator)
