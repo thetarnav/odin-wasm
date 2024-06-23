@@ -37,6 +37,7 @@ const Example_Kind = /** @type {const} */ ({
 	Candy       : 7,
 	Sol_System  : 8,
 	Bezier_Curve: 9,
+	Lathe       : 10,
 })
 /** @type {Example_Kind[]} */
 const example_kinds = Object.values(Example_Kind)
@@ -53,6 +54,7 @@ const example_kind_href_hashes = {
 	[Example_Kind.Candy]       : "#candy",
 	[Example_Kind.Sol_System]  : "#sol-system",
 	[Example_Kind.Bezier_Curve]: "#bezier-curve",
+	[Example_Kind.Lathe]       : "#lathe",
 }
 
 /** @type {Example_Kind} */

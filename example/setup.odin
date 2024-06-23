@@ -31,6 +31,7 @@ Example_Kind :: enum {
 	Candy        = 7,
 	Sol_System   = 8,
 	Bezier_Curve = 9,
+	Lathe        = 10,
 }
 example: Example_Kind
 
@@ -74,6 +75,7 @@ demos: [Example_Kind]struct {
 		fs_sources = {#load("./sol_system.frag", string)},
 	},
 	.Bezier_Curve = {},
+	.Lathe = {},
 }
 
 // state is a union because it is being used by only one of the examples
@@ -88,6 +90,7 @@ demo_state: struct #raw_union {
 	candy:        State_Candy,
 	sol_system:   State_Sol_System,
 	bezier_curve: State_Bezier_Curve,
+	lathe:        State_Lathe,
 }
 
 
@@ -193,6 +196,7 @@ start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 	case .Candy:        setup_candy       (&demo_state.candy,        program)
 	case .Sol_System:   setup_sol_system  (&demo_state.sol_system,   program)
 	case .Bezier_Curve: setup_bezier_curve(&demo_state.bezier_curve, program)
+	case .Lathe:        setup_lathe       (&demo_state.lathe,        program)
 	}
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
@@ -225,5 +229,6 @@ frame :: proc (delta: f32) {
 	case .Candy:        frame_candy       (&demo_state.candy,        delta)
 	case .Sol_System:   frame_sol_system  (&demo_state.sol_system,   delta)
 	case .Bezier_Curve: frame_bezier_curve(&demo_state.bezier_curve, delta)
+	case .Lathe:        frame_lathe       (&demo_state.lathe,        delta)
 	}
 }

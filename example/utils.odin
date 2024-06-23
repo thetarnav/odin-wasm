@@ -29,6 +29,7 @@ TAU	   :: glm.TAU
 PI     :: glm.PI
 VAO    :: gl.VertexArrayObject
 
+mod       :: glm.mod
 radians   :: glm.radians_f32
 cos       :: glm.cos
 sin       :: glm.sin
@@ -37,6 +38,7 @@ dot       :: glm.dot
 cross     :: glm.cross
 normalize :: glm.normalize
 lerp      :: glm.lerp
+distance  :: glm.distance
 
 UP    :: vec3{ 0, 1, 0}
 DOWN  :: vec3{ 0,-1, 0}

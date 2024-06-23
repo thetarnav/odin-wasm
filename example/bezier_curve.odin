@@ -1,7 +1,6 @@
 //+private file
 package example
 
-import glm "core:math/linalg/glsl"
 import "core:fmt"
 
 import gl  "../wasm/webgl"
@@ -34,13 +33,13 @@ setup_bezier_curve :: proc(s: ^State_Bezier_Curve, _: gl.Program) {
 frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	// update t
-	s.t = glm.mod(s.t + delta * 0.0008, 1.0)
+	s.t = mod(s.t + delta * 0.0008, 1.0)
 
 	// dragging
 	switch {
 	case s.draggig == -1 && mouse_down:
 		for &p, i in s.points {
-			if glm.distance(to_px(p), to_px(mouse_rel)) < 10 {
+			if distance(to_px(p), to_px(mouse_rel)) < 10 {
 				p = mouse_rel
 				s.draggig = i
 				break
