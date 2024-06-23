@@ -8,7 +8,7 @@ https://github.com/odin-lang/Odin/tree/master/vendor/wasm
 //+build js wasm32, js wasm64p32
 package wasm
 
-import "core:intrinsics"
+import "base:intrinsics"
 import "core:mem"
 
 PAGE_SIZE :: 64 * 1024
