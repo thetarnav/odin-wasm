@@ -16,8 +16,7 @@ import process       from "node:process"
 import child_process from "node:child_process"
 import * as chokidar from "chokidar"
 import * as ws       from "ws"
-import * as rollup   from "rollup"
-import * as swc      from "@swc/core"
+import * as esbuild  from "esbuild"
 
 import {
 	DIST_DIRNAME, CONFIG_FILENAME, HTTP_PORT, MESSAGE_RELOAD, PACKAGE_DIRNAME, PLAYGROUND_DIRNAME,
@@ -228,44 +227,27 @@ const command_handlers = {
 		await build_config(false)
 		logger_info(logger, "Built config")
 
-		const bundle_res = await unsafePromiseToError(
-			rollup.rollup({input: path.join(playground_path, "setup.js")}),
-		)
-		if (bundle_res instanceof Error) panic("Failed to bundle, error:", bundle_res)
-		else logger_info(logger, "Bundled")
-
-		const generate_res = await unsafePromiseToError(bundle_res.generate({}))
-		if (generate_res instanceof Error) panic("Failed to generate, error:", generate_res)
-		else logger_info(logger, "Generated")
-
-		let errors_count = 0
-
-		const promises = generate_res.output.map(async chunk => {
-			if (chunk.type === "asset") {
-				error("Unexpected asset: "+chunk.fileName)
-				errors_count += 1
-				return
-			}
-
-			const transformed = await swc.transform(chunk.code, {
-				jsc: JSC_CONFIG,
-				minify: true,
-				filename: chunk.fileName,
-			})
-
-			return fsp.writeFile(path.join(dist_path, chunk.fileName), transformed.code)
+		const res = await esbuild.build({
+			entryPoints: [path.join(playground_path, "setup.js")],
+			outfile:     path.join(dist_path, "setup.js"),
+			format:      "esm",
+			bundle:      true,
+			minify:      true,
+			sourcemap:   false,
 		})
 
-		await Promise.all(promises)
-		void bundle_res.close()
-		logger_info(logger, "Transformed")
-
-		errors_count
-			? logger_error(logger, "JS Build failed, errors: "+errors_count)
-			: logger_info(logger, "JS Build complete")
+		if (res.errors.length > 0) {
+			let message = "JS Build failed, errors:"
+			for (const error of res.errors) {
+				message += "\n\t" + error.text
+			}
+			logger_error(logger, message)
+		} else {
+			logger_info(logger, "JS Build complete")
+		}
 
 		const wasm_exit_code = await wasm_promise
-		if (wasm_exit_code != 0) panic("Failed to build WASM, code:", wasm_exit_code)
+		if (wasm_exit_code != 0) panic("Failed to build WASM, code: "+wasm_exit_code)
 
 		/* Copy public dir */
 		await copyDirContents(public_path, dist_path)
@@ -291,23 +273,10 @@ const args = process.argv.slice(2)
 const command = args[0]
 
 if (!command) panic("Command not specified")
-if (!hasKey(command_handlers, command)) panic("Unknown command", command)
+if (!hasKey(command_handlers, command)) panic("Unknown command: "+command)
 
 const command_handler = command_handlers[command]
 command_handler(args.slice(1))
-
-/** @type {swc.JscConfig} */
-const JSC_CONFIG = {
-	target: "es2018",
-	keepClassNames: false,
-	loose: false,
-	externalHelpers: false,
-	minify: {
-		compress: true,
-		mangle: true,
-		inlineSourcesContent: true,
-	},
-}
 
 /** @returns {Promise<number>} exit code */
 async function build_shader_utils() {
@@ -445,8 +414,8 @@ function error (/** @type {string} */ message) {
 }
 
 /** @returns {never} */
-function panic(/** @type {any[]} */ ...message) {
-	error(...message)
+function panic(/** @type {string} */ message) {
+	error(message)
 	process.exit(1)
 }
 
