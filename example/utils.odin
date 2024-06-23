@@ -95,28 +95,28 @@ vec2_to_vec3 :: #force_inline proc "contextless" (v: $T/[2]f32, z: f32 = 0) -> v
 	return {v.x, v.y, z}
 }
 
-rand_color :: proc(r: ^rand.Rand = nil) -> u8vec4 {
-	color := transmute(u8vec4)rand.uint32(r)
+rand_color :: proc() -> u8vec4 {
+	color := transmute(u8vec4)rand.uint32()
 	color.a = 255
 	return color
 }
-rand_color_gray :: proc(r: ^rand.Rand = nil) -> u8vec4 {
-	l := u8(rand.uint64(r))/4 + 256/2 + 256/4
+rand_color_gray :: proc() -> u8vec4 {
+	l := u8(rand.uint64())/4 + 256/2 + 256/4
 	return {l, l, l, 255}
 }
-rand_colors :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
+rand_colors :: proc(colors: []u8vec4) {
 	assert(len(colors)%3 == 0)
 	for i in 0..<len(colors)/3 {
-		color := rand_color(r)
+		color := rand_color()
 		colors[i*3+0] = color
 		colors[i*3+1] = color
 		colors[i*3+2] = color
 	}
 }
-rand_colors_gray :: proc(colors: []u8vec4, r: ^rand.Rand = nil) {
+rand_colors_gray :: proc(colors: []u8vec4) {
 	assert(len(colors)%3 == 0)
 	for i in 0..<len(colors)/3 {
-		color := rand_color_gray(r)
+		color := rand_color_gray()
 		colors[i*3+0] = color
 		colors[i*3+1] = color
 		colors[i*3+2] = color

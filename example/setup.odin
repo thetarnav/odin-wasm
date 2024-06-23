@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:mem"
 import "base:runtime"
 import "core:math/rand"
+import "core:crypto"
 
 import    "../wasm/dom"
 import gl "../wasm/webgl"
@@ -99,10 +100,6 @@ forever_arena_buffer: [mem.Megabyte]byte
 forever_arena: mem.Arena = {data = forever_arena_buffer[:]}
 forever_arena_allocator := mem.arena_allocator(&forever_arena)
 
-
-system_rand: rand.Rand = {is_system=true}
-
-
 main :: proc() {
 	if ODIN_DEBUG {
 		dom.dispatch_custom_event("body", "lol")
@@ -122,8 +119,12 @@ main :: proc() {
 	canvas_size = window_size - 200
 	mouse_pos   = vec2(window_size / 2)
 
-
-	rand.set_global_seed(rand.uint64(&system_rand))
+	// Seed the random number generator
+	{
+		buf: [8]u8
+		crypto.rand_bytes(buf[:])
+		rand.reset(transmute(u64)buf)
+	}
 }
 
 on_mouse_move :: proc(e: dom.Event) {
