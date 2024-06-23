@@ -50,6 +50,8 @@ BACK  :: vec3{ 0, 0,-1}
 ratio :: distinct f32
 rvec2 :: distinct [2]f32
 
+Rect :: struct {x, y, w, h: f32}
+
 to_px :: proc(r: rvec2) -> vec2 {
 	return vec2(r) * window_size * dpr
 }

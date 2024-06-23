@@ -262,20 +262,31 @@ foreign ctx2d {
 	strokeRectXY :: proc (x, y, w, h: f32) ---
 }
 
+Rect :: struct {x, y, w, h: f32}
+
 clearRectVec :: proc (v: glm.vec2, size: glm.vec2) {
 	clearRectXY(v.x, v.y, size.x, size.y)
 }
-clearRect :: proc {clearRectXY, clearRectVec}
+clearRectRect :: proc (rect: Rect) {
+	clearRectXY(rect.x, rect.y, rect.w, rect.h)
+}
+clearRect :: proc {clearRectXY, clearRectVec, clearRectRect}
 
 fillRectVec :: proc (v: glm.vec2, size: glm.vec2) {
 	fillRectXY(v.x, v.y, size.x, size.y)
 }
-fillRect :: proc {fillRectXY, fillRectVec}
+fillRectRect :: proc (rect: Rect) {
+	fillRectXY(rect.x, rect.y, rect.w, rect.h)
+}
+fillRect :: proc {fillRectXY, fillRectVec, fillRectRect}
 
 strokeRectVec :: proc (v: glm.vec2, size: glm.vec2) {
 	strokeRectXY(v.x, v.y, size.x, size.y)
 }
-strokeRect :: proc {strokeRectXY, strokeRectVec}
+strokeRectRect :: proc (rect: Rect) {
+	strokeRectXY(rect.x, rect.y, rect.w, rect.h)
+}
+strokeRect :: proc {strokeRectXY, strokeRectVec, strokeRectRect}
 
 // ------------------------------ /
 //         SHADOW STYLES          /
