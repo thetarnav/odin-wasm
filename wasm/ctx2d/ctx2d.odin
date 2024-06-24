@@ -264,6 +264,13 @@ foreign ctx2d {
 
 Rect :: struct {x, y, w, h: f32}
 
+rect_pos :: proc "contextless" (rect: Rect) -> vec2 {
+	return {rect.x, rect.y}
+}
+rect_size :: proc "contextless" (rect: Rect) -> vec2 {
+	return {rect.w, rect.h}
+}
+
 clearRectVec :: proc (v: glm.vec2, size: glm.vec2) {
 	clearRectXY(v.x, v.y, size.x, size.y)
 }

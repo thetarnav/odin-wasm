@@ -39,6 +39,11 @@ cross     :: glm.cross
 normalize :: glm.normalize
 lerp      :: glm.lerp
 distance  :: glm.distance
+sqrt      :: glm.sqrt
+
+cbrt :: #force_inline proc "contextless" (x: f32) -> f32 {
+	return x * x * x
+}
 
 UP    :: vec3{ 0, 1, 0}
 DOWN  :: vec3{ 0,-1, 0}
@@ -49,8 +54,6 @@ BACK  :: vec3{ 0, 0,-1}
 
 ratio :: distinct f32
 rvec2 :: distinct [2]f32
-
-Rect :: struct {x, y, w, h: f32}
 
 to_px :: proc(r: rvec2) -> vec2 {
 	return vec2(r) * window_size * dpr
@@ -110,7 +113,7 @@ rand_color_gray :: proc() -> u8vec4 {
 }
 rand_colors :: proc(colors: []u8vec4) {
 	assert(len(colors)%3 == 0)
-	for i in 0..<len(colors)/3 {
+	for i in 0 ..< len(colors)/3 {
 		color := rand_color()
 		colors[i*3+0] = color
 		colors[i*3+1] = color

@@ -98,10 +98,6 @@ temp_arena_buffer: [mem.Megabyte]byte
 temp_arena: mem.Arena = {data = temp_arena_buffer[:]}
 temp_arena_allocator := mem.arena_allocator(&temp_arena)
 
-forever_arena_buffer: [mem.Megabyte]byte
-forever_arena: mem.Arena = {data = forever_arena_buffer[:]}
-forever_arena_allocator := mem.arena_allocator(&forever_arena)
-
 main :: proc() {
 	if ODIN_DEBUG {
 		dom.dispatch_custom_event("body", "lol")
@@ -157,7 +153,6 @@ start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 	example = example_kind
 	demo := demos[example]
 
-	context.allocator      = forever_arena_allocator
 	context.temp_allocator = temp_arena_allocator
 	defer free_all(context.temp_allocator)
 
@@ -209,7 +204,6 @@ start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 
 @export
 frame :: proc (delta: f32) {
-	context.allocator      = forever_arena_allocator
 	context.temp_allocator = temp_arena_allocator
 	defer free_all(context.temp_allocator)
 

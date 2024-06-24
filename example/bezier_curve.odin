@@ -101,7 +101,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	SHADOWS :: 12
 	for shadow in f32(0)..<SHADOWS {
-		alpha := u8(255 * (SHADOWS-shadow)/SHADOWS   )
+		alpha := u8(255 * (SHADOWS-shadow) / SHADOWS)
 
 		defer {
 			m: mat3 = 1
@@ -144,8 +144,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			ctx.fillStyle(to_rgba(GRAY.rgb, alpha))
 			ctx.strokeStyle(to_rgba(WHITE.rgb, alpha))
 			for p, pi in px_points {
-				ctx.beginPath()
-				ctx.arc(p, 6, 0, TAU)
+				ctx.path_circle(p, 6)
 				if s.draggig == pi {
 					ctx.fillStyle(to_rgba(WHITE.rgb, alpha))
 					ctx.fill()
@@ -160,8 +159,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	
 		ctx.fillStyle(to_rgba(RED.rgb, alpha))
 		ctx.strokeStyle(TRANSPARENT)
-		ctx.beginPath()	
-		ctx.arc(tp, 10, 0, TAU)
+		ctx.path_circle(tp, 10)
 		ctx.fill()
 		ctx.stroke()
 	}
