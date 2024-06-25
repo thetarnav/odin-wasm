@@ -44,7 +44,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 
 	if s.draggig == -1 && hovering_shape_creator && mouse_down {
 		for p, i in sa.slice(&s.shape) {
-			if distance(mouse_pos * dpr, rect_rvec_to_px(p, SHAPE_CREATOR_RECT)) < 6 {
+			if distance(mouse_pos * dpr, rect_rvec_to_px(p, SHAPE_CREATOR_RECT)) < 8 {
 				s.draggig = i
 				break
 			}
@@ -66,7 +66,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 	ctx.stroke()
 
 	for p, i in sa.slice(&s.shape) {
-		if hovering_shape_creator {
+		if hovering_shape_creator || s.draggig != -1 {
 			ctx.path_circle(rect_rvec_to_px(p, SHAPE_CREATOR_RECT), 6)
 			ctx.fillStyle(GRAY_1)
 			ctx.fill()
