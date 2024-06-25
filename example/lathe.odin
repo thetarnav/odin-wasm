@@ -36,44 +36,47 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 	ctx.resetTransform()
 	ctx.clearRect(0, canvas_size * dpr)
 
+	mouse_dpr := mouse_pos * dpr
+
 	/*
 	Shape creator
 	*/
 
-	hovering_shape_creator := is_vec_in_rect(mouse_pos * dpr, rect_with_margin(SHAPE_CREATOR_RECT, 4))
+	hovering_shape_creator := is_vec_in_rect(mouse_dpr, rect_with_margin(SHAPE_CREATOR_RECT, 4))
 
-	// find hovered shape point
-	hovered_shape_point := -1
-	if hovering_shape_creator {
+	hovered_shape_point         := -1
+	hovered_shape_edge_midpoint := -1
+	
+	find_hover_point: if hovering_shape_creator {
+		// find hovered shape point
 		for p, i in sa.slice(&s.shape) {
-			if distance(mouse_pos * dpr, rect_rvec_to_px(p, SHAPE_CREATOR_RECT)) < 8 {
+			if distance(mouse_dpr, rect_rvec_to_px(p, SHAPE_CREATOR_RECT)) < 8 {
 				hovered_shape_point = i
-				break
+				break find_hover_point
 			}
 		}
-	}
 
-	// find hovered shape edge midpoint
-	hovered_shape_edge_midpoint := -1
-	if hovered_shape_point == -1 {
-		for i in 0 ..< sa.len(s.shape)-1 {
-			p0 := sa.get(s.shape, i+0)
-			p1 := sa.get(s.shape, i+1)
-			m  := (p0 + p1) / 2
-			if distance(mouse_pos * dpr, rect_rvec_to_px(m, SHAPE_CREATOR_RECT)) < 8 {
+		// find hovered shape edge midpoint
+		for i in 0 ..< s.shape.len-1 {
+			a := sa.get(s.shape, i+0)
+			b := sa.get(s.shape, i+1)
+			m := (a + b) / 2
+
+			if distance(mouse_dpr, rect_rvec_to_px(m, SHAPE_CREATOR_RECT)) < 8 {
 				hovered_shape_edge_midpoint = i
-				break
+				break find_hover_point
 			}
 		}
 	}
 
 	// start dragging
 	if s.draggig == -1 && hovering_shape_creator && mouse_down {
+
 		if hovered_shape_point != -1 {
 			s.draggig = hovered_shape_point
 		}
 		else if hovered_shape_edge_midpoint != -1 {
-			sa.inject_at(&s.shape, vec_to_rect_rvec(mouse_pos * dpr, SHAPE_CREATOR_RECT), hovered_shape_edge_midpoint+1)
+			sa.inject_at(&s.shape, vec_to_rect_rvec(mouse_dpr, SHAPE_CREATOR_RECT), hovered_shape_edge_midpoint+1)
 			s.draggig = hovered_shape_edge_midpoint+1
 			hovered_shape_edge_midpoint = -1
 		}
@@ -81,7 +84,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 
 	// update dragging
 	if s.draggig != -1 && mouse_down {
-		s.shape.data[s.draggig] = rvec_clamp(vec_to_rect_rvec(mouse_pos * dpr, SHAPE_CREATOR_RECT))
+		s.shape.data[s.draggig] = rvec_clamp(vec_to_rect_rvec(mouse_dpr, SHAPE_CREATOR_RECT))
 	}
 
 	// end dragging
@@ -97,6 +100,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 
 	// draw shape edges
 	for i in 0 ..< sa.len(s.shape)-1 {
+
 		p0 := sa.get(s.shape, i+0)
 		p1 := sa.get(s.shape, i+1)
 		ctx.beginPath()
@@ -107,20 +111,18 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 	}
 
 	// draw shape points
-	for p, i in sa.slice(&s.shape) {
-		if hovering_shape_creator || s.draggig != -1 {
+	if hovering_shape_creator || s.draggig != -1 {
+
+		for p, i in sa.slice(&s.shape) {
 			ctx.path_circle(rect_rvec_to_px(p, SHAPE_CREATOR_RECT), 6)
-			if i == hovered_shape_point || i == s.draggig {
-				ctx.fillStyle(GRAY_1)
-			} else {
-				ctx.fillStyle(GRAY_2)
-			}
+			ctx.fillStyle(i == hovered_shape_point || i == s.draggig ? GRAY_1 : GRAY_2)
 			ctx.fill()
 		}
 	}
 
 	// draw shape edge hovered midpoint
 	if hovered_shape_edge_midpoint != -1 {
+
 		p0 := sa.get(s.shape, hovered_shape_edge_midpoint+0)
 		p1 := sa.get(s.shape, hovered_shape_edge_midpoint+1)
 		m  := (p0 + p1) / 2
