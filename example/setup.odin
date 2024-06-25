@@ -8,6 +8,7 @@ import "core:crypto"
 import    "../wasm/dom"
 import gl "../wasm/webgl"
 
+
 canvas_res:  ivec2
 canvas_pos:  vec2
 canvas_size: vec2
@@ -15,11 +16,63 @@ window_size: vec2
 mouse_abs:   vec2  // Absolute mouse position from the window top-left
 mouse_rel:   rvec2 // Relative mouse position -0.5 to 0.5
 mouse_pos:   vec2  // Absolute mouse position from the canvas top-left
-mouse_down: bool
+mouse_down:  bool
+mouse_down_time: f64
+mouse_down_time_prev: f64
+mouse_down_frame: bool
 dpr: f32
 aspect_ratio: f32
 
 scale: f32 = 0.5
+
+on_mouse_move :: proc(e: dom.Event) {
+	mouse_abs = cast_vec2(e.mouse.client)
+	mouse_pos = mouse_abs - canvas_pos
+	mouse_rel = rvec2((mouse_pos - window_size / 2) / window_size)
+}
+on_mouse_down :: proc(e: dom.Event) {
+	mouse_down_time_prev = mouse_down_time
+	mouse_down_time      = e.timestamp
+	mouse_down       = true
+	mouse_down_frame = true
+}
+on_mouse_up :: proc(e: dom.Event) {
+	mouse_down = false
+}
+on_wheel :: proc(e: dom.Event) {
+	scale -= f32(e.wheel.delta.y) * 0.001
+	scale = clamp(scale, 0, 1)
+}
+@export
+on_window_resize :: proc (vw, vh, cw, ch, cx, cy: f32) {
+	window_size  = {vw, vh}
+	canvas_size  = {cw, ch}
+	canvas_pos   = {cx, cy}
+	canvas_res   = cast_ivec2(canvas_size * dpr)
+	aspect_ratio = canvas_size.x / canvas_size.y
+}
+
+main :: proc() {
+	dom.add_window_event_listener(.Wheel,      {}, on_wheel)
+	dom.add_window_event_listener(.Mouse_Move, {}, on_mouse_move)
+	dom.add_window_event_listener(.Mouse_Down, {}, on_mouse_down)
+	dom.add_window_event_listener(.Mouse_Up,   {}, on_mouse_up)
+
+
+	dpr = f32(dom.device_pixel_ratio())
+	window_size = cast_vec2(dom.get_window_inner_size())
+	canvas_size = window_size - 200
+	mouse_abs   = vec2(window_size / 2)
+	mouse_pos   = vec2(canvas_size / 2)
+
+	// Seed the random number generator
+	{
+		buf: [8]u8
+		crypto.rand_bytes(buf[:])
+		rand.reset(transmute(u64)buf)
+	}
+}
+
 
 Example_Kind :: enum {
 	Rectangle    = 0,
@@ -99,58 +152,6 @@ temp_arena_buffer: [mem.Megabyte]byte
 temp_arena: mem.Arena = {data = temp_arena_buffer[:]}
 temp_arena_allocator := mem.arena_allocator(&temp_arena)
 
-main :: proc() {
-	if ODIN_DEBUG {
-		dom.dispatch_custom_event("body", "lol")
-
-		fmt.print("Hellope, WebAssembly!!!\n")
-		fmt.eprint("Hello, Error!\n\ttest\nbyebye!\n")
-	}
-
-	dom.add_window_event_listener(.Wheel,      {}, on_wheel)
-	dom.add_window_event_listener(.Mouse_Move, {}, on_mouse_move)
-	dom.add_window_event_listener(.Mouse_Down, {}, on_mouse_down)
-	dom.add_window_event_listener(.Mouse_Up,   {}, on_mouse_up)
-
-
-	dpr = f32(dom.device_pixel_ratio())
-	window_size = cast_vec2(dom.get_window_inner_size())
-	canvas_size = window_size - 200
-	mouse_abs   = vec2(window_size / 2)
-	mouse_pos   = vec2(canvas_size / 2)
-
-	// Seed the random number generator
-	{
-		buf: [8]u8
-		crypto.rand_bytes(buf[:])
-		rand.reset(transmute(u64)buf)
-	}
-}
-
-on_mouse_move :: proc(e: dom.Event) {
-	mouse_abs = cast_vec2(e.mouse.client)
-	mouse_pos = mouse_abs - canvas_pos
-	mouse_rel = rvec2((mouse_pos - window_size / 2) / window_size)
-}
-on_mouse_down :: proc(e: dom.Event) {
-	mouse_down = true
-}
-on_mouse_up :: proc(e: dom.Event) {
-	mouse_down = false
-}
-on_wheel :: proc(e: dom.Event) {
-	scale -= f32(e.wheel.delta.y) * 0.001
-	scale = clamp(scale, 0, 1)
-}
-@export
-on_window_resize :: proc (vw, vh, cw, ch, cx, cy: f32) {
-	window_size  = {vw, vh}
-	canvas_size  = {cw, ch}
-	canvas_pos   = {cx, cy}
-	canvas_res   = cast_ivec2(canvas_size * dpr)
-	aspect_ratio = canvas_size.x / canvas_size.y
-}
-
 @export
 start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 	example = example_kind
@@ -209,6 +210,8 @@ start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 frame :: proc (delta: f32) {
 	context.temp_allocator = temp_arena_allocator
 	defer free_all(context.temp_allocator)
+
+	defer mouse_down_frame = false
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
 		fmt.eprintln("WebGL error:", err)

@@ -38,6 +38,8 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 
 	mouse_dpr := mouse_pos * dpr
 
+	is_double_click_frame := mouse_down_frame && mouse_down_time - mouse_down_time_prev < 0.3
+
 	/*
 	Shape creator
 	*/
@@ -69,12 +71,19 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 		}
 	}
 
-	// start dragging
 	if s.draggig == -1 && hovering_shape_creator && mouse_down {
 
 		if hovered_shape_point != -1 {
-			s.draggig = hovered_shape_point
-		}
+			// remove point on double click
+			if is_double_click_frame && sa.len(s.shape) > 2 {
+				sa.ordered_remove(&s.shape, hovered_shape_point)
+			}\
+			// start dragging point
+			else {
+				s.draggig = hovered_shape_point
+			}
+		}\
+		// add point
 		else if hovered_shape_edge_midpoint != -1 {
 			sa.inject_at(&s.shape, vec_to_rect_rvec(mouse_dpr, SHAPE_CREATOR_RECT), hovered_shape_edge_midpoint+1)
 			s.draggig = hovered_shape_edge_midpoint+1
