@@ -7,18 +7,28 @@ import sa "core:container/small_array"
 import gl  "../wasm/webgl"
 import ctx "../wasm/ctx2d"
 
-
 @private
 State_Lathe :: struct {
-	shape:   sa.Small_Array(32, rvec2),
-	draggig: int, // shape index
+	using locations: Input_Locations_Lighting,
+	vao     : VAO,
+	rotation: mat4,
+	shape   : sa.Small_Array(32, rvec2),
+	dragging: int, // shape index
 }
 
 SHAPE_CREATOR_RECT :: ctx.Rect{40, 260}
 
 @private
-setup_lathe :: proc (s: ^State_Lathe, _: gl.Program)
+setup_lathe :: proc (s: ^State_Lathe, program: gl.Program)
 {
+	s.vao = gl.CreateVertexArray()
+	gl.BindVertexArray(s.vao)
+
+	input_locations_lighting(s, program)
+
+	gl.Enable(gl.CULL_FACE)  // don't draw back faces
+	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
+
 	ok := ctx.setCurrentContextById("canvas-0")
 	if !ok {
 		fmt.eprintfln("failed to set current context")
@@ -27,7 +37,7 @@ setup_lathe :: proc (s: ^State_Lathe, _: gl.Program)
 
 	sa.append(&s.shape, rvec2{0, 0}, rvec2{0.25, 0.75}, rvec2{1, 1})
 
-	s.draggig = -1
+	s.dragging = -1
 }
 
 @private
@@ -52,7 +62,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 	find_hover_point: if hovering_shape_creator {
 		// find hovered shape point
 		for p, i in sa.slice(&s.shape) {
-			if distance(mouse_dpr, rect_rvec_to_px(p, SHAPE_CREATOR_RECT)) < 8 {
+			if distance(mouse_dpr, rect_rvec_to_px(p, SHAPE_CREATOR_RECT)) < 10 {
 				hovered_shape_point = i
 				break find_hover_point
 			}
@@ -64,14 +74,14 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 			b := sa.get(s.shape, i+1)
 			m := (a + b) / 2
 
-			if distance(mouse_dpr, rect_rvec_to_px(m, SHAPE_CREATOR_RECT)) < 8 {
+			if distance(mouse_dpr, rect_rvec_to_px(m, SHAPE_CREATOR_RECT)) < 10 {
 				hovered_shape_edge_midpoint = i
 				break find_hover_point
 			}
 		}
 	}
 
-	if s.draggig == -1 && hovering_shape_creator && mouse_down {
+	if s.dragging == -1 && hovering_shape_creator && mouse_down {
 
 		if hovered_shape_point != -1 {
 			// remove point on double click
@@ -80,51 +90,76 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 			}\
 			// start dragging point
 			else {
-				s.draggig = hovered_shape_point
+				s.dragging = hovered_shape_point
 			}
 		}\
 		// add point
 		else if hovered_shape_edge_midpoint != -1 {
 			sa.inject_at(&s.shape, vec_to_rect_rvec(mouse_dpr, SHAPE_CREATOR_RECT), hovered_shape_edge_midpoint+1)
-			s.draggig = hovered_shape_edge_midpoint+1
+			s.dragging = hovered_shape_edge_midpoint+1
 			hovered_shape_edge_midpoint = -1
 		}
 	}
 
 	// update dragging
-	if s.draggig != -1 && mouse_down {
-		s.shape.data[s.draggig] = rvec_clamp(vec_to_rect_rvec(mouse_dpr, SHAPE_CREATOR_RECT))
+	if s.dragging != -1 && mouse_down {
+		s.shape.data[s.dragging] = rvec_clamp(vec_to_rect_rvec(mouse_dpr, SHAPE_CREATOR_RECT))
+		// keep cap points on the rect border
+		if s.dragging == 0 {
+			s.shape.data[s.dragging].x = 0
+		} else if s.dragging == sa.len(s.shape)-1 {
+			s.shape.data[s.dragging].y = 1
+		}
 	}
 
 	// end dragging
-	if s.draggig != -1 && !mouse_down {
-		s.draggig = -1
+	if s.dragging != -1 && !mouse_down {
+		s.dragging = -1
 	}
 
-	ctx.path_rect_rounded(SHAPE_CREATOR_RECT, 8)
-	ctx.fillStyle(to_rgba(GRAY.xyz, 24))
-	ctx.fill()
-	ctx.strokeStyle(to_rgba(GRAY.xyz, 60))
-	ctx.stroke()
+	// draw creator bg
+	{
+		ctx.path_rect_rounded(SHAPE_CREATOR_RECT, 8)
+		ctx.fillStyle(to_rgba(GRAY.xyz, 24))
+		ctx.fill()
+		ctx.strokeStyle(to_rgba(GRAY.xyz, 60))
+		ctx.stroke()
+	}
 
-	// draw shape edges
-	for i in 0 ..< sa.len(s.shape)-1 {
-
-		p0 := sa.get(s.shape, i+0)
-		p1 := sa.get(s.shape, i+1)
+	// draw shape
+	{
 		ctx.beginPath()
-		ctx.moveTo(rect_rvec_to_px(p0, SHAPE_CREATOR_RECT))
-		ctx.lineTo(rect_rvec_to_px(p1, SHAPE_CREATOR_RECT))
+		
+		first := sa.get(s.shape, 0)
+		ctx.moveTo(rect_rvec_to_px(first, SHAPE_CREATOR_RECT))
+		
+		for p in sa.slice(&s.shape)[1:] {
+			ctx.lineTo(rect_rvec_to_px(p, SHAPE_CREATOR_RECT))
+		}
+
+		// complete shape
+		corner := rvec2{0, 1}
+		ctx.lineTo(rect_rvec_to_px(corner, SHAPE_CREATOR_RECT))
+		ctx.lineTo(rect_rvec_to_px(first , SHAPE_CREATOR_RECT))
+
+		ctx.fillStyle(GRAY_4)
+		ctx.fill()
+		ctx.lineWidth(2)
+		ctx.lineJoin(.round)
 		ctx.strokeStyle(GRAY_2)
 		ctx.stroke()
 	}
 
 	// draw shape points
-	if hovering_shape_creator || s.draggig != -1 {
+	if hovering_shape_creator || s.dragging != -1 {
 
 		for p, i in sa.slice(&s.shape) {
 			ctx.path_circle(rect_rvec_to_px(p, SHAPE_CREATOR_RECT), 6)
-			ctx.fillStyle(i == hovered_shape_point || i == s.draggig ? GRAY_1 : GRAY_2)
+			switch i {
+			case s.dragging:           ctx.fillStyle(GRAY_0)
+			case hovered_shape_point: ctx.fillStyle(GRAY_1)
+			case:					  ctx.fillStyle(GRAY_2)
+			}
 			ctx.fill()
 		}
 	}

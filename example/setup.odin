@@ -129,7 +129,10 @@ demos: [Example_Kind]struct {
 		fs_sources = {#load("./sol_system.frag", string)},
 	},
 	.Bezier_Curve = {},
-	.Lathe = {},
+	.Lathe = {
+		vs_sources = {#load("./lighting.vert", string)},
+		fs_sources = {#load("./lighting.frag", string)},
+	},
 }
 
 // state is a union because it is being used by only one of the examples
