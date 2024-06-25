@@ -171,7 +171,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 		p1 := sa.get(s.shape, hovered_shape_edge_midpoint+1)
 		m  := (p0 + p1) / 2
 		ctx.path_circle(rect_rvec_to_px(m, SHAPE_CREATOR_RECT), 6)
-		ctx.fillStyle(GRAY_3)
+		ctx.fillStyle(to_rgba(GRAY_2.xyz, 200))
 		ctx.fill()
 	}
 }
