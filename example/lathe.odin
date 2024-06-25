@@ -42,19 +42,49 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 
 	hovering_shape_creator := is_vec_in_rect(mouse_pos * dpr, rect_with_margin(SHAPE_CREATOR_RECT, 4))
 
-	if s.draggig == -1 && hovering_shape_creator && mouse_down {
+	// find hovered shape point
+	hovered_shape_point := -1
+	if hovering_shape_creator {
 		for p, i in sa.slice(&s.shape) {
 			if distance(mouse_pos * dpr, rect_rvec_to_px(p, SHAPE_CREATOR_RECT)) < 8 {
-				s.draggig = i
+				hovered_shape_point = i
 				break
 			}
 		}
 	}
 
+	// find hovered shape edge midpoint
+	hovered_shape_edge_midpoint := -1
+	if hovered_shape_point == -1 {
+		for i in 0 ..< sa.len(s.shape)-1 {
+			p0 := sa.get(s.shape, i+0)
+			p1 := sa.get(s.shape, i+1)
+			m  := (p0 + p1) / 2
+			if distance(mouse_pos * dpr, rect_rvec_to_px(m, SHAPE_CREATOR_RECT)) < 8 {
+				hovered_shape_edge_midpoint = i
+				break
+			}
+		}
+	}
+
+	// start dragging
+	if s.draggig == -1 && hovering_shape_creator && mouse_down {
+		if hovered_shape_point != -1 {
+			s.draggig = hovered_shape_point
+		}
+		else if hovered_shape_edge_midpoint != -1 {
+			sa.inject_at(&s.shape, vec_to_rect_rvec(mouse_pos * dpr, SHAPE_CREATOR_RECT), hovered_shape_edge_midpoint+1)
+			s.draggig = hovered_shape_edge_midpoint+1
+			hovered_shape_edge_midpoint = -1
+		}
+	}
+
+	// update dragging
 	if s.draggig != -1 && mouse_down {
 		s.shape.data[s.draggig] = rvec_clamp(vec_to_rect_rvec(mouse_pos * dpr, SHAPE_CREATOR_RECT))
 	}
 
+	// end dragging
 	if s.draggig != -1 && !mouse_down {
 		s.draggig = -1
 	}
@@ -65,20 +95,38 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 	ctx.strokeStyle(to_rgba(GRAY.xyz, 60))
 	ctx.stroke()
 
+	// draw shape edges
+	for i in 0 ..< sa.len(s.shape)-1 {
+		p0 := sa.get(s.shape, i+0)
+		p1 := sa.get(s.shape, i+1)
+		ctx.beginPath()
+		ctx.moveTo(rect_rvec_to_px(p0, SHAPE_CREATOR_RECT))
+		ctx.lineTo(rect_rvec_to_px(p1, SHAPE_CREATOR_RECT))
+		ctx.strokeStyle(GRAY_2)
+		ctx.stroke()
+	}
+
+	// draw shape points
 	for p, i in sa.slice(&s.shape) {
 		if hovering_shape_creator || s.draggig != -1 {
 			ctx.path_circle(rect_rvec_to_px(p, SHAPE_CREATOR_RECT), 6)
-			ctx.fillStyle(GRAY_1)
+			if i == hovered_shape_point || i == s.draggig {
+				ctx.fillStyle(GRAY_1)
+			} else {
+				ctx.fillStyle(GRAY_2)
+			}
 			ctx.fill()
 		}
+	}
 
-		if i < sa.len(s.shape) - 1 {
-			ctx.beginPath()
-			ctx.moveTo(rect_rvec_to_px(p, SHAPE_CREATOR_RECT))
-			ctx.lineTo(rect_rvec_to_px(sa.get(s.shape, i+1), SHAPE_CREATOR_RECT))
-			ctx.strokeStyle(GRAY_1)
-			ctx.stroke()
-		}
+	// draw shape edge hovered midpoint
+	if hovered_shape_edge_midpoint != -1 {
+		p0 := sa.get(s.shape, hovered_shape_edge_midpoint+0)
+		p1 := sa.get(s.shape, hovered_shape_edge_midpoint+1)
+		m  := (p0 + p1) / 2
+		ctx.path_circle(rect_rvec_to_px(m, SHAPE_CREATOR_RECT), 6)
+		ctx.fillStyle(GRAY_3)
+		ctx.fill()
 	}
 }
 
