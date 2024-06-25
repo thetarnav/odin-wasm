@@ -78,7 +78,7 @@ frame_pyramid :: proc(s: ^State_Pyramid, delta: f32) {
 		near   = -1000,
 		far    = 1000,
 	)
-	mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos - canvas_pos))
+	mat *= glm.mat4Translate(vec2_to_vec3(mouse_pos))
 	mat *= glm.mat4Scale(scale*2 + 0.4)
 	mat *= mat4_rotate_y(-s.rotation.y)
 	mat *= mat4_rotate_x( s.rotation.x)

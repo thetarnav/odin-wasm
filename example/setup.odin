@@ -12,8 +12,9 @@ canvas_res:  ivec2
 canvas_pos:  vec2
 canvas_size: vec2
 window_size: vec2
-mouse_pos:   vec2  // Absolute mouse position
+mouse_abs:   vec2  // Absolute mouse position from the window top-left
 mouse_rel:   rvec2 // Relative mouse position -0.5 to 0.5
+mouse_pos:   vec2  // Absolute mouse position from the canvas top-left
 mouse_down: bool
 dpr: f32
 aspect_ratio: f32
@@ -115,7 +116,8 @@ main :: proc() {
 	dpr = f32(dom.device_pixel_ratio())
 	window_size = cast_vec2(dom.get_window_inner_size())
 	canvas_size = window_size - 200
-	mouse_pos   = vec2(window_size / 2)
+	mouse_abs   = vec2(window_size / 2)
+	mouse_pos   = vec2(canvas_size / 2)
 
 	// Seed the random number generator
 	{
@@ -126,7 +128,8 @@ main :: proc() {
 }
 
 on_mouse_move :: proc(e: dom.Event) {
-	mouse_pos = cast_vec2(e.mouse.client)
+	mouse_abs = cast_vec2(e.mouse.client)
+	mouse_pos = mouse_abs - canvas_pos
 	mouse_rel = rvec2((mouse_pos - window_size / 2) / window_size)
 }
 on_mouse_down :: proc(e: dom.Event) {

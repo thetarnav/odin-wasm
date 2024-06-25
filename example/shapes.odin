@@ -2,6 +2,13 @@ package example
 
 
 WHITE       :: rgba{255, 255, 255, 255}
+GRAY_0      :: rgba{200, 200, 200, 255}
+GRAY_1      :: rgba{160, 160, 160, 255}
+GRAY_2      :: rgba{120, 120, 120, 255}
+GRAY_3      :: rgba{ 80,  80,  80, 255}
+GRAY_4      :: rgba{ 40,  40,  40, 255}
+GRAY        :: GRAY_3
+BLACK       :: rgba{  0,   0,   0, 255}
 GREEN       :: rgba{ 60, 210,   0, 255}
 YELLOW      :: rgba{210, 200,   0, 255}
 BLUE        :: rgba{  0,  80, 190, 255}
@@ -10,8 +17,6 @@ RED         :: rgba{230,  20,   0, 255}
 ORANGE      :: rgba{250, 150,  50, 255}
 PURPLE      :: rgba{160, 100, 200, 255}
 PURPLE_DARK :: rgba{ 80,  30,  30, 255}
-BLACK       :: rgba{  0,   0,   0, 255}
-GRAY		:: rgba{ 80,  80,  80, 255}
 TRANSPARENT :: rgba{  0,   0,   0,   0}
 
 
