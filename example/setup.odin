@@ -25,21 +25,21 @@ aspect_ratio: f32
 
 scale: f32 = 0.5
 
-on_mouse_move :: proc(e: dom.Event) {
+on_mouse_move :: proc (e: dom.Event) {
 	mouse_abs = cast_vec2(e.mouse.client)
 	mouse_pos = mouse_abs - canvas_pos
 	mouse_rel = rvec2((mouse_pos - window_size / 2) / window_size)
 }
-on_mouse_down :: proc(e: dom.Event) {
+on_mouse_down :: proc (e: dom.Event) {
 	mouse_down_time_prev = mouse_down_time
 	mouse_down_time      = e.timestamp
 	mouse_down       = true
 	mouse_down_frame = true
 }
-on_mouse_up :: proc(e: dom.Event) {
+on_mouse_up :: proc (e: dom.Event) {
 	mouse_down = false
 }
-on_wheel :: proc(e: dom.Event) {
+on_wheel :: proc (e: dom.Event) {
 	scale -= f32(e.wheel.delta.y) * 0.001
 	scale = clamp(scale, 0, 1)
 }
@@ -52,7 +52,7 @@ on_window_resize :: proc (vw, vh, cw, ch, cx, cy: f32) {
 	aspect_ratio = canvas_size.x / canvas_size.y
 }
 
-main :: proc() {
+main :: proc () {
 	dom.add_window_event_listener(.Wheel,      {}, on_wheel)
 	dom.add_window_event_listener(.Mouse_Move, {}, on_mouse_move)
 	dom.add_window_event_listener(.Mouse_Down, {}, on_mouse_down)

@@ -262,20 +262,16 @@ foreign ctx2d {
 	strokeRectXY :: proc (x, y, w, h: f32) ---
 }
 
-Rect :: struct {x, y, w, h: f32}
-
-rect_pos :: proc "contextless" (rect: Rect) -> vec2 {
-	return {rect.x, rect.y}
-}
-rect_size :: proc "contextless" (rect: Rect) -> vec2 {
-	return {rect.w, rect.h}
+Rect :: struct {
+	using pos: vec2,
+	size: vec2,
 }
 
 clearRectVec :: proc (v: glm.vec2, size: glm.vec2) {
 	clearRectXY(v.x, v.y, size.x, size.y)
 }
 clearRectRect :: proc (rect: Rect) {
-	clearRectXY(rect.x, rect.y, rect.w, rect.h)
+	clearRectVec(rect, rect.size)
 }
 clearRect :: proc {clearRectXY, clearRectVec, clearRectRect}
 
@@ -283,7 +279,7 @@ fillRectVec :: proc (v: glm.vec2, size: glm.vec2) {
 	fillRectXY(v.x, v.y, size.x, size.y)
 }
 fillRectRect :: proc (rect: Rect) {
-	fillRectXY(rect.x, rect.y, rect.w, rect.h)
+	fillRectVec(rect, rect.size)
 }
 fillRect :: proc {fillRectXY, fillRectVec, fillRectRect}
 
@@ -291,7 +287,7 @@ strokeRectVec :: proc (v: glm.vec2, size: glm.vec2) {
 	strokeRectXY(v.x, v.y, size.x, size.y)
 }
 strokeRectRect :: proc (rect: Rect) {
-	strokeRectXY(rect.x, rect.y, rect.w, rect.h)
+	strokeRectVec(rect, rect.size)
 }
 strokeRect :: proc {strokeRectXY, strokeRectVec, strokeRectRect}
 

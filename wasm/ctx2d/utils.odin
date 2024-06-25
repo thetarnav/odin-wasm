@@ -5,7 +5,7 @@ import glm "core:math/linalg/glsl"
 
 path_rect_rounded :: proc (rect: Rect, r: f32)
 {
-	using rect
+	x, y, w, h := rect.x, rect.y, rect.size.x, rect.size.y
 	beginPath()
 	moveTo(x+r, y)
 	arcTo(x+w, y  , x+w, y+h, r)
@@ -16,7 +16,7 @@ path_rect_rounded :: proc (rect: Rect, r: f32)
 
 path_rect_squircle :: proc (rect: Rect, r: f32)
 {
-	using rect
+	x, y, w, h := rect.x, rect.y, rect.size.x, rect.size.y
 	beginPath()
 	moveTo(x+r  , y)
 	lineTo(x+w-r, y)

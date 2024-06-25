@@ -14,7 +14,7 @@ State_Lathe :: struct {
 	draggig: int, // shape index
 }
 
-SHAPE_CREATOR_RECT :: ctx.Rect{40, 40, 260, 260}
+SHAPE_CREATOR_RECT :: ctx.Rect{40, 260}
 
 @private
 setup_lathe :: proc (s: ^State_Lathe, _: gl.Program)
@@ -143,22 +143,22 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 
 is_vec_in_rect :: proc (p: vec2, r: ctx.Rect) -> bool
 {
-	return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h
+	return p.x >= r.x && p.x <= r.x + r.size.x && p.y >= r.y && p.y <= r.y + r.size.y
 }
 
 rect_rvec_to_px :: proc (p: rvec2, r: ctx.Rect) -> vec2
 {
-	return vec2(p) * ctx.rect_size(r) + ctx.rect_pos(r)
+	return vec2(p) * r.size + r
 }
 
 vec_to_rect_rvec :: proc (p: vec2, r: ctx.Rect) -> rvec2
 {
-	return rvec2((p - ctx.rect_pos(r)) / ctx.rect_size(r))
+	return rvec2((p - r) / r.size)
 }
 
 rect_with_margin :: proc (r: ctx.Rect, margin: f32) -> ctx.Rect
 {
-	return ctx.Rect{r.x - margin, r.y - margin, r.w + margin * 2, r.h + margin * 2}
+	return ctx.Rect{r.pos - margin, r.size + margin * 2}
 }
 
 rvec_clamp :: proc (v: rvec2) -> rvec2
