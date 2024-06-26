@@ -10,26 +10,27 @@ import gl  "../wasm/webgl"
 import ctx "../wasm/ctx2d"
 
 MAX_SEGMENTS :: 32
-DIVISIONS    :: 16
-MAX_VERTICES :: ((MAX_SEGMENTS-3) * DIVISIONS + DIVISIONS) * 2
+DIVISIONS    :: 12
+MAX_VERTICES :: ((MAX_SEGMENTS-3) * DIVISIONS + DIVISIONS) * 2 * 3
 
 get_verts_len :: proc (segments: int) -> int {
-	return ((segments-3) * DIVISIONS + DIVISIONS) * 2
+	return ((segments-3) * DIVISIONS + DIVISIONS) * 2 * 3
 }
 
 @private
 State_Lathe :: struct {
 	using locations: Input_Locations_Lighting,
-	vao      : VAO,
-	positions: [MAX_VERTICES]vec3,
-	normals  : [MAX_VERTICES]vec3,
-	colors   : [MAX_VERTICES]rgba,
+	vao            : VAO,
+	positions      : [MAX_VERTICES]vec3,
+	normals        : [MAX_VERTICES]vec3,
+	colors         : [MAX_VERTICES]rgba,
 	buffer_position: gl.Buffer,
 	buffer_normal  : gl.Buffer,
 	buffer_color   : gl.Buffer,
-	rotation : mat4,
-	shape    : sa.Small_Array(MAX_SEGMENTS, rvec2),
-	dragging : int, // shape index
+	light_angle    : f32,
+	rotation       : mat4,
+	shape          : sa.Small_Array(MAX_SEGMENTS, rvec2),
+	dragging       : int, // shape index
 }
 
 SHAPE_CREATOR_RECT :: ctx.Rect{40, 260}
@@ -210,30 +211,57 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	// construct positions
-	verts_len := get_verts_len(sa.len(s.shape) + 1) // + one for the bot-left corner
-
-	shape_point_to_vec3 :: proc (p: rvec2) -> vec3 {
-		return {p.x * 200, (1-p.y-0.5) * 200, 0}
-	}
+	verts_len := get_verts_len(sa.len(s.shape))
 
 	{
-		vi     := 0
-		shape  := sa.slice(&s.shape)
-		first  := shape_point_to_vec3(shape[0])
-		second := shape_point_to_vec3(shape[1])
-		for i in 0..<DIVISIONS {
-			a0 := PI * (f32(i)  ) / DIVISIONS
-			a1 := PI * (f32(i)+1) / DIVISIONS
+		shape_vec3: sa.Small_Array(MAX_SEGMENTS, vec3)
+		shape_vec3.len = s.shape.len
+		shape := sa.slice(&shape_vec3)
+		for p, i in sa.slice(&s.shape) {
+			shape[i] = {p.x * 200, (1-p.y-0.5) * 200, 0}
+		}
+
+		first    := shape[0]
+		second   := shape[1]
+		pre_last := shape[len(shape)-2]
+		last     := shape[len(shape)-1]
+
+		vi := 0
+		
+		for di in 0..<DIVISIONS {
+			a0 := PI * (f32(di)+0) / DIVISIONS
+			a1 := PI * (f32(di)+1) / DIVISIONS
 
 			s.positions[vi+0] = {0, first.y, 0}
 			s.positions[vi+1] = vec3_on_radius(second.x, a1, second.y)
 			s.positions[vi+2] = vec3_on_radius(second.x, a0, second.y)
 			vi += 3
+
+			for si in 1..<len(shape)-2 {
+				top := shape[si+0]
+				bot := shape[si+1]
+
+				s.positions[vi+0] = vec3_on_radius(bot.x, a1, bot.y)
+				s.positions[vi+1] = vec3_on_radius(bot.x, a0, bot.y)
+				s.positions[vi+2] = vec3_on_radius(top.x, a0, top.y)
+				vi += 3
+
+				s.positions[vi+0] = vec3_on_radius(top.x, a0, top.y)
+				s.positions[vi+1] = vec3_on_radius(top.x, a1, top.y)
+				s.positions[vi+2] = vec3_on_radius(bot.x, a1, bot.y)
+				vi += 3
+			}
+
+			s.positions[vi+0] = vec3_on_radius(pre_last.x, a0, pre_last.y)
+			s.positions[vi+1] = vec3_on_radius(pre_last.x, a1, pre_last.y)
+			s.positions[vi+2] = {0, last.y, 0}
+			vi += 3
 		}
 	}
 
-	slice.fill(s.normals[:verts_len], 1)
-	slice.fill(s.colors [:verts_len], 255)
+	normals_from_positions(s.normals[:verts_len], s.positions[:verts_len])
+
+	slice.fill(s.colors [:verts_len], PURPLE)
 
 	attribute(s.a_position, s.buffer_position, s.positions[:verts_len])
 	attribute(s.a_normal  , s.buffer_normal  , s.normals  [:verts_len])
@@ -243,7 +271,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 
 
 	camera_mat: mat4 = 1
-	camera_mat *= mat4_translate({0, 0, 800 - 800 * scale})
+	camera_mat *= mat4_translate({0, 0, 800 - 700 * scale})
 	camera_mat = glm.inverse_mat4(camera_mat)
 
 	view_mat := glm.mat4PerspectiveInfinite(
@@ -256,9 +284,21 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 	uniform(s.u_view, view_mat)
 
 	uniform(s.u_local, 1)
-	gl.DrawArrays(gl.TRIANGLES, 0, verts_len)
 
-	uniform(s.u_light_dir, 1)
+	/* light */
+	s.light_angle += 0.001 * delta
+
+	light_pos := vec3{
+		500 * -mouse_rel.y,
+		300 * cos(s.light_angle),
+		300 * sin(s.light_angle),
+	}
+
+	/* Draw light from cube */
+	light_dir := glm.normalize(light_pos)
+	uniform(s.u_light_dir, light_dir)
+
+	gl.DrawArrays(gl.TRIANGLES, 0, verts_len)
 }
 
 is_vec_in_rect :: proc (p: vec2, r: ctx.Rect) -> bool

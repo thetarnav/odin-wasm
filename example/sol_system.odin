@@ -176,7 +176,7 @@ frame_sol_system :: proc(s: ^State_Sol_System, delta: f32) {
 
 	view_mat: mat4 = 1
 	view_mat *= glm.mat4PerspectiveInfinite(
-		fovy   = glm.radians_f32(80),
+		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
