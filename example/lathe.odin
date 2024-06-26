@@ -1,19 +1,35 @@
 //+private file
 package example
 
-import "core:fmt"
-import sa "core:container/small_array"
+import     "core:fmt"
+import sa  "core:container/small_array"
+import glm "core:math/linalg/glsl"
+import     "core:slice"
 
 import gl  "../wasm/webgl"
 import ctx "../wasm/ctx2d"
 
+MAX_SEGMENTS :: 32
+DIVISIONS    :: 16
+MAX_VERTICES :: ((MAX_SEGMENTS-3) * DIVISIONS + DIVISIONS) * 2
+
+get_verts_len :: proc (segments: int) -> int {
+	return ((segments-3) * DIVISIONS + DIVISIONS) * 2
+}
+
 @private
 State_Lathe :: struct {
 	using locations: Input_Locations_Lighting,
-	vao     : VAO,
-	rotation: mat4,
-	shape   : sa.Small_Array(32, rvec2),
-	dragging: int, // shape index
+	vao      : VAO,
+	positions: [MAX_VERTICES]vec3,
+	normals  : [MAX_VERTICES]vec3,
+	colors   : [MAX_VERTICES]rgba,
+	buffer_position: gl.Buffer,
+	buffer_normal  : gl.Buffer,
+	buffer_color   : gl.Buffer,
+	rotation : mat4,
+	shape    : sa.Small_Array(MAX_SEGMENTS, rvec2),
+	dragging : int, // shape index
 }
 
 SHAPE_CREATOR_RECT :: ctx.Rect{40, 260}
@@ -38,6 +54,10 @@ setup_lathe :: proc (s: ^State_Lathe, program: gl.Program)
 	sa.append(&s.shape, rvec2{0, 0}, rvec2{0.25, 0.75}, rvec2{1, 1})
 
 	s.dragging = -1
+
+	s.buffer_position = gl.CreateBuffer()
+	s.buffer_normal   = gl.CreateBuffer()
+	s.buffer_color    = gl.CreateBuffer()
 }
 
 @private
@@ -69,14 +89,16 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 		}
 
 		// find hovered shape edge midpoint
-		for i in 0 ..< s.shape.len-1 {
-			a := sa.get(s.shape, i+0)
-			b := sa.get(s.shape, i+1)
-			m := (a + b) / 2
-
-			if distance(mouse_dpr, rect_rvec_to_px(m, SHAPE_CREATOR_RECT)) < 10 {
-				hovered_shape_edge_midpoint = i
-				break find_hover_point
+		if sa.len(s.shape) < len(s.shape.data) {
+			for i in 0 ..< sa.len(s.shape)-1 {
+				a := sa.get(s.shape, i+0)
+				b := sa.get(s.shape, i+1)
+				m := (a + b) / 2
+	
+				if distance(mouse_dpr, rect_rvec_to_px(m, SHAPE_CREATOR_RECT)) < 10 {
+					hovered_shape_edge_midpoint = i
+					break find_hover_point
+				}
 			}
 		}
 	}
@@ -156,7 +178,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 		for p, i in sa.slice(&s.shape) {
 			ctx.path_circle(rect_rvec_to_px(p, SHAPE_CREATOR_RECT), 6)
 			switch i {
-			case s.dragging:           ctx.fillStyle(GRAY_0)
+			case s.dragging:          ctx.fillStyle(GRAY_0)
 			case hovered_shape_point: ctx.fillStyle(GRAY_1)
 			case:					  ctx.fillStyle(GRAY_2)
 			}
@@ -174,6 +196,69 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 		ctx.fillStyle(to_rgba(GRAY_2.xyz, 200))
 		ctx.fill()
 	}
+
+
+	/*
+	DRAW THE 3D SHAPE
+	*/
+
+	gl.BindVertexArray(s.vao)
+
+	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
+	gl.ClearColor(0, 0, 0, 0)
+	// Clear the canvas AND the depth buffer.
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+	// construct positions
+	verts_len := get_verts_len(sa.len(s.shape) + 1) // + one for the bot-left corner
+
+	shape_point_to_vec3 :: proc (p: rvec2) -> vec3 {
+		return {p.x * 200, (1-p.y-0.5) * 200, 0}
+	}
+
+	{
+		vi     := 0
+		shape  := sa.slice(&s.shape)
+		first  := shape_point_to_vec3(shape[0])
+		second := shape_point_to_vec3(shape[1])
+		for i in 0..<DIVISIONS {
+			a0 := PI * (f32(i)  ) / DIVISIONS
+			a1 := PI * (f32(i)+1) / DIVISIONS
+
+			s.positions[vi+0] = {0, first.y, 0}
+			s.positions[vi+1] = vec3_on_radius(second.x, a1, second.y)
+			s.positions[vi+2] = vec3_on_radius(second.x, a0, second.y)
+			vi += 3
+		}
+	}
+
+	slice.fill(s.normals[:verts_len], 1)
+	slice.fill(s.colors [:verts_len], 255)
+
+	attribute(s.a_position, s.buffer_position, s.positions[:verts_len])
+	attribute(s.a_normal  , s.buffer_normal  , s.normals  [:verts_len])
+	attribute(s.a_color   , s.buffer_color   , s.colors   [:verts_len])
+
+	uniform(s.u_light_color, rgba_to_vec4(ORANGE))
+
+
+	camera_mat: mat4 = 1
+	camera_mat *= mat4_translate({0, 0, 800 - 800 * scale})
+	camera_mat = glm.inverse_mat4(camera_mat)
+
+	view_mat := glm.mat4PerspectiveInfinite(
+		fovy   = radians(80),
+		aspect = aspect_ratio,
+		near   = 1,
+	)
+	view_mat *= camera_mat
+
+	uniform(s.u_view, view_mat)
+
+	uniform(s.u_local, 1)
+	gl.DrawArrays(gl.TRIANGLES, 0, verts_len)
+
+	uniform(s.u_light_dir, 1)
 }
 
 is_vec_in_rect :: proc (p: vec2, r: ctx.Rect) -> bool

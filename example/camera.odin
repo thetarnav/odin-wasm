@@ -91,13 +91,11 @@ frame_camera :: proc(s: ^State_Camera, delta: f32) {
 		/* Draw pyramid looking at the cube */
 
 		angle := 2*PI * f32(i)/f32(AMOUNT)
-		y: f32 = -80
-		x: f32 = RING_RADIUS * cos(angle)
-		z: f32 = RING_RADIUS * sin(angle)
+		eye   := vec3_on_radius(RING_RADIUS, angle, -80)
 
 		mat := view_mat
 		mat *= mat4_look_at(
-			eye    = {x, y, z},
+			eye    = eye,
 			target = cube_pos,
 			up     = {0, 1, 0},
 		)

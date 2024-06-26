@@ -327,6 +327,11 @@ normals_from_positions :: proc(dst, src: []vec3) {
 	}
 }
 
+vec3_on_radius :: proc (r, a, y: f32) -> vec3 {
+	return {r * cos(a), y, r * sin(a)}
+}
+
+
 Attribute_int   :: distinct i32
 Attribute_ivec2 :: distinct i32
 Attribute_ivec3 :: distinct i32
@@ -518,7 +523,7 @@ attribute_vec4   :: proc "contextless" (loc: Attribute_vec4, buffer: gl.Buffer, 
 	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
 	gl.VertexAttribPointer(i32(loc), 4, gl.FLOAT, false, 0, 0)
 }
-attribute_vec4_byte :: proc "contextless" (loc: Attribute_vec4, buffer: gl.Buffer, data: []u8vec4) {
+attribute_u8vec4 :: proc "contextless" (loc: Attribute_vec4, buffer: gl.Buffer, data: []u8vec4) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, buffer)
 	#force_inline gl.BufferDataSlice(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
 	gl.VertexAttribPointer(i32(loc), 4, gl.UNSIGNED_BYTE, true, 0, 0)
@@ -556,7 +561,7 @@ attribute :: proc {
 	attribute_vec2,
 	attribute_vec3,
 	attribute_vec4,
-	attribute_vec4_byte,
+	attribute_u8vec4,
 	attribute_mat2,
 	attribute_mat3,
 	attribute_mat4,
