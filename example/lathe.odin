@@ -52,7 +52,7 @@ setup_lathe :: proc (s: ^State_Lathe, program: gl.Program)
 		return
 	}
 
-	sa.append(&s.shape, rvec2{0, 0}, rvec2{0.25, 0.75}, rvec2{1, 1})
+	sa.append(&s.shape, rvec2{0, 0}, rvec2{0.25, 0.75}, rvec2{0, 1})
 
 	s.dragging = -1
 
@@ -128,10 +128,8 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 	if s.dragging != -1 && mouse_down {
 		s.shape.data[s.dragging] = rvec_clamp(vec_to_rect_rvec(mouse_dpr, SHAPE_CREATOR_RECT))
 		// keep cap points on the rect border
-		if s.dragging == 0 {
+		if s.dragging == 0 || s.dragging == sa.len(s.shape)-1 {
 			s.shape.data[s.dragging].x = 0
-		} else if s.dragging == sa.len(s.shape)-1 {
-			s.shape.data[s.dragging].y = 1
 		}
 	}
 
@@ -155,14 +153,9 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 		
 		first := sa.get(s.shape, 0)
 		ctx.moveTo(rect_rvec_to_px(first, SHAPE_CREATOR_RECT))
-		
 		for p in sa.slice(&s.shape)[1:] {
 			ctx.lineTo(rect_rvec_to_px(p, SHAPE_CREATOR_RECT))
 		}
-
-		// complete shape
-		corner := rvec2{0, 1}
-		ctx.lineTo(rect_rvec_to_px(corner, SHAPE_CREATOR_RECT))
 		ctx.lineTo(rect_rvec_to_px(first , SHAPE_CREATOR_RECT))
 
 		ctx.fillStyle(GRAY_4)
