@@ -9,11 +9,13 @@ import     "core:slice"
 import gl  "../wasm/webgl"
 import ctx "../wasm/ctx2d"
 
+
 MAX_SEGMENTS :: 32
 DIVISIONS    :: 12
 MAX_VERTICES :: ((MAX_SEGMENTS-3) * DIVISIONS + DIVISIONS) * 2 * 3
 
-get_verts_len :: proc (segments: int) -> int {
+get_verts_len :: proc (segments: int) -> int
+{
 	return ((segments-3) * DIVISIONS + DIVISIONS) * 2 * 3
 }
 
