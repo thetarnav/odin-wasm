@@ -175,19 +175,6 @@ parse_int :: proc (ptr: ^[^]byte) -> (val: int)
 	return sign * num
 }
 
-/* Max supported power when parsing float */
-MAX_POWER   :: 20
-
-POWER_10_POS :: [MAX_POWER]f64{
-	1.0e0,  1.0e1,  1.0e2,  1.0e3,  1.0e4,  1.0e5,  1.0e6,  1.0e7,  1.0e8,  1.0e9,
-	1.0e10, 1.0e11, 1.0e12, 1.0e13, 1.0e14, 1.0e15, 1.0e16, 1.0e17, 1.0e18, 1.0e19,
-}
-
-POWER_10_NEG :: [MAX_POWER]f64{
-	1.0e0,   1.0e-1,  1.0e-2,  1.0e-3,  1.0e-4,  1.0e-5,  1.0e-6,  1.0e-7,  1.0e-8,  1.0e-9,
-	1.0e-10, 1.0e-11, 1.0e-12, 1.0e-13, 1.0e-14, 1.0e-15, 1.0e-16, 1.0e-17, 1.0e-18, 1.0e-19,
-}
-
 parse_float :: proc (ptr: ^[^]byte) -> f32
 {
 	skip_whitespace(ptr)
@@ -228,6 +215,10 @@ parse_float :: proc (ptr: ^[^]byte) -> f32
 
 	if is_exponent(ptr[0]) {
 		increase(ptr)
+
+		MAX_POWER    :: 20
+		POWER_10_POS :: [MAX_POWER]f64{1.0e0, 1.0e1,  1.0e2,  1.0e3,  1.0e4,  1.0e5,  1.0e6,  1.0e7,  1.0e8,  1.0e9,  1.0e10,  1.0e11,  1.0e12,  1.0e13,  1.0e14,  1.0e15,  1.0e16,  1.0e17,  1.0e18,  1.0e19}
+		POWER_10_NEG :: [MAX_POWER]f64{1.0e0, 1.0e-1, 1.0e-2, 1.0e-3, 1.0e-4, 1.0e-5, 1.0e-6, 1.0e-7, 1.0e-8, 1.0e-9, 1.0e-10, 1.0e-11, 1.0e-12, 1.0e-13, 1.0e-14, 1.0e-15, 1.0e-16, 1.0e-17, 1.0e-18, 1.0e-19}
 
 		powers: [MAX_POWER]f64
 		switch ptr[0] {
