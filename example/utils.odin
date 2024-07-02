@@ -140,7 +140,7 @@ mat3_translate :: proc "contextless" (v: vec2) -> mat3 {
 		1, 0, v.x,
 		0, 1, v.y,
 		0, 0, 1,
-   	}
+	}
 }
 @(require_results)
 mat3_scale :: proc "contextless" (v: vec2) -> mat3 {
@@ -148,7 +148,7 @@ mat3_scale :: proc "contextless" (v: vec2) -> mat3 {
 		v.x, 0,   0,
 		0,   v.y, 0,
 		0,   0,   1,
-   	}
+	}
 }
 @(require_results)
 mat3_rotate :: proc "contextless" (angle: f32) -> mat3 {
@@ -231,10 +231,10 @@ mat4_rotate_vec :: #force_inline proc "contextless" (v: vec3) -> mat4 {
 }
 @(require_results)
 mat4_perspective :: proc "contextless" (fov, aspect, near, far: f32) -> mat4 {
-    f    : f32 = tan(fov*0.5)
-    range: f32 = 1 / (near - far)
+	f    : f32 = tan(fov*0.5)
+	range: f32 = 1 / (near - far)
 
-    return {
+	return {
 		f/aspect, 0, 0,                    0,
 		0,        f, 0,                    0,
 		0,        0, (near + far) * range, near * far * range * 2,
@@ -294,12 +294,12 @@ vec3_rotate :: proc "contextless" (v, axis: vec3, angle: f32) -> vec3 {
 }
 
 vec3_transform :: proc "contextless" (v: vec3, m: mat4) -> vec3 {
-    w := m[0][3] * v.x + m[1][3] * v.y + m[2][3] * v.z + m[3][3]
+	w := m[0][3] * v.x + m[1][3] * v.y + m[2][3] * v.z + m[3][3]
 
-    return {
-        (m[0][0] * v.x + m[1][0] * v.y + m[2][0] * v.z + m[3][0]) / w,
-        (m[0][1] * v.x + m[1][1] * v.y + m[2][1] * v.z + m[3][1]) / w,
-        (m[0][2] * v.x + m[1][2] * v.y + m[2][2] * v.z + m[3][2]) / w,
+	return {
+		(m[0][0] * v.x + m[1][0] * v.y + m[2][0] * v.z + m[3][0]) / w,
+		(m[0][1] * v.x + m[1][1] * v.y + m[2][1] * v.z + m[3][1]) / w,
+		(m[0][2] * v.x + m[1][2] * v.y + m[2][2] * v.z + m[3][2]) / w,
 	}
 }
 
