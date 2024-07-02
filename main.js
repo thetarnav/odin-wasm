@@ -34,6 +34,14 @@ const shdc_bin_path   = path.join(dirname, "shdc.bin")
 
 
 /** @type {string[]} */
+const ODIN_ARGS_VET = [
+	"-vet-unused",
+	"-vet-style",
+	"-vet-semicolon",
+	"-vet-cast",
+	"-vet-tabs",
+]
+/** @type {string[]} */
 const ODIN_ARGS_SHARED = [
 	"build",
 	playground_path,
@@ -48,9 +56,7 @@ const ODIN_ARGS_DEV    = [
 ]
 /** @type {string[]} */
 const ODIN_ARGS_RELESE = [
-	"-vet-unused",
-	"-vet-style",
-	"-vet-semicolon",
+	...ODIN_ARGS_VET,
 	"-o:aggressive",
 	"-disable-assert",
 	"-no-bounds-check",
@@ -60,9 +66,7 @@ const ODIN_ARGS_SHDC = [
 	"build",
 	shdc_dir_path,
 	"-out:"+shdc_bin_path,
-	"-vet-unused",
-	"-vet-style",
-	"-vet-semicolon",
+	...ODIN_ARGS_VET,
 	"-o:aggressive",
 	"-microarch:native",
 	"-disable-assert",

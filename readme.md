@@ -50,12 +50,24 @@ The tool is just an experiment of parsing glsl, and generating some boilerplate 
 
 ### OLS
 
-Add `js_wasm32` target to `ols.json` if you want to use [OLS](https://github.com/DanielGavin/ols):
+Add `js_wasm32` target to `ols.json` if you want to use [OLS](https://github.com/DanielGavin/ols).
 
 ```json
 {
-    "checker_args": "-target:js_wasm32 -vet-unused -vet-style -vet-semicolon",
-    "enable_format": false
+    "enable_format": false,
+	"checker_args": "-target:js_wasm32 -vet-unused -vet-style -vet-semicolon -vet-cast -vet-tabs",
+	"profile": "example",
+	"profiles": [{
+		"name": "example",
+		"os": "js_wasm32",
+		"checker_path": ["example"]
+	}, {
+		"name": "shdc",
+		"checker_path": ["shdc"]
+	}, {
+		"name": "obj",
+		"checker_path": ["obj"]
+	}]
 }
 ```
 
