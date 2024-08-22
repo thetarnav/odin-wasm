@@ -237,7 +237,8 @@ const command_handlers = {
 			format:      "esm",
 			bundle:      true,
 			minify:      true,
-			sourcemap:   false,
+			// splitting:   true,
+			treeShaking: true,
 		})
 
 		if (res.errors.length > 0) {

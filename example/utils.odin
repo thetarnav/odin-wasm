@@ -88,25 +88,27 @@ copy_pattern :: #force_inline proc "contextless" (dst: []$S, src: []S) #no_bound
 // 	      intrinsics.type_is_numeric(D) {
 // 	return {D(v.x), D(v.y)}
 // }
-
+@(require_results)
 cast_vec2 :: #force_inline proc "contextless" (v: $T/[2]$S) -> vec2
 	where intrinsics.type_is_numeric(S) {
 	return {f32(v.x), f32(v.y)}
 }
+@(require_results)
 cast_ivec2 :: #force_inline proc "contextless" (v: $T/[2]$S) -> ivec2
 	where intrinsics.type_is_numeric(S) {
 	return {i32(v.x), i32(v.y)}
 }
-
+@(require_results)
 vec2_to_vec3 :: #force_inline proc "contextless" (v: $T/[2]f32, z: f32 = 0) -> vec3 {
 	return {v.x, v.y, z}
 }
-
+@(require_results)
 rand_color :: proc() -> u8vec4 {
 	color := transmute(u8vec4)rand.uint32()
 	color.a = 255
 	return color
 }
+@(require_results)
 rand_color_gray :: proc() -> u8vec4 {
 	l := u8(rand.uint64())/4 + 256/2 + 256/4
 	return {l, l, l, 255}
@@ -168,8 +170,6 @@ mat3_projection :: proc "contextless" (size: vec2) -> mat3 {
 		0,        0,        1,
 	}
 }
-
-mat4_inverse   :: glm.inverse_mat4
 
 @(require_results)
 mat4_translate :: proc "contextless" (v: vec3) -> mat4 {
@@ -293,6 +293,7 @@ vec3_rotate :: proc "contextless" (v, axis: vec3, angle: f32) -> vec3 {
 	return v + wv + wwv
 }
 
+@(require_results)
 vec3_transform :: proc "contextless" (v: vec3, m: mat4) -> vec3 {
 	w := m[0][3] * v.x + m[1][3] * v.y + m[2][3] * v.z + m[3][3]
 
@@ -303,6 +304,7 @@ vec3_transform :: proc "contextless" (v: vec3, m: mat4) -> vec3 {
 	}
 }
 
+@(require_results)
 vec2_transform :: proc "contextless" (v: vec2, m: mat3) -> vec2 {
 	return {
 		v.x * m[0].x + v.y * m[1].x + m[2].x,
