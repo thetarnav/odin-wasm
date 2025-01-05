@@ -1,5 +1,7 @@
 package obj
 
+vec3 :: [3]f32
+vec2 :: [2]f32
 
 // Texture :: struct {
 // 	name: string, // Texture name from .mtl file
@@ -38,10 +40,10 @@ Index :: struct {
 // }
 
 Data :: struct {
-	positions : [dynamic]f32,
-	texcoords : [dynamic]f32,
-	normals   : [dynamic]f32,
-	colors    : [dynamic]f32,
+	positions : [dynamic]vec3,
+	texcoords : [dynamic]vec2,
+	normals   : [dynamic]vec3,
+	colors    : [dynamic]vec3,
 	indices   : [dynamic]Index,
 	// mesh    : Mesh,   // Final mesh
 	// object  : Group,  // Current object
@@ -79,41 +81,24 @@ Data :: struct {
 // }
 
 init_data :: proc (data: ^Data, allocator := context.allocator) {
-	data.positions = make([dynamic]f32  , 0, 32, allocator)
-	data.normals   = make([dynamic]f32  , 0, 32, allocator)
-	data.texcoords = make([dynamic]f32  , 0, 32, allocator)
-	data.colors    = make([dynamic]f32  , 0, 32, allocator)
+	data.positions = make([dynamic]vec3,  0, 32, allocator)
+	data.normals   = make([dynamic]vec3,  0, 32, allocator)
+	data.texcoords = make([dynamic]vec2,  0, 32, allocator)
+	data.colors    = make([dynamic]vec3,  0, 32, allocator)
 	data.indices   = make([dynamic]Index, 0, 32, allocator)
 }
 
-@private increase :: #force_inline proc (ptr: ^[^]byte, amount := 1)
-{
+@private increase :: #force_inline proc (ptr: ^[^]byte, amount := 1) {
 	ptr ^= ([^]byte)(uintptr(ptr^) + uintptr(amount))
 }
-@private decrease :: #force_inline proc (ptr: ^[^]byte, amount := 1)
-{
+@private decrease :: #force_inline proc (ptr: ^[^]byte, amount := 1) {
 	ptr ^= ([^]byte)(uintptr(ptr^) - uintptr(amount))
 }
 
-is_whitespace :: proc (c: byte) -> bool
-{
-	return c == ' ' || c == '\t' || c == '\r'
-}
-
-is_newline :: proc (c: byte) -> bool
-{
-	return c == '\n'
-}
-
-is_digit :: proc (c: byte) -> bool
-{
-	return c >= '0' && c <= '9'
-}
-
-is_exponent :: proc (c: byte) -> bool
-{
-	return c == 'e' || c == 'E'
-}
+is_whitespace :: proc (c: byte) -> bool {return c == ' ' || c == '\t' || c == '\r'}
+is_newline    :: proc (c: byte) -> bool {return c == '\n'}
+is_digit      :: proc (c: byte) -> bool {return c >= '0' && c <= '9'}
+is_exponent   :: proc (c: byte) -> bool {return c == 'e' || c == 'E'}
 
 skip_name :: proc (ptr: ^[^]byte)
 {
@@ -147,11 +132,11 @@ skip_line :: proc (ptr: ^[^]byte)
 
 parse_name :: proc (ptr: ^[^]byte) -> string
 {
-    start := ptr^
-    skip_name(ptr)
-    end   := ptr^
+	start := ptr^
+	skip_name(ptr)
+	end   := ptr^
 
-    return string(start[:uintptr(end)-uintptr(start)])
+	return string(start[:uintptr(end)-uintptr(start)])
 }
 
 parse_int :: proc (ptr: ^[^]byte) -> (val: int)
@@ -244,37 +229,36 @@ parse_float :: proc (ptr: ^[^]byte) -> f32
 	return f32(sign * num)
 }
 
+parse_vec3 :: proc(ptr: ^[^]byte) -> vec3 {
+	return {parse_float(ptr), parse_float(ptr), parse_float(ptr)}
+}
+parse_vec2 :: proc(ptr: ^[^]byte) -> vec2 {
+	return {parse_float(ptr), parse_float(ptr)}
+}
+
 parse_vertex :: proc(data: ^Data, ptr: ^[^]byte)
 {
-	for _ in 0..<3 {
-		append(&data.positions, parse_float(ptr))
-	}
+	append(&data.positions, parse_vec3(ptr))
 
 	skip_whitespace(ptr)
 	if is_newline(ptr[0]) do return
 
 	/* Fill the colors array until it matches the size of the positions array */
-	for _ in 0 ..< len(data.positions) - 3 - len(data.colors) {
-		append(&data.colors, 1.0)
+	for _ in len(data.colors) ..< len(data.positions)-1 {
+		append(&data.colors, vec3{1, 1, 1})
 	}
 
-	for _ in 0..<3 {
-		append(&data.colors, parse_float(ptr))
-	}
+	append(&data.colors, parse_vec3(ptr))
 }
 
 parse_texcoord :: proc (data: ^Data, ptr: ^[^]byte)
 {
-	for _ in 0..<2 {
-		append(&data.texcoords, parse_float(ptr))
-	}
+	append(&data.texcoords, parse_vec2(ptr))
 }
 
 parse_normal :: proc (data: ^Data, ptr: ^[^]byte)
 {
-	for _ in 0..<3 {
-		append(&data.normals, parse_float(ptr))
-	}
+	append(&data.normals, parse_vec3(ptr))
 }
 
 parse_face :: proc (data: ^Data, ptr: ^[^]byte)
@@ -292,19 +276,19 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 		if ptr[0] == '/' {
 			increase(ptr)
 
-            if ptr[0] != '/' {
-                index.texcoord = parse_int(ptr)
+			if ptr[0] != '/' {
+				index.texcoord = parse_int(ptr)
 			}
 
-            if (ptr[0] == '/') {
-                increase(ptr)
-                index.normal = parse_int(ptr)
-            }
+			if (ptr[0] == '/') {
+				increase(ptr)
+				index.normal = parse_int(ptr)
+			}
 		}
 
-		if index.position < 0 do index.position += len(data.positions) / 3
-		if index.texcoord < 0 do index.texcoord += len(data.texcoords) / 2
-		if index.normal   < 0 do index.normal   += len(data.normals)   / 3
+		if index.position < 0 do index.position += len(data.positions)
+		if index.texcoord < 0 do index.texcoord += len(data.texcoords)
+		if index.normal   < 0 do index.normal   += len(data.normals)
 
 		append(&data.indices, index)
 		// count += 1
@@ -321,7 +305,7 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 
 // parse_object :: proc (data: ^Data, ptr: ^[^]byte)
 // {
-//     flush_object(data)
+//	 flush_object(data)
 
 //     skip_whitespace(ptr)
 //     data.object.name = parse_name(ptr)
@@ -432,10 +416,10 @@ parse_line :: proc (data: ^Data, str: string)
 		}
 	}
 
-    // if len(data.colors) > 0 {
-    //     /* Fill the remaining slots in the colors array */
+	// if len(data.colors) > 0 {
+	//     /* Fill the remaining slots in the colors array */
 	// 	for _ in 0 ..< len(data.positions) - len(data.colors) {
 	// 		append(&data.colors, 1)
 	// 	}
-    // }
+	// }
 }
