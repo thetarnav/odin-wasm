@@ -1,4 +1,4 @@
-//+private file
+#+private file
 package example
 
 import "core:fmt"
@@ -64,7 +64,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	q1 := lerp(p1, p2, s.t)
 	q2 := lerp(p2, p3, s.t)
 	q3 := lerp(p3, p4, s.t)
-	
+
 	r1 := lerp(q1, q2, s.t)
 	r2 := lerp(q2, q3, s.t)
 
@@ -73,7 +73,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 	a12 := vec2_angle(p1, p2)
 	a34 := vec2_angle(p3, p4)
 
-	
+
 	ctx.resetTransform()
 	ctx.clearRect(0, canvas_size * dpr)
 
@@ -92,11 +92,11 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 		ctx.fillText(fmt.tprintf("a12:        %f", a12),                                              30, 50 + line_height*7)
 		ctx.fillText(fmt.tprintf("a34:        %f", a34),                                              30, 50 + line_height*8)
 	}
-	
+
 	// draw
 
 	ctx.lineWidth(2)
-	
+
 	ctx.translate(canvas_size/2 * dpr)
 
 	SHADOWS :: 12
@@ -112,7 +112,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			m *= mat3_translate(-p1)
 			ctx.transform(m)
 		}
-	
+
 		ctx.strokeStyle(to_rgba(GRAY.rgb, alpha))
 		for p, i in px_points[1:] {
 			ctx.beginPath()
@@ -120,26 +120,26 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			ctx.lineTo(px_points[i])
 			ctx.stroke()
 		}
-	
+
 		ctx.strokeStyle(to_rgba(BLUE.rgb, alpha))
 		ctx.beginPath()
 		ctx.moveTo(q1)
 		ctx.lineTo(q2)
 		ctx.lineTo(q3)
 		ctx.stroke()
-	
+
 		ctx.strokeStyle(to_rgba(GREEN.rgb, alpha))
 		ctx.beginPath()
 		ctx.moveTo(r1)
 		ctx.lineTo(r2)
 		ctx.stroke()
-	
+
 		ctx.strokeStyle(to_rgba(RED.rgb, alpha))
 		ctx.beginPath()
 		ctx.moveTo(p1)
 		ctx.bezierCurveTo(p2, p3, p4)
 		ctx.stroke()
-	
+
 		if shadow == 0 {
 			ctx.fillStyle(to_rgba(GRAY.rgb, alpha))
 			ctx.strokeStyle(to_rgba(WHITE.rgb, alpha))
@@ -156,7 +156,7 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 				}
 			}
 		}
-	
+
 		ctx.fillStyle(to_rgba(RED.rgb, alpha))
 		ctx.strokeStyle(TRANSPARENT)
 		ctx.path_circle(tp, 10)

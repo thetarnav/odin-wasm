@@ -1,4 +1,4 @@
-//+private file
+#+private file
 package example
 
 import glm "core:math/linalg/glsl"
@@ -55,7 +55,7 @@ setup_sol_system :: proc(s: ^State_Sol_System, program: gl.Program) {
 		colors    = make([]u8vec4, sphere_vertices),
 		vao       = gl.CreateVertexArray(),
 	}
-	
+
 	get_sphere_base_triangle(s.shape_sphere.positions, s.shape_sphere.normals, 1, SPHERE_SEGMENTS)
 	rand_colors_gray(s.shape_sphere.colors)
 
@@ -70,7 +70,7 @@ setup_sol_system :: proc(s: ^State_Sol_System, program: gl.Program) {
 	Planets
 	*/
 
-	
+
 	s.planets[0] = {
 		transform = 1,
 	}
@@ -192,13 +192,13 @@ frame_sol_system :: proc(s: ^State_Sol_System, delta: f32) {
 
 		p.orbit_rotation += p.orbit_speed * delta * 0.005
 		p.orbit_rotation = p.orbit_rotation if p.orbit_rotation < 360 else p.orbit_rotation - 360
-		
+
 		p.transform =
 			s.planets[p.parent_idx].transform *
 			mat4_rotate_y(p.orbit_rotation) *
 			mat4_translate({p.orbit_distance, 0, 0}) *
 			mat4_rotate_y(p.rotation)
-		
+
 		if p.shape == nil do continue
 
 		p.u_view         = view_mat

@@ -5,7 +5,7 @@ https://github.com/odin-lang/Odin/tree/master/vendor/wasm
 
 */
 
-//+build js wasm32, js wasm64p32
+#+build js wasm32, js wasm64p32
 package wasm
 
 import "base:intrinsics"

@@ -1,4 +1,4 @@
-//+private file
+#+private file
 package example
 
 import "core:slice"
@@ -175,4 +175,3 @@ frame_spotlight :: proc(s: ^State_Spotlight, delta: f32) {
 	gl.DrawArrays(gl.TRIANGLES, vi, GUY_VERTICES)
 	vi += GUY_VERTICES
 }
-	

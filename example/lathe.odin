@@ -1,4 +1,4 @@
-//+private file
+#+private file
 package example
 
 import     "core:fmt"
@@ -81,7 +81,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 
 	hovered_shape_point         := -1
 	hovered_shape_edge_midpoint := -1
-	
+
 	find_hover_point: if hovering_shape_creator {
 		// find hovered shape point
 		for p, i in sa.slice(&s.shape) {
@@ -97,7 +97,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 				a := sa.get(s.shape, i+0)
 				b := sa.get(s.shape, i+1)
 				m := (a + b) / 2
-	
+
 				if distance(mouse_dpr, rect_rvec_to_px(m, SHAPE_CREATOR_RECT)) < 10 {
 					hovered_shape_edge_midpoint = i
 					break find_hover_point
@@ -152,7 +152,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 	// draw shape
 	{
 		ctx.beginPath()
-		
+
 		first := sa.get(s.shape, 0)
 		ctx.moveTo(rect_rvec_to_px(first, SHAPE_CREATOR_RECT))
 		for p in sa.slice(&s.shape)[1:] {
@@ -222,7 +222,7 @@ frame_lathe :: proc (s: ^State_Lathe, delta: f32)
 		last     := shape[len(shape)-1]
 
 		vi := 0
-		
+
 		for di in 0..<DIVISIONS {
 			a0 := PI * (f32(di)+0) / DIVISIONS
 			a1 := PI * (f32(di)+1) / DIVISIONS

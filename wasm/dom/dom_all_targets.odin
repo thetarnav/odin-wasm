@@ -5,7 +5,7 @@ https://github.com/odin-lang/Odin/tree/master/vendor/wasm
 
 */
 
-//+build !js
+#+build !js
 package wasm_js_interface
 
 import "base:runtime"

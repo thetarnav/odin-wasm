@@ -1,4 +1,4 @@
-//+private file
+#+private file
 package example
 
 import gl "../wasm/webgl"

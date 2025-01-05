@@ -1,4 +1,4 @@
-//+build js
+#+build js
 package ls
 
 foreign import "odin_ls"

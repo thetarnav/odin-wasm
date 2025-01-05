@@ -1,4 +1,4 @@
-//+private file
+#+private file
 package example
 
 import glm "core:math/linalg/glsl"
@@ -50,7 +50,7 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 
 	cube_positions := get_cube_positions()
 	cube_shape.positions = cube_positions[:]
-	
+
 	cube_shape.colors = make([]u8vec4, len(cube_positions))
 	rand_colors_gray(cube_shape.colors)
 
