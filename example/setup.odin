@@ -28,13 +28,13 @@ scale: f32 = 0.5
 on_mouse_move :: proc (e: dom.Event) {
 	mouse_abs = cast_vec2(e.mouse.client)
 	mouse_pos = mouse_abs - canvas_pos
-	mouse_rel = rvec2((mouse_pos - window_size / 2) / window_size)
+	mouse_rel = rvec2((mouse_pos - canvas_size/2) / canvas_size)
 }
 on_mouse_down :: proc (e: dom.Event) {
 	mouse_down_time_prev = mouse_down_time
 	mouse_down_time      = e.timestamp
-	mouse_down       = true
-	mouse_down_frame = true
+	mouse_down           = true
+	mouse_down_frame     = true
 }
 on_mouse_up :: proc (e: dom.Event) {
 	mouse_down = false

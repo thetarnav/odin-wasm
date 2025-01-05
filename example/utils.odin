@@ -56,10 +56,10 @@ ratio :: distinct f32
 rvec2 :: distinct [2]f32
 
 to_px :: proc(r: rvec2) -> vec2 {
-	return vec2(r) * window_size * dpr
+	return vec2(r) * canvas_size * dpr
 }
 to_rvec2 :: proc(p: vec2) -> rvec2 {
-	return rvec2(p / window_size * dpr)
+	return rvec2(p / canvas_size * dpr)
 }
 
 u8vec4_to_vec4 :: #force_inline proc "contextless" (rgba: u8vec4) -> vec4 {
