@@ -96,16 +96,16 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 			pos         = {30, 50},
 			line_height = 30,
 		}
-		fill_text_line(&t, fmt.tprintf("mouse_down: %t",           mouse_down))
-		fill_text_line(&t, fmt.tprintf("dragging:   %i",           s.draggig))
-		fill_text_line(&t, fmt.tprintf("mouse_rel:  %+.2f, %+.2f", mouse_rel.x       , mouse_rel.y       ))
-		fill_text_line(&t, fmt.tprintf("mouse_pos:  %+.2f, %+.2f", to_px(mouse_rel).x, to_px(mouse_rel).y))
-		fill_text_line(&t, fmt.tprintf("p1:         %+.2f, %+.2f", p1.x              , p1.y              ))
-		fill_text_line(&t, fmt.tprintf("p2:         %+.2f, %+.2f", p2.x              , p2.y              ))
-		fill_text_line(&t, fmt.tprintf("p3:         %+.2f, %+.2f", p3.x              , p3.y              ))
-		fill_text_line(&t, fmt.tprintf("p4:         %+.2f, %+.2f", p4.x              , p4.y              ))
-		fill_text_line(&t, fmt.tprintf("a12:        %f",           a12))
-		fill_text_line(&t, fmt.tprintf("a34:        %f",           a34))
+		fill_text_line(&t, fmt.tprintf("mouse_down: %t",    mouse_down      ))
+		fill_text_line(&t, fmt.tprintf("dragging:   %i",    s.draggig       ))
+		fill_text_line(&t, fmt.tprintf("mouse_rel:  %+.2f", mouse_rel       ))
+		fill_text_line(&t, fmt.tprintf("mouse_pos:  %+.2f", to_px(mouse_rel)))
+		fill_text_line(&t, fmt.tprintf("p1:         %+.2f", p1              ))
+		fill_text_line(&t, fmt.tprintf("p2:         %+.2f", p2              ))
+		fill_text_line(&t, fmt.tprintf("p3:         %+.2f", p3              ))
+		fill_text_line(&t, fmt.tprintf("p4:         %+.2f", p4              ))
+		fill_text_line(&t, fmt.tprintf("a12:        %f",    a12             ))
+		fill_text_line(&t, fmt.tprintf("a34:        %f",    a34             ))
 	}
 
 	// draw
