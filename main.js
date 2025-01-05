@@ -43,6 +43,7 @@ const ODIN_ARGS_VET = [
 ]
 /** @type {string[]} */
 const ODIN_ARGS_SHARED = [
+	"odin",
 	"build",
 	playground_path,
 	"-out:"+WASM_PATH,
@@ -63,6 +64,7 @@ const ODIN_ARGS_RELESE = [
 	"-obfuscate-source-code-locations",
 ]
 const ODIN_ARGS_SHDC = [
+	"odin",
 	"build",
 	shdc_dir_path,
 	"-out:"+shdc_bin_path,
@@ -299,6 +301,21 @@ async function build_shader_utils() {
 	return code
 }
 
+/**
+@param   {string[]} args 
+@param   {(fs.ObjectEncodingOptions & child_process.ExecFileOptions) | undefined | null} options
+@returns {child_process.ChildProcess} */
+function exec(args, options) {
+
+	let process = child_process.execFile(args[0], args.slice(1), options)
+
+	console.log("\x1b[90m"+"$ odin "+args.join(' ')+"\x1b[0m")
+
+	process.stderr?.on("data", console.error)
+
+	return process
+}
+
 /** @returns {Promise<number>} exit code */
 async function build_shdc() {
 	const start = performance.now()
@@ -307,9 +324,7 @@ async function build_shdc() {
 		return 0
 	}
 
-	const child = child_process.execFile("odin", ODIN_ARGS_SHDC, {cwd: dirname})
-
-	child.stderr?.on("data", console.error)
+	const child = exec(ODIN_ARGS_SHDC, {cwd: dirname})
 
 	const code = await childProcessToPromise(child)
 
@@ -329,14 +344,10 @@ async function build_shdc() {
 async function build_wasm(is_dev) {
 	const start = performance.now()
 
-	const args = ODIN_ARGS_SHARED.concat(is_dev ? ODIN_ARGS_DEV : ODIN_ARGS_RELESE)
-
-	console.log("\x1b[90m"+"odin "+args.join(' ')+"\x1b[0m")
-
-	const child = child_process.execFile("odin", args, {cwd: dirname})
-	child.stderr?.on("data", data => {
-		console.error(data.toString())
-	})
+	const child = exec(
+		ODIN_ARGS_SHARED.concat(is_dev ? ODIN_ARGS_DEV : ODIN_ARGS_RELESE),
+		{cwd: dirname},
+	)
 
 	const code = await childProcessToPromise(child)
 
