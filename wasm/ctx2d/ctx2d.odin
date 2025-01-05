@@ -326,18 +326,18 @@ foreign ctx2d {
 
 // The dimensions of a piece of text in the canvas, as created by the CanvasRenderingContext2D.measureText() method.
 TextMetrics :: struct {
-    actualBoundingBoxAscent:  f32,
-    actualBoundingBoxDescent: f32,
-    actualBoundingBoxLeft:    f32,
-    actualBoundingBoxRight:   f32,
-    alphabeticBaseline:       f32,
-    emHeightAscent:           f32,
-    emHeightDescent:          f32,
-    fontBoundingBoxAscent:    f32,
-    fontBoundingBoxDescent:   f32,
-    hangingBaseline:          f32,
-    ideographicBaseline:      f32,
-    width:                    f32,
+	actualBoundingBoxAscent:  f32,
+	actualBoundingBoxDescent: f32,
+	actualBoundingBoxLeft:    f32,
+	actualBoundingBoxRight:   f32,
+	alphabeticBaseline:       f32,
+	emHeightAscent:           f32,
+	emHeightDescent:          f32,
+	fontBoundingBoxAscent:    f32,
+	fontBoundingBoxDescent:   f32,
+	hangingBaseline:          f32,
+	ideographicBaseline:      f32,
+	width:                    f32,
 }
 
 @(default_calling_convention="contextless")
