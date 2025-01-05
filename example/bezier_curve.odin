@@ -79,18 +79,32 @@ frame_bezier_curve :: proc(s: ^State_Bezier_Curve, delta: f32) {
 
 	// debug info
 	{
+		Fill_Text :: struct {
+			pos:         [2]f32,
+			line_height: f32,
+			line_number: f32,
+		}
+		fill_text_line :: proc(t: ^Fill_Text, str: string) {
+			ctx.fillText(str, t.pos.x, t.pos.y + t.line_height*t.line_number)
+			t.line_number += 1
+		}
+
 		ctx.font("26px monospace")
-		line_height: f32 = 30
 		ctx.fillStyle(to_rgba(WHITE.rgb, 100))
-		ctx.fillText(fmt.tprintf("mouse_down: %t", mouse_down),                                       30, 50 + line_height*0)
-		ctx.fillText(fmt.tprintf("dragging:   %i", s.draggig),                                        30, 50 + line_height*1)
-		ctx.fillText(fmt.tprintf("mouse_pos:  %+.2f, %+.2f", to_px(mouse_rel).x, to_px(mouse_rel).y), 30, 50 + line_height*2)
-		ctx.fillText(fmt.tprintf("p1:         %+.2f, %+.2f", p1.x              , p1.y              ), 30, 50 + line_height*3)
-		ctx.fillText(fmt.tprintf("p2:         %+.2f, %+.2f", p2.x              , p2.y              ), 30, 50 + line_height*4)
-		ctx.fillText(fmt.tprintf("p3:         %+.2f, %+.2f", p3.x              , p3.y              ), 30, 50 + line_height*5)
-		ctx.fillText(fmt.tprintf("p4:         %+.2f, %+.2f", p4.x              , p4.y              ), 30, 50 + line_height*6)
-		ctx.fillText(fmt.tprintf("a12:        %f", a12),                                              30, 50 + line_height*7)
-		ctx.fillText(fmt.tprintf("a34:        %f", a34),                                              30, 50 + line_height*8)
+
+		t := Fill_Text{
+			pos         = {30, 50},
+			line_height = 30,
+		}
+		fill_text_line(&t, fmt.tprintf("mouse_down: %t",           mouse_down))
+		fill_text_line(&t, fmt.tprintf("dragging:   %i",           s.draggig))
+		fill_text_line(&t, fmt.tprintf("mouse_pos:  %+.2f, %+.2f", to_px(mouse_rel).x, to_px(mouse_rel).y))
+		fill_text_line(&t, fmt.tprintf("p1:         %+.2f, %+.2f", p1.x              , p1.y              ))
+		fill_text_line(&t, fmt.tprintf("p2:         %+.2f, %+.2f", p2.x              , p2.y              ))
+		fill_text_line(&t, fmt.tprintf("p3:         %+.2f, %+.2f", p3.x              , p3.y              ))
+		fill_text_line(&t, fmt.tprintf("p4:         %+.2f, %+.2f", p4.x              , p4.y              ))
+		fill_text_line(&t, fmt.tprintf("a12:        %f",           a12))
+		fill_text_line(&t, fmt.tprintf("a34:        %f",           a34))
 	}
 
 	// draw
