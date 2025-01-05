@@ -6,7 +6,15 @@
 			"request": "launch",
 			"type": "chrome",
 			"url": "http://localhost:3000",
-			"webRoot": "${workspaceFolder}/example"
+			"webRoot": "${workspaceFolder}/example",
+			/*
+			 Requires "C/C++ DevTools Support (DWARF)" Chrome extension
+			 https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb
+
+			 And "WebAssembly DWARF Debugging" Vscode extension
+			 https://marketplace.visualstudio.com/items?itemName=ms-vscode.wasm-dwarf-debugging
+			*/
+			"userDataDir": false,
 		},
 		{
 			"type": "lldb",

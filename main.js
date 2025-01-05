@@ -51,7 +51,7 @@ const ODIN_ARGS_SHARED = [
 ]
 /** @type {string[]} */
 const ODIN_ARGS_DEV    = [
-	"-o:none",
+	"-debug",
 	"-use-separate-modules",
 ]
 /** @type {string[]} */
@@ -330,6 +330,8 @@ async function build_wasm(is_dev) {
 	const start = performance.now()
 
 	const args = ODIN_ARGS_SHARED.concat(is_dev ? ODIN_ARGS_DEV : ODIN_ARGS_RELESE)
+
+	console.log("\x1b[90m"+"odin "+args.join(' ')+"\x1b[0m")
 
 	const child = child_process.execFile("odin", args, {cwd: dirname})
 	child.stderr?.on("data", data => {
