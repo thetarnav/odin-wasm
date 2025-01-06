@@ -1,6 +1,5 @@
 package example
 
-import "core:fmt"
 import "core:mem"
 import "core:math/rand"
 import "core:crypto"

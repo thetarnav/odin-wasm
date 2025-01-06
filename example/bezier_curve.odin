@@ -1,8 +1,6 @@
 #+private file
 package example
 
-import "core:fmt"
-
 import gl  "../wasm/webgl"
 import ctx "../wasm/ctx2d"
 

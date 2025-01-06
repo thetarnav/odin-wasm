@@ -3,7 +3,6 @@ package example
 
 import glm "core:math/linalg/glsl"
 import     "core:strings"
-import     "core:fmt"
 import gl  "../wasm/webgl"
 import     "../obj"
 
@@ -21,7 +20,7 @@ suzanne_obj_bytes := #load("./public/suzanne.obj", string)
 @private
 setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 
-	data: obj.Data
+	data := obj.data_make(context.temp_allocator)
 	it := suzanne_obj_bytes
 	for line in strings.split_lines_iterator(&it) {
 		obj.parse_line(&data, line)

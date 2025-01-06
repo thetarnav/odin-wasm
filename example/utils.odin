@@ -1,9 +1,12 @@
 package example
 
-import     "base:intrinsics"
-import     "core:math/rand"
-import glm "core:math/linalg/glsl"
-import gl  "../wasm/webgl"
+import      "base:intrinsics"
+import      "core:math/rand"
+import _fmt "core:fmt"
+import glm  "core:math/linalg/glsl"
+import gl   "../wasm/webgl"
+
+fmt :: _fmt // make available everywhere without importing
 
 float  :: f32
 double :: f64

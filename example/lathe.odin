@@ -1,7 +1,6 @@
 #+private file
 package example
 
-import     "core:fmt"
 import sa  "core:container/small_array"
 import glm "core:math/linalg/glsl"
 import     "core:slice"

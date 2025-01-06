@@ -87,6 +87,12 @@ init_data :: proc (data: ^Data, allocator := context.allocator) {
 	data.colors    = make([dynamic]vec3,  0, 32, allocator)
 	data.indices   = make([dynamic]Index, 0, 32, allocator)
 }
+data_init :: init_data
+
+data_make :: proc (allocator := context.allocator) -> (data: Data) {
+	init_data(&data)
+	return
+}
 
 @private increase :: #force_inline proc (ptr: ^[^]byte, amount := 1) {
 	ptr ^= ([^]byte)(uintptr(ptr^) + uintptr(amount))
