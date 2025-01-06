@@ -27,23 +27,16 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 		obj.parse_line(&data, line)
 	}
 
-	s.positions = make([]vec3,   len(data.indices)*2)
-	s.colors    = make([]u8vec4, len(s.positions))
+	lines := obj.data_to_lines(data, context.allocator)
 
-	// for idx, i in data.indices {
-	// 	s.positions[i] = data.positions[idx.position-1] * 100
-	// }
+	s.positions = lines.pos[:len(lines)]
+	s.colors    = lines.col[:len(lines)]
 
-	for i := 0; i < len(data.indices); i += 3 {
-		a, b, c := data.indices[i+0], data.indices[i+1], data.indices[i+2]
-		s.positions[i*2+0] = data.positions[a.position-1] * 100
-		s.positions[i*2+1] = data.positions[b.position-1] * 100
-		s.positions[i*2+2] = data.positions[b.position-1] * 100
-		s.positions[i*2+3] = data.positions[c.position-1] * 100
-		s.positions[i*2+4] = data.positions[c.position-1] * 100
-		s.positions[i*2+5] = data.positions[a.position-1] * 100
+	for &pos in s.positions {
+		pos *= 100
 	}
 
+	// rand_colors(s.colors)
 	slice.fill(s.colors, GREEN)
 
 	/* Init rotation */

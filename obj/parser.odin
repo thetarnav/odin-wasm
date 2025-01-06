@@ -1,7 +1,8 @@
 package obj
 
-vec3 :: [3]f32
-vec2 :: [2]f32
+vec3   :: [3]f32
+vec2   :: [2]f32
+u8vec4 :: [4]u8
 
 // Texture :: struct {
 // 	name: string, // Texture name from .mtl file
@@ -45,11 +46,11 @@ Index :: struct {
 // }
 
 Data :: struct {
-	positions : [dynamic]vec3,
-	texcoords : [dynamic]vec2,
-	normals   : [dynamic]vec3,
-	colors    : [dynamic]vec3,
-	indices   : [dynamic]Index,
+	positions: [dynamic]vec3,
+	texcoords: [dynamic]vec2,
+	normals:   [dynamic]vec3,
+	colors:    [dynamic]vec3,
+	indices:   [dynamic][]Index,
 	// mesh    : Mesh,   // Final mesh
 	// object  : Group,  // Current object
 	// group   : Group,  // Current group
@@ -86,11 +87,11 @@ Data :: struct {
 // }
 
 init_data :: proc (data: ^Data, allocator := context.allocator) {
-	data.positions = make([dynamic]vec3,  0, 32, allocator)
-	data.normals   = make([dynamic]vec3,  0, 32, allocator)
-	data.texcoords = make([dynamic]vec2,  0, 32, allocator)
-	data.colors    = make([dynamic]vec3,  0, 32, allocator)
-	data.indices   = make([dynamic]Index, 0, 32, allocator)
+	data.positions    = make([dynamic]vec3,    0, 32, allocator)
+	data.normals      = make([dynamic]vec3,    0, 32, allocator)
+	data.texcoords    = make([dynamic]vec2,    0, 32, allocator)
+	data.colors       = make([dynamic]vec3,    0, 32, allocator)
+	data.indices      = make([dynamic][]Index, 0, 32, allocator)
 }
 data_init :: init_data
 
@@ -99,15 +100,12 @@ data_make :: proc (allocator := context.allocator) -> (data: Data) {
 	return
 }
 
-@private increase :: #force_inline proc (ptr: ^[^]byte, amount := 1) {
+@private move :: #force_inline proc (ptr: ^[^]byte, amount := 1) {
 	ptr ^= ([^]byte)(uintptr(ptr^) + uintptr(amount))
-}
-@private decrease :: #force_inline proc (ptr: ^[^]byte, amount := 1) {
-	ptr ^= ([^]byte)(uintptr(ptr^) - uintptr(amount))
 }
 
 is_whitespace :: proc (c: byte) -> bool {return c == ' ' || c == '\t' || c == '\r'}
-is_newline    :: proc (c: byte) -> bool {return c == '\n'}
+is_newline    :: proc (c: byte) -> bool {return c == '\n' || c == 0}
 is_digit      :: proc (c: byte) -> bool {return c >= '0' && c <= '9'}
 is_exponent   :: proc (c: byte) -> bool {return c == 'e' || c == 'E'}
 
@@ -116,11 +114,11 @@ skip_name :: proc (ptr: ^[^]byte)
 	start := ptr^
 
 	for !is_newline(ptr[0]) {
-		increase(ptr)
+		move(ptr)
 	}
 
 	for ptr^ > start && is_whitespace(ptr[-1]) {
-		decrease(ptr)
+		move(ptr, -1)
 	}
 }
 
@@ -128,7 +126,7 @@ skip_name :: proc (ptr: ^[^]byte)
 skip_whitespace :: proc (ptr: ^[^]byte)
 {
 	for is_whitespace(ptr[0]) {
-		increase(ptr)
+		move(ptr)
 	}
 }
 
@@ -136,9 +134,9 @@ skip_whitespace :: proc (ptr: ^[^]byte)
 skip_line :: proc (ptr: ^[^]byte)
 {
 	for !is_newline(ptr[0]) {
-		increase(ptr)
+		move(ptr)
 	}
-	increase(ptr)
+	move(ptr)
 }
 
 parse_name :: proc (ptr: ^[^]byte) -> string
@@ -156,7 +154,7 @@ parse_int :: proc (ptr: ^[^]byte) -> (val: int)
 
 	if ptr[0] == '-' {
 		sign = -1
-		increase(ptr)
+		move(ptr)
 	}
 	else {
 		sign = +1
@@ -165,7 +163,7 @@ parse_int :: proc (ptr: ^[^]byte) -> (val: int)
 	num = 0
 	for is_digit(ptr[0]) {
 		num = 10 * num + int(ptr[0] - '0')
-		increase(ptr)
+		move(ptr)
 	}
 
 	return sign * num
@@ -179,10 +177,10 @@ parse_float :: proc (ptr: ^[^]byte) -> f32
 	switch ptr[0] {
 	case '+':
 		sign = 1.0
-		increase(ptr)
+		move(ptr)
 	case '-':
 		sign = -1.0
-		increase(ptr)
+		move(ptr)
 	case:
 		sign = 1.0
 	}
@@ -191,11 +189,11 @@ parse_float :: proc (ptr: ^[^]byte) -> f32
 	num := 0.0
 	for is_digit(ptr[0]) {
 		num = 10 * num + f64(ptr[0] - '0')
-		increase(ptr)
+		move(ptr)
 	}
 
 	if ptr[0] == '.' {
-		increase(ptr)
+		move(ptr)
 	}
 
 	fra := 0.0
@@ -204,13 +202,13 @@ parse_float :: proc (ptr: ^[^]byte) -> f32
 	for is_digit(ptr[0]) {
 		fra  = 10 * fra + f64(ptr[0] - '0')
 		div *= 10
-		increase(ptr)
+		move(ptr)
 	}
 
 	num += fra / div
 
 	if is_exponent(ptr[0]) {
-		increase(ptr)
+		move(ptr)
 
 		MAX_POWER    :: 20
 		POWER_10_POS :: [MAX_POWER]f64{1.0e0, 1.0e1,  1.0e2,  1.0e3,  1.0e4,  1.0e5,  1.0e6,  1.0e7,  1.0e8,  1.0e9,  1.0e10,  1.0e11,  1.0e12,  1.0e13,  1.0e14,  1.0e15,  1.0e16,  1.0e17,  1.0e18,  1.0e19}
@@ -220,10 +218,10 @@ parse_float :: proc (ptr: ^[^]byte) -> f32
 		switch ptr[0] {
 		case '+':
 			powers = POWER_10_POS
-			increase(ptr)
+			move(ptr)
 		case '-':
 			powers = POWER_10_NEG
-			increase(ptr)
+			move(ptr)
 		case:
 			powers = POWER_10_POS
 		}
@@ -231,7 +229,7 @@ parse_float :: proc (ptr: ^[^]byte) -> f32
 		eval := 0
 		for is_digit(ptr[0]) {
 			eval = 10 * eval + int(ptr[0] - '0')
-			increase(ptr)
+			move(ptr)
 		}
 		
 		num *= eval >= MAX_POWER ? 0.0 : powers[eval]
@@ -274,7 +272,8 @@ parse_normal :: proc (data: ^Data, ptr: ^[^]byte)
 
 parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 {
-	// count: int
+	indices := make([dynamic]Index, 0, 3, data.indices.allocator)
+
 	for {
 		skip_whitespace(ptr)
 		if is_newline(ptr[0]) do break
@@ -284,14 +283,14 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 		idx.position = parse_int(ptr)
 		
 		if ptr[0] == '/' {
-			increase(ptr)
+			move(ptr)
 
 			if ptr[0] != '/' {
 				idx.texcoord = parse_int(ptr)
 			}
 
 			if (ptr[0] == '/') {
-				increase(ptr)
+				move(ptr)
 				idx.normal = parse_int(ptr)
 			}
 		}
@@ -303,9 +302,11 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 		if idx.texcoord < 0 do idx.texcoord += len(data.texcoords)
 		if idx.normal   < 0 do idx.normal   += len(data.normals)
 
-		append(&data.indices, idx)
-		// count += 1
+		append(&indices, idx)
 	}
+
+	assert(len(indices) >= 3)
+	append(&data.indices, indices[:])
 
 	// append_soa(&data.faces, Face{
 	// 	verticis = count,
@@ -362,31 +363,31 @@ parse_line :: proc (data: ^Data, str: string)
 
 	switch ptr[0] {
 	case 'v':
-		increase(&ptr)
+		move(&ptr)
 
 		switch ptr[0] {
 		case ' ', '\t':
-			increase(&ptr)
+			move(&ptr)
 			parse_vertex(data, &ptr)
 		case 't':
-			increase(&ptr)
+			move(&ptr)
 			parse_texcoord(data, &ptr)
 		case 'n':
-			increase(&ptr)
+			move(&ptr)
 			parse_normal(data, &ptr)
 		}
 
 	case 'f':
-		increase(&ptr)
+		move(&ptr)
 
 		switch ptr[0] {
 		case ' ', '\t':
-			increase(&ptr)
+			move(&ptr)
 			parse_face(data, &ptr)
 		}
 
 	case 'o':
-		increase(&ptr)
+		move(&ptr)
 
 		switch ptr[0] {
 		case ' ', '\t':
@@ -395,7 +396,7 @@ parse_line :: proc (data: ^Data, str: string)
 		}
 
 	case 'g':
-		increase(&ptr)
+		move(&ptr)
 
 		switch ptr[0] {
 		case ' ', '\t':
@@ -404,7 +405,7 @@ parse_line :: proc (data: ^Data, str: string)
 		}
 
 	case 'm':
-		increase(&ptr)
+		move(&ptr)
 
 		if ptr[0] == 't' &&
 		   ptr[1] == 'l' &&
@@ -416,7 +417,7 @@ parse_line :: proc (data: ^Data, str: string)
 		}
 
 	case 'u':
-		increase(&ptr)
+		move(&ptr)
 		
 		if ptr[0] == 's' &&
 		   ptr[1] == 'e' &&
@@ -435,4 +436,49 @@ parse_line :: proc (data: ^Data, str: string)
 	// 		append(&data.colors, 1)
 	// 	}
 	// }
+}
+
+Vertex :: struct {
+	pos: vec3,
+	col: u8vec4,
+}
+Vertices :: #soa[]Vertex
+
+data_to_triangles :: proc (data: Data, allocator := context.allocator) -> Vertices {
+
+	vertices := make(#soa[dynamic]Vertex, 0, 3*len(data.indices), allocator)
+
+	for indices in data.indices {
+		for i in 2 ..< len(indices) {
+			a, b, c := indices[0], indices[i-1], indices[i]
+			append(&vertices, ..[]Vertex{
+				{pos = data.positions[a.position-1]},
+				{pos = data.positions[b.position-1]},
+				{pos = data.positions[c.position-1]},
+			})
+		}
+	}
+
+	return vertices[:]
+}
+
+data_to_lines :: proc (data: Data, allocator := context.allocator) -> Vertices {
+
+	vertices := make(#soa[dynamic]Vertex, 0, 6*len(data.indices), allocator)
+
+	for indices in data.indices {
+		for i in 2 ..< len(indices) {
+			a, b, c := indices[0], indices[i-1], indices[i]
+			append(&vertices, ..[]Vertex{
+				{pos = data.positions[a.position-1]},
+				{pos = data.positions[b.position-1]},
+				{pos = data.positions[b.position-1]},
+				{pos = data.positions[c.position-1]},
+				{pos = data.positions[c.position-1]},
+				{pos = data.positions[a.position-1]},
+			})
+		}
+	}
+
+	return vertices[:]
 }
