@@ -279,31 +279,31 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 		skip_whitespace(ptr)
 		if is_newline(ptr[0]) do break
 
-		index: Index
+		idx: Index
 
-		index.position = parse_int(ptr)
+		idx.position = parse_int(ptr)
 		
 		if ptr[0] == '/' {
 			increase(ptr)
 
 			if ptr[0] != '/' {
-				index.texcoord = parse_int(ptr)
+				idx.texcoord = parse_int(ptr)
 			}
 
 			if (ptr[0] == '/') {
 				increase(ptr)
-				index.normal = parse_int(ptr)
+				idx.normal = parse_int(ptr)
 			}
 		}
 		
-		if index.position == 0 {
-			return /* Skip lines with no valid vertex index */
+		if idx.position == 0 {
+			return /* Skip lines with no valid vertex idx */
 		}
-		if index.position < 0 do index.position += len(data.positions)
-		if index.texcoord < 0 do index.texcoord += len(data.texcoords)
-		if index.normal   < 0 do index.normal   += len(data.normals)
+		if idx.position < 0 do idx.position += len(data.positions)
+		if idx.texcoord < 0 do idx.texcoord += len(data.texcoords)
+		if idx.normal   < 0 do idx.normal   += len(data.normals)
 
-		append(&data.indices, index)
+		append(&data.indices, idx)
 		// count += 1
 	}
 
