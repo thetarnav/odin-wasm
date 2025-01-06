@@ -9,6 +9,11 @@ vec2 :: [2]f32
 // }
 
 Index :: struct {
+	/* 
+	 indices start ar 1
+	 zero means it points to nowhere
+	 `data.positions[idx.position-1]`
+	*/
 	position: int,
 	texcoord: int,
 	normal  : int,
@@ -277,8 +282,7 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 		index: Index
 
 		index.position = parse_int(ptr)
-		if index.position == 0 do return /* Skip lines with no valid vertex index */
-
+		
 		if ptr[0] == '/' {
 			increase(ptr)
 
@@ -291,7 +295,10 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 				index.normal = parse_int(ptr)
 			}
 		}
-
+		
+		if index.position == 0 {
+			return /* Skip lines with no valid vertex index */
+		}
 		if index.position < 0 do index.position += len(data.positions)
 		if index.texcoord < 0 do index.texcoord += len(data.texcoords)
 		if index.normal   < 0 do index.normal   += len(data.normals)

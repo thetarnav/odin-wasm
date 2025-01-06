@@ -26,11 +26,11 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 		obj.parse_line(&data, line)
 	}
 
-	s.positions = make([]vec3, len(data.indices))
+	s.positions = make([]vec3,   len(data.indices))
 	s.colors    = make([]u8vec4, len(s.positions))
 
 	for idx, i in data.indices {
-		s.positions[i] = data.positions[idx.position] * 100
+		s.positions[i] = data.positions[idx.position-1] * 100
 	}
 
 	rand_colors(s.colors)
