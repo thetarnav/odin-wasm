@@ -3,6 +3,7 @@ package example
 
 import glm "core:math/linalg/glsl"
 import     "core:strings"
+import     "core:slice"
 import gl  "../wasm/webgl"
 import     "../obj"
 
@@ -26,14 +27,24 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 		obj.parse_line(&data, line)
 	}
 
-	s.positions = make([]vec3,   len(data.indices))
+	s.positions = make([]vec3,   len(data.indices)*2)
 	s.colors    = make([]u8vec4, len(s.positions))
 
-	for idx, i in data.indices {
-		s.positions[i] = data.positions[idx.position-1] * 100
+	// for idx, i in data.indices {
+	// 	s.positions[i] = data.positions[idx.position-1] * 100
+	// }
+
+	for i := 0; i < len(data.indices); i += 3 {
+		a, b, c := data.indices[i+0], data.indices[i+1], data.indices[i+2]
+		s.positions[i*2+0] = data.positions[a.position-1] * 100
+		s.positions[i*2+1] = data.positions[b.position-1] * 100
+		s.positions[i*2+2] = data.positions[b.position-1] * 100
+		s.positions[i*2+3] = data.positions[c.position-1] * 100
+		s.positions[i*2+4] = data.positions[c.position-1] * 100
+		s.positions[i*2+5] = data.positions[a.position-1] * 100
 	}
 
-	rand_colors(s.colors)
+	slice.fill(s.colors, GREEN)
 
 	/* Init rotation */
 	s.rotation = 1
@@ -44,8 +55,8 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 
 	input_locations_boxes(s, program)
 
-	gl.Enable(gl.CULL_FACE) // don't draw back faces
-	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
+	// gl.Enable(gl.CULL_FACE) // don't draw back faces
+	// gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
 	attribute(s.a_position, gl.CreateBuffer(), s.positions)
 	attribute(s.a_color   , gl.CreateBuffer(), s.colors)
@@ -75,5 +86,5 @@ frame_suzanne :: proc(s: ^State_Suzanne, delta: f32) {
 
 	uniform(s.u_matrix, mat)
 
-	gl.DrawArrays(gl.TRIANGLES, 0, len(s.positions))
+	gl.DrawArrays(gl.LINES, 0, len(s.positions))
 }
