@@ -3,16 +3,17 @@ package example
 
 import glm "core:math/linalg/glsl"
 import     "core:strings"
-// import     "core:fmt"
+import     "core:fmt"
 import gl  "../wasm/webgl"
 import     "../obj"
 
 @private
 State_Suzanne :: struct {
 	using locations: Input_Locations_Boxes,
-	vao:      VAO,
-	rotation: mat4,
-	data:     obj.Data,
+	vao:       VAO,
+	rotation:  mat4,
+	positions: []vec3,
+	colors:    []u8vec4,
 }
 
 suzanne_obj_bytes := #load("./public/suzanne.obj", string)
@@ -20,34 +21,35 @@ suzanne_obj_bytes := #load("./public/suzanne.obj", string)
 @private
 setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 
-	s.vao = gl.CreateVertexArray()
-	gl.BindVertexArray(s.vao)
-
+	data: obj.Data
 	it := suzanne_obj_bytes
 	for line in strings.split_lines_iterator(&it) {
-		obj.parse_line(&s.data, line)
+		obj.parse_line(&data, line)
 	}
+
+	s.positions = make([]vec3, len(data.indices))
+	s.colors    = make([]u8vec4, len(s.positions))
+
+	for idx, i in data.indices {
+		s.positions[i] = data.positions[idx.position] * 100
+	}
+
+	rand_colors(s.colors)
+
+	/* Init rotation */
+	s.rotation = 1
+
+
+	s.vao = gl.CreateVertexArray()
+	gl.BindVertexArray(s.vao)
 
 	input_locations_boxes(s, program)
 
 	gl.Enable(gl.CULL_FACE) // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	for &pos in s.data.positions {
-		pos *= 100
-	}
-
-	colors := make([]u8vec4, len(s.data.positions))
-	// for _, i in s.data.positions {
-	// 	colors[i] = {u8(col.x), u8(col.y), u8(col.z), 255} rand_colors
-	// }
-	rand_colors(colors)
-
-	attribute(s.a_position, gl.CreateBuffer(), s.data.positions[:])
-	attribute(s.a_color   , gl.CreateBuffer(), colors)
-
-	/* Init rotation */
-	s.rotation = 1
+	attribute(s.a_position, gl.CreateBuffer(), s.positions)
+	attribute(s.a_color   , gl.CreateBuffer(), s.colors)
 }
 
 @private
@@ -74,5 +76,5 @@ frame_suzanne :: proc(s: ^State_Suzanne, delta: f32) {
 
 	uniform(s.u_matrix, mat)
 
-	gl.DrawArrays(gl.TRIANGLES, 0, len(s.data.positions))
+	gl.DrawArrays(gl.TRIANGLES, 0, len(s.positions))
 }
