@@ -45,12 +45,17 @@ Index :: struct {
 // 	indices   : [dynamic]Index,
 // }
 
-Data :: struct {
+Geometry :: struct {
 	positions: [dynamic]vec3,
 	texcoords: [dynamic]vec2,
 	normals:   [dynamic]vec3,
 	colors:    [dynamic]vec3,
 	indices:   [dynamic][]Index,
+	material:  string,
+}
+
+Data :: struct {
+	geometry: [dynamic]Geometry,
 	// mesh    : Mesh,   // Final mesh
 	// object  : Group,  // Current object
 	// group   : Group,  // Current group
@@ -87,11 +92,8 @@ Data :: struct {
 // }
 
 init_data :: proc (data: ^Data, allocator := context.allocator) {
-	data.positions    = make([dynamic]vec3,    0, 32, allocator)
-	data.normals      = make([dynamic]vec3,    0, 32, allocator)
-	data.texcoords    = make([dynamic]vec2,    0, 32, allocator)
-	data.colors       = make([dynamic]vec3,    0, 32, allocator)
-	data.indices      = make([dynamic][]Index, 0, 32, allocator)
+	data.geometry = make([dynamic]Geometry, 1, allocator)
+	data.geometry[0] = geometry_make(data)
 }
 data_init :: init_data
 
@@ -100,9 +102,23 @@ data_make :: proc (allocator := context.allocator) -> (data: Data) {
 	return
 }
 
+geometry_make :: proc (data: ^Data) -> (g: Geometry) {
+	g.positions = make([dynamic]vec3,    0, 32, data.geometry.allocator)
+	g.texcoords = make([dynamic]vec2,    0, 32, data.geometry.allocator)
+	g.normals   = make([dynamic]vec3,    0, 32, data.geometry.allocator)
+	g.colors    = make([dynamic]vec3,    0, 32, data.geometry.allocator)
+	g.indices   = make([dynamic][]Index, 0, 32, data.geometry.allocator)
+	return
+}
+
+geometry_last :: proc (data: ^Data) -> (g: ^Geometry) {
+	return &data.geometry[len(data.geometry)-1]
+}
+
 @private move :: #force_inline proc (ptr: ^[^]byte, amount := 1) {
 	ptr ^= ([^]byte)(uintptr(ptr^) + uintptr(amount))
 }
+
 
 is_whitespace :: proc (c: byte) -> bool {return c == ' ' || c == '\t' || c == '\r'}
 is_newline    :: proc (c: byte) -> bool {return c == '\n' || c == 0}
@@ -245,34 +261,54 @@ parse_vec2 :: proc(ptr: ^[^]byte) -> vec2 {
 	return {parse_float(ptr), parse_float(ptr)}
 }
 
-parse_vertex :: proc(data: ^Data, ptr: ^[^]byte)
-{
-	append(&data.positions, parse_vec3(ptr))
+parse_vertex :: proc(data: ^Data, ptr: ^[^]byte) {
+
+	g := geometry_last(data)
+	if (g.material != "") {
+		append(&data.geometry, geometry_make(data))
+		g = &data.geometry[len(data.geometry)-1]
+	}
+
+	append(&g.positions, parse_vec3(ptr))
 
 	skip_whitespace(ptr)
 	if is_newline(ptr[0]) do return
 
 	/* Fill the colors array until it matches the size of the positions array */
-	for _ in len(data.colors) ..< len(data.positions)-1 {
-		append(&data.colors, vec3{1, 1, 1})
+	for _ in len(g.colors) ..< len(g.positions)-1 {
+		append(&g.colors, vec3{1, 1, 1})
 	}
 
-	append(&data.colors, parse_vec3(ptr))
+	append(&g.colors, parse_vec3(ptr))
 }
 
-parse_texcoord :: proc (data: ^Data, ptr: ^[^]byte)
-{
-	append(&data.texcoords, parse_vec2(ptr))
+parse_texcoord :: proc (data: ^Data, ptr: ^[^]byte) {
+
+	g := geometry_last(data)
+	if (g.material != "") {
+		append(&data.geometry, geometry_make(data))
+		g = &data.geometry[len(data.geometry)-1]
+	}
+
+	append(&g.texcoords, parse_vec2(ptr))
 }
 
-parse_normal :: proc (data: ^Data, ptr: ^[^]byte)
-{
-	append(&data.normals, parse_vec3(ptr))
+parse_normal :: proc (data: ^Data, ptr: ^[^]byte) {
+
+	g := geometry_last(data)
+	if (g.material != "") {
+		append(&data.geometry, geometry_make(data))
+		g = &data.geometry[len(data.geometry)-1]
+	}
+
+	append(&g.normals, parse_vec3(ptr))
 }
 
-parse_face :: proc (data: ^Data, ptr: ^[^]byte)
-{
-	indices := make([dynamic]Index, 0, 3, data.indices.allocator)
+parse_face :: proc (data: ^Data, ptr: ^[^]byte) {
+
+	g := geometry_last(data)
+
+	indices := make([dynamic]Index, 0, 3, g.indices.allocator)
 
 	for {
 		skip_whitespace(ptr)
@@ -298,15 +334,15 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 		if idx.position == 0 {
 			return /* Skip lines with no valid vertex idx */
 		}
-		if idx.position < 0 do idx.position += len(data.positions)
-		if idx.texcoord < 0 do idx.texcoord += len(data.texcoords)
-		if idx.normal   < 0 do idx.normal   += len(data.normals)
+		if idx.position < 0 do idx.position += len(g.positions)
+		if idx.texcoord < 0 do idx.texcoord += len(g.texcoords)
+		if idx.normal   < 0 do idx.normal   += len(g.normals)
 
 		append(&indices, idx)
 	}
 
 	assert(len(indices) >= 3)
-	append(&data.indices, indices[:])
+	append(&g.indices, indices[:])
 
 	// append_soa(&data.faces, Face{
 	// 	verticis = count,
@@ -333,27 +369,19 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte)
 //     data.group.name = parse_name(ptr)
 // }
 
-// parse_usemtl :: proc (data: ^Data, ptr: ^[^]byte)
-// {
-//     skip_whitespace(ptr)
-// 	name := parse_name(ptr)
-	
-// 	/* Find an existing material with the same name */
-// 	for mtl, i in data.materials {
-// 		if mtl.name == name {
-// 			data.material = i
-// 			return
-// 		}
-// 	}
+parse_usemtl :: proc (data: ^Data, ptr: ^[^]byte) {
 
-// 	/* If doesn't exist, create a default one with this name
-// 	   Note: this case happens when OBJ doesn't have its MTL */
-// 	data.material = len(data.materials)
-// 	append(&data.materials, Material{ // TODO this should be initialized I think
-// 		name     = name,
-// 		fallback = 1,
-// 	})
-// }
+	skip_whitespace(ptr)	
+	name := parse_name(ptr)
+
+	g := geometry_last(data)
+	if (g.material != "") {
+		append(&data.geometry, geometry_make(data))
+		g = &data.geometry[len(data.geometry)-1]
+	}
+
+	g.material = name
+}
 
 parse_line :: proc (data: ^Data, str: string)
 {
@@ -426,7 +454,7 @@ parse_line :: proc (data: ^Data, str: string)
 		   ptr[4] == 'l' &&
 		   is_whitespace(ptr[5]) {
 			// increase(&ptr, 5)
-			// parse_usemtl(data, &ptr)
+			parse_usemtl(data, &ptr)
 		}
 	}
 
@@ -444,17 +472,17 @@ Vertex :: struct {
 }
 Vertices :: #soa[]Vertex
 
-data_to_triangles :: proc (data: Data, allocator := context.allocator) -> Vertices {
+geometry_to_triangles :: proc (g: Geometry, allocator := context.allocator) -> Vertices {
 
-	vertices := make(#soa[dynamic]Vertex, 0, 3*len(data.indices), allocator)
+	vertices := make(#soa[dynamic]Vertex, 0, 3*len(g.indices), allocator)
 
-	for indices in data.indices {
+	for indices in g.indices {
 		for i in 2 ..< len(indices) {
 			a, b, c := indices[0], indices[i-1], indices[i]
 			append(&vertices, ..[]Vertex{
-				{pos = data.positions[a.position-1]},
-				{pos = data.positions[b.position-1]},
-				{pos = data.positions[c.position-1]},
+				{pos = g.positions[a.position-1]},
+				{pos = g.positions[b.position-1]},
+				{pos = g.positions[c.position-1]},
 			})
 		}
 	}
@@ -462,20 +490,20 @@ data_to_triangles :: proc (data: Data, allocator := context.allocator) -> Vertic
 	return vertices[:]
 }
 
-data_to_lines :: proc (data: Data, allocator := context.allocator) -> Vertices {
+geometry_to_lines :: proc (g: Geometry, allocator := context.allocator) -> Vertices {
 
-	vertices := make(#soa[dynamic]Vertex, 0, 6*len(data.indices), allocator)
+	vertices := make(#soa[dynamic]Vertex, 0, 6*len(g.indices), allocator)
 
-	for indices in data.indices {
+	for indices in g.indices {
 		for i in 2 ..< len(indices) {
 			a, b, c := indices[0], indices[i-1], indices[i]
 			append(&vertices, ..[]Vertex{
-				{pos = data.positions[a.position-1]},
-				{pos = data.positions[b.position-1]},
-				{pos = data.positions[b.position-1]},
-				{pos = data.positions[c.position-1]},
-				{pos = data.positions[c.position-1]},
-				{pos = data.positions[a.position-1]},
+				{pos = g.positions[a.position-1]},
+				{pos = g.positions[b.position-1]},
+				{pos = g.positions[b.position-1]},
+				{pos = g.positions[c.position-1]},
+				{pos = g.positions[c.position-1]},
+				{pos = g.positions[a.position-1]},
 			})
 		}
 	}
