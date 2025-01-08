@@ -144,6 +144,7 @@ setup_candy :: proc(s: ^State_Candy, program: gl.Program) {
 
 @private
 frame_candy :: proc(s: ^State_Candy, delta: f32) {
+	
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0, 0, 0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)

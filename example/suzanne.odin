@@ -27,7 +27,7 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 		obj.parse_line(&data, line)
 	}
 
-	lines := obj.geometry_to_lines(data.geometry[0], context.allocator)
+	lines := obj.object_to_lines(data, data.objects[0], context.allocator)
 
 	s.positions = lines.pos[:len(lines)]
 	s.colors    = lines.col[:len(lines)]

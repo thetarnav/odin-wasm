@@ -75,6 +75,14 @@ to_rgba_3_1 :: #force_inline proc "contextless" (color: $A/[3]u8, a: u8) -> rgba
 }
 to_rgba :: proc {to_rgba_3_1}
 
+last_array         :: #force_inline proc "contextless" (arr: $T/[$N]$E)       -> E  {return arr[len(arr)-1]}
+last_dyn_array     :: #force_inline proc "contextless" (arr: $T/[dynamic]$E)  -> E  {return arr[len(arr)-1]}
+last_slice         :: #force_inline proc "contextless" (arr: $T/[]$E)         -> E  {return arr[len(arr)-1]}
+last_array_ptr     :: #force_inline proc "contextless" (arr: $T/^[$N]$E)      -> ^E {return &arr[len(arr)-1]}
+last_dyn_array_ptr :: #force_inline proc "contextless" (arr: $T/^[dynamic]$E) -> ^E {return &arr[len(arr)-1]}
+last_slice_ptr     :: #force_inline proc "contextless" (arr: $T/^[]$E)        -> ^E {return &arr[len(arr)-1]}
+last :: proc {last_array, last_dyn_array, last_slice, last_array_ptr, last_dyn_array_ptr, last_slice_ptr}
+
 copy_array :: #force_inline proc "contextless" (dst: []$S, src: [$N]S) {
 	src := src
 	copy(dst, src[:])

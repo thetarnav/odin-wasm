@@ -86,6 +86,7 @@ Example_Kind :: enum {
 	Bezier_Curve = 9,
 	Lathe        = 10,
 	Suzanne      = 11,
+	Chair        = 12,
 }
 example: Example_Kind
 
@@ -137,6 +138,10 @@ demos: [Example_Kind]struct {
 		vs_sources = {#load("./boxes.vert", string)},
 		fs_sources = {#load("./simple.frag", string)},
 	},
+	.Chair = {
+		vs_sources = {#load("./boxes.vert", string)},
+		fs_sources = {#load("./simple.frag", string)},
+	},
 }
 
 // state is a union because it is being used by only one of the examples
@@ -153,6 +158,7 @@ demo_state: struct #raw_union {
 	bezier_curve: State_Bezier_Curve,
 	lathe:        State_Lathe,
 	suzanne:      State_Suzanne,
+	chair:        State_Chair,
 }
 
 
@@ -205,6 +211,7 @@ start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 	case .Bezier_Curve: setup_bezier_curve(&demo_state.bezier_curve, program)
 	case .Lathe:        setup_lathe       (&demo_state.lathe,        program)
 	case .Suzanne:      setup_suzanne     (&demo_state.suzanne,      program)
+	case .Chair:        setup_chair       (&demo_state.chair,        program)
 	}
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
@@ -240,5 +247,6 @@ frame :: proc (delta: f32) {
 	case .Bezier_Curve: frame_bezier_curve(&demo_state.bezier_curve, delta)
 	case .Lathe:        frame_lathe       (&demo_state.lathe,        delta)
 	case .Suzanne:      frame_suzanne     (&demo_state.suzanne,      delta)
+	case .Chair:        frame_chair       (&demo_state.chair,        delta)
 	}
 }
