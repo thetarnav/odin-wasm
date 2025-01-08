@@ -5,7 +5,7 @@
 		"moduleResolution": "NodeNext",
 		"lib": ["ESNext", "DOM"],
 		"newLine": "LF",
-		"types": [],
+		"types": ["node"],
 
 		/* JS */
 		"allowJs": true,
