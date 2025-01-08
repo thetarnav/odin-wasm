@@ -1,10 +1,6 @@
 /*
 Main script for building and running the playground.
 
-TODO:
-
-- [ ] Better css reloading
-
 */
 
 import fs            from "node:fs"
@@ -14,7 +10,6 @@ import url           from "node:url"
 import http          from "node:http"
 import process       from "node:process"
 import child_process from "node:child_process"
-import * as chokidar from "chokidar"
 import * as ws       from "ws"
 import * as esbuild  from "esbuild"
 
@@ -25,7 +20,9 @@ import {
 
 const dirname         = path.dirname(url.fileURLToPath(import.meta.url))
 const playground_path = path.join(dirname, PLAYGROUND_DIRNAME)
+const package_path    = path.join(dirname, PACKAGE_DIRNAME)
 const dist_path       = path.join(dirname, DIST_DIRNAME)
+const obj_path        = path.join(dirname, "obj")
 const config_path     = path.join(dirname, CONFIG_FILENAME)
 const config_path_out = path.join(playground_path, CONFIG_OUT_FILENAME)
 const public_path     = path.join(playground_path, PUBLIC_DIRNAME)
@@ -109,43 +106,97 @@ const command_handlers = {
 		const server = makeHttpServer(requestListener)
 		const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
 
-		let wasm_build_promise =
-			build_shdc()
-			.then(() => build_shader_utils())
-			.then(() => build_wasm(true))
+		/** @type {Promise<number> | null} */ let build_wasm_promise         = null
+		/** @type {Promise<number> | null} */ let build_shader_utils_promise = null
+		/** @type {Promise<number> | null} */ let build_shdc_promise         = null
+
+		function build_shdc_start() {
+			return build_shdc_promise = (async () => {
+				let r = await build_shdc()
+				build_shdc_promise = null
+				return r
+			})()
+		}
+		function build_shader_utils_start() {
+
+			if (build_shader_utils_promise)
+				return build_shader_utils_promise
+
+			info("Building shader utils...")
+
+			return build_shader_utils_promise = (async () => {
+				await build_shdc_promise
+				let r = await build_shader_utils()
+				build_shader_utils_promise = null
+				return r
+			})()
+		}
+		function build_wasm_start() {
+
+			if (build_wasm_promise)
+				return build_wasm_promise
+
+			info("Building wasm...")
+			
+			return build_wasm_promise = (async () => {
+				await build_shader_utils_promise
+				let r = await build_wasm(true)
+				build_wasm_promise = null
+				return r
+			})()
+		}
+
+		build_shdc_start()
+		build_shader_utils_start()
+		build_wasm_start()
+
 		const config_promise = build_config(true)
 
-		const watcher = chokidar.watch(
-			[
-				`./${PLAYGROUND_DIRNAME}/**/*.{js,html,css,odin,vert,frag}`,
-				`./${PACKAGE_DIRNAME}/**/*.{js,odin}`,
-			],
-			{
-				ignored: ["**/.*", "**/_*", "**/*.test.js"],
-				ignoreInitial: true,
-			},
-		)
-		void watcher.on("change", filepath => {
-			switch (path.extname(filepath)) {
-			case ".odin":
-				info("Rebuilding WASM...")
-				wasm_build_promise = build_wasm(true)
-				break
-			case ".vert":
-			case ".frag":
-				info("Rebuilding shader utils...")
-				wasm_build_promise = build_shader_utils()
-				break
-			}
+		const watchers = [
+			fs.watch(playground_path, {recursive: true}),
+			fs.watch(package_path,    {recursive: true}),
+			fs.watch(obj_path,        {recursive: true}),
+		]
 
-			info("Reloading page...")
-			sendToAllClients(wss, MESSAGE_RELOAD)
-		})
+		for (let watcher of watchers) {
+			watcher.on("change", (e, _filename) => {
+				let filename = String(_filename)
+				let basename = path.basename(filename)
+
+				if (!basename || basename[0] === "." || basename[0] === "_") return
+
+				let ext = path.extname(basename)
+
+				switch (ext) {
+				case ".odin":
+					build_wasm_start()
+					break
+				case ".vert":
+				case ".frag":
+					build_shader_utils_start()
+					break
+				case ".svg":
+				case ".html":
+				case ".css":
+				case ".obj":
+				case ".gif":
+				case ".js":
+					break
+				default:
+					return // ignore
+				}
+
+				info(`${filename} ${e}, reloading page...`)
+				sendToAllClients(wss, MESSAGE_RELOAD)
+			})
+		}
 
 		function exit() {
 			void server.close()
 			void wss.close()
-			void watcher.close()
+			for (let watcher of watchers) {
+				watcher.close()
+			}
 			sendToAllClients(wss, MESSAGE_RELOAD)
 			void process.exit(0)
 		}
@@ -163,7 +214,7 @@ const command_handlers = {
 			if (req.url === "/" + CONFIG_OUT_FILENAME) {
 				await config_promise
 			} else if (req.url === "/" + WASM_FILENAME) {
-				await wasm_build_promise
+				await build_wasm_promise
 			}
 
 			/* Static files */
@@ -285,11 +336,26 @@ if (!hasKey(command_handlers, command)) panic("Unknown command: "+command)
 const command_handler = command_handlers[command]
 command_handler(args.slice(1))
 
+/**
+@param   {string[]} args
+@param   {(fs.ObjectEncodingOptions & child_process.ExecFileOptions) | undefined | null} options
+@returns {child_process.ChildProcess} */
+function exec(args, options) {
+
+	let process = child_process.execFile(args[0], args.slice(1), options)
+
+	console.log("\x1b[90m"+"$ odin "+args.join(" ")+"\x1b[0m")
+
+	process.stderr?.on("data", console.error)
+
+	return process
+}
+
 /** @returns {Promise<number>} exit code */
 async function build_shader_utils() {
 	const start = performance.now()
 
-	const child = child_process.execFile(shdc_bin_path, args, {cwd: dirname})
+	const child = exec([shdc_bin_path, ...args], {cwd: dirname})
 	const code = await childProcessToPromise(child)
 
 	if (code === 0) {
@@ -299,21 +365,6 @@ async function build_shader_utils() {
 	}
 
 	return code
-}
-
-/**
-@param   {string[]} args 
-@param   {(fs.ObjectEncodingOptions & child_process.ExecFileOptions) | undefined | null} options
-@returns {child_process.ChildProcess} */
-function exec(args, options) {
-
-	let process = child_process.execFile(args[0], args.slice(1), options)
-
-	console.log("\x1b[90m"+"$ odin "+args.join(' ')+"\x1b[0m")
-
-	process.stderr?.on("data", console.error)
-
-	return process
 }
 
 /** @returns {Promise<number>} exit code */
@@ -339,7 +390,7 @@ async function build_shdc() {
 
 /**
  * @param   {boolean}         is_dev
- * @returns {Promise<number>}            exit code
+ * @returns {Promise<number>} exit code
  */
 async function build_wasm(is_dev) {
 	const start = performance.now()
