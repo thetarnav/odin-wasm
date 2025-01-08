@@ -1,3 +1,9 @@
+/*
+https://paulbourke.net/dataformats/obj
+
+https://github.com/thisistherk/fast_obj
+*/
+
 package obj
 
 vec3   :: [3]f32
