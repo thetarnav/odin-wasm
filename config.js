@@ -7,7 +7,7 @@ export const IS_DEV = /** @type {boolean} */ (false)
 export const IS_PROD = /** @type {boolean} */ (!IS_DEV)
 
 export const HTTP_PORT = 3000
-export const WEB_SOCKET_PORT = 8080
+export const RELOAD_URL = "/_reload"
 
 export const PLAYGROUND_DIRNAME = "example"
 export const DIST_DIRNAME = "dist"
@@ -19,5 +19,3 @@ export const CONFIG_OUT_FILENAME = "_" + CONFIG_FILENAME
 
 export const WASM_FILENAME = "_main.wasm"
 export const WASM_PATH = PLAYGROUND_DIRNAME + "/" + PUBLIC_DIRNAME + "/" + WASM_FILENAME
-
-export const MESSAGE_RELOAD = "reload"

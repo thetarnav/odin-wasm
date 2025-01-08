@@ -1,6 +1,6 @@
 import * as wasm from "../wasm/runtime.js"
 
-import {IS_DEV, WEB_SOCKET_PORT, MESSAGE_RELOAD, WASM_FILENAME} from "./_config.js"
+import {IS_DEV, RELOAD_URL, WASM_FILENAME} from "./_config.js"
 
 /*
 Development server
@@ -10,10 +10,10 @@ if (IS_DEV) {
 	wasm.enableConsole()
 
 	/* Hot Reload */
-	new WebSocket("ws://localhost:" + WEB_SOCKET_PORT).addEventListener(
-		"message",
-		event => event.data === MESSAGE_RELOAD && location.reload(),
-	)
+	const events = new EventSource(RELOAD_URL)
+	events.onmessage = _ => {
+		location.reload()
+	}
 
 	/* To test dispatching custom events */
 	document.body.addEventListener("lol", () => {

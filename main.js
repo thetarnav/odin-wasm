@@ -10,12 +10,11 @@ import url           from "node:url"
 import http          from "node:http"
 import process       from "node:process"
 import child_process from "node:child_process"
-import * as ws       from "ws"
 import * as esbuild  from "esbuild"
 
 import {
-	DIST_DIRNAME, CONFIG_FILENAME, HTTP_PORT, MESSAGE_RELOAD, PACKAGE_DIRNAME, PLAYGROUND_DIRNAME,
-	WASM_PATH, WEB_SOCKET_PORT, CONFIG_OUT_FILENAME, WASM_FILENAME, PUBLIC_DIRNAME,
+	DIST_DIRNAME, CONFIG_FILENAME, HTTP_PORT, PACKAGE_DIRNAME, PLAYGROUND_DIRNAME,
+	WASM_PATH, RELOAD_URL, CONFIG_OUT_FILENAME, WASM_FILENAME, PUBLIC_DIRNAME,
 } from "./config.js"
 
 const dirname         = path.dirname(url.fileURLToPath(import.meta.url))
@@ -104,7 +103,9 @@ const command_handlers = {
 		void fs.mkdirSync(dist_path, {recursive: true})
 
 		const server = makeHttpServer(requestListener)
-		const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
+
+		/** @type {Set<http.ServerResponse>} */
+		const reload_clients_set = new Set()
 
 		/** @type {Promise<number> | null} */ let build_wasm_promise         = null
 		/** @type {Promise<number> | null} */ let build_shader_utils_promise = null
@@ -187,17 +188,16 @@ const command_handlers = {
 				}
 
 				info(`${filename} ${e}, reloading page...`)
-				sendToAllClients(wss, MESSAGE_RELOAD)
+				for (const client of reload_clients_set) {
+					client.write(`data: reload\n\n`)
+				}
 			})
 		}
 
 		function exit() {
 			void server.close()
-			void wss.close()
-			for (let watcher of watchers) {
-				watcher.close()
-			}
-			sendToAllClients(wss, MESSAGE_RELOAD)
+			for (let w of watchers) w.close()
+			for (let c of reload_clients_set) c.end()
 			void process.exit(0)
 		}
 		void process.on("SIGINT", exit)
@@ -211,10 +211,25 @@ const command_handlers = {
 			const req_time = performance.now()
 			if (!req.url || req.method !== "GET") return end404(req, res, req_time)
 
-			if (req.url === "/" + CONFIG_OUT_FILENAME) {
+			switch (req.url) {
+			// Handle SSE endpoint
+			case RELOAD_URL: {
+				res.writeHead(200, {
+					"Content-Type":  "text/event-stream",
+					"Cache-Control": "no-cache",
+					"Connection":    "keep-alive",
+				})
+				res.write("\n")
+				reload_clients_set.add(res)
+				req.on("close", () => reload_clients_set.delete(res))
+				return
+			}
+			case "/" + CONFIG_OUT_FILENAME:
 				await config_promise
-			} else if (req.url === "/" + WASM_FILENAME) {
+				break
+			case "/" + WASM_FILENAME:
 				await build_wasm_promise
+				break
 			}
 
 			/* Static files */
@@ -556,15 +571,6 @@ function log_request(req, res, req_time) {
 	txt += " "
 	txt += req.url ?? "NULL"
 	console.log(txt)
-}
-
-/** @typedef {Parameters<ws.WebSocket["send"]>[0]} BufferLike */
-
-/** @returns {void} */
-function sendToAllClients(/** @type {ws.WebSocketServer} */ wss, /** @type {BufferLike} */ data) {
-	for (const client of wss.clients) {
-		client.send(data)
-	}
 }
 
 /** @returns {string} */
