@@ -3,14 +3,14 @@ Main script for building and running the playground.
 
 */
 
-import fs            from "node:fs"
-import fsp           from "node:fs/promises"
-import path          from "node:path"
-import url           from "node:url"
-import http          from "node:http"
-import process       from "node:process"
-import child_process from "node:child_process"
-import * as esbuild  from "esbuild"
+import * as fs      from "node:fs"
+import * as fsp     from "node:fs/promises"
+import * as path    from "node:path"
+import * as url     from "node:url"
+import * as http    from "node:http"
+import * as process from "node:process"
+import * as cp      from "node:child_process"
+import * as esbuild from "esbuild"
 
 import {
 	DIST_DIRNAME, CONFIG_FILENAME, HTTP_PORT, PACKAGE_DIRNAME, PLAYGROUND_DIRNAME,
@@ -353,11 +353,11 @@ command_handler(args.slice(1))
 
 /**
 @param   {string[]} args
-@param   {(fs.ObjectEncodingOptions & child_process.ExecFileOptions) | undefined | null} options
-@returns {child_process.ChildProcess} */
+@param   {(fs.ObjectEncodingOptions & cp.ExecFileOptions) | undefined | null} options
+@returns {cp.ChildProcess} */
 function exec(args, options) {
 
-	let process = child_process.execFile(args[0], args.slice(1), options)
+	let process = cp.execFile(args[0], args.slice(1), options)
 
 	console.log("\x1b[90m"+"$ odin "+args.join(" ")+"\x1b[0m")
 
@@ -616,7 +616,7 @@ function unsafePromiseToBool(/** @type {Promise<any>} */ promise) {
 }
 
 /** @returns {Promise<number>} Exit code */
-function childProcessToPromise(/** @type {child_process.ChildProcess} */ child) {
+function childProcessToPromise(/** @type {cp.ChildProcess} */ child) {
 	return new Promise(resolve => {
 		void child.on("close", resolve)
 	})
