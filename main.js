@@ -3,14 +3,14 @@ Main script for building and running the playground.
 
 */
 
-import * as fs      from "node:fs"
-import * as fsp     from "node:fs/promises"
-import * as path    from "node:path"
-import * as url     from "node:url"
-import * as http    from "node:http"
-import * as process from "node:process"
-import * as cp      from "node:child_process"
-import * as esbuild from "esbuild"
+import      fs      from "node:fs"
+import      fsp     from "node:fs/promises"
+import      path    from "node:path"
+import      url     from "node:url"
+import      http    from "node:http"
+import      process from "node:process"
+import      cp      from "node:child_process"
+import * as esb     from "esbuild"
 
 import {
 	DIST_DIRNAME, CONFIG_FILENAME, HTTP_PORT, PACKAGE_DIRNAME, PLAYGROUND_DIRNAME,
@@ -299,7 +299,7 @@ const command_handlers = {
 		await build_config(false)
 		logger_info(logger, "Built config")
 
-		const res = await esbuild.build({
+		const res = await esb.build({
 			entryPoints: [path.join(playground_path, "setup.js")],
 			outfile:     path.join(dist_path, "setup.js"),
 			format:      "esm",
