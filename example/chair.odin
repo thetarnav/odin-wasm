@@ -24,6 +24,9 @@ chair_obj_bytes := #load("./public/chair.obj", string)
 
 @private
 setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
+	
+	gl.Enable(gl.CULL_FACE)  // don't draw back faces
+	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
 	data := obj.data_make(context.temp_allocator)
 	it := chair_obj_bytes
@@ -39,24 +42,22 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 
 		o.vao = gl.CreateVertexArray()
 
-		lines := obj.object_to_lines(data, object, context.allocator)
+		lines := obj.object_to_triangles(data, object, context.allocator)
 		
 		o.positions = lines.pos[:len(lines)]
 		o.colors    = lines.col[:len(lines)]
 
 		for &pos in o.positions {
 			pos *= 100
+			pos.y -= 300
 		}
 
-		slice.fill(o.colors, GREEN)
+		slice.fill(o.colors, rand_color())
 
 
 		gl.BindVertexArray(o.vao)
 	
 		input_locations_boxes(&o.locations, program)
-	
-		// gl.Enable(gl.CULL_FACE) // don't draw back faces
-		// gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 	
 		attribute(o.a_position, gl.CreateBuffer(), o.positions)
 		attribute(o.a_color   , gl.CreateBuffer(), o.colors)
@@ -98,7 +99,7 @@ frame_chair :: proc(s: ^State_Chair, delta: f32) {
 
 		uniform(o.u_matrix, mat)
 		
-		gl.DrawArrays(gl.LINES, 0, len(o.positions))
+		gl.DrawArrays(gl.TRIANGLES, 0, len(o.positions))
 	}
 
 }

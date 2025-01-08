@@ -36,7 +36,6 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 		pos *= 100
 	}
 
-	// rand_colors(s.colors)
 	slice.fill(s.colors, GREEN)
 
 	/* Init rotation */
@@ -47,9 +46,6 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 	gl.BindVertexArray(s.vao)
 
 	input_locations_boxes(s, program)
-
-	// gl.Enable(gl.CULL_FACE) // don't draw back faces
-	// gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
 	attribute(s.a_position, gl.CreateBuffer(), s.positions)
 	attribute(s.a_color   , gl.CreateBuffer(), s.colors)
