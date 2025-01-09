@@ -2,6 +2,7 @@ package example
 
 import      "base:intrinsics"
 import      "core:math/rand"
+import      "core:math"
 import _fmt "core:fmt"
 import glm  "core:math/linalg/glsl"
 import gl   "../wasm/webgl"
@@ -44,8 +45,47 @@ lerp      :: glm.lerp
 distance  :: glm.distance
 sqrt      :: glm.sqrt
 
+@require_results
 cbrt :: #force_inline proc "contextless" (x: f32) -> f32 {
 	return x * x * x
+}
+
+@require_results
+hypot_f32_3d :: proc "contextless" (x, y, z: f32) -> f32 {
+	x, y, z := abs(x), abs(y), abs(z)
+	
+	if math.is_inf(x, 1) || math.is_inf(y, 1) || math.is_inf(z, 1) {
+		return math.inf_f32(1)
+	}
+	if math.is_nan(x) || math.is_nan(y) || math.is_nan(z) {
+		return math.nan_f32()
+	}
+	
+	// make p the largest
+	if x < y {
+		x, y = y, x
+	}
+	if x < z {
+		x, z = z, x
+	}
+	if x == 0 {
+		return 0
+	}
+	y = y / x
+	z = z / x
+	return x * sqrt(1 + y*y + z*z)
+}
+
+@require_results
+hypot_vec3 :: proc "contextless" (v: vec3) -> f32 {
+	return hypot_f32_3d(v.x, v.y, v.z)
+}
+
+hypot :: proc {
+	math.hypot_f16, math.hypot_f16le, math.hypot_f16be,
+	math.hypot_f32, math.hypot_f32le, math.hypot_f32be,
+	math.hypot_f64, math.hypot_f64le, math.hypot_f64be,
+	hypot_f32_3d, hypot_vec3,
 }
 
 UP    :: vec3{ 0, 1, 0}
@@ -58,10 +98,10 @@ BACK  :: vec3{ 0, 0,-1}
 ratio :: distinct f32
 rvec2 :: distinct [2]f32
 
-to_px :: proc(r: rvec2) -> vec2 {
+to_px :: #force_inline proc "contextless" (r: rvec2) -> vec2 {
 	return vec2(r) * canvas_size * dpr
 }
-to_rvec2 :: proc(p: vec2) -> rvec2 {
+to_rvec2 :: #force_inline proc "contextless" (p: vec2) -> rvec2 {
 	return rvec2(p / canvas_size * dpr)
 }
 
@@ -328,7 +368,7 @@ vec2_transform :: proc "contextless" (v: vec2, m: mat3) -> vec2 {
 	}
 }
 
-normals_from_positions :: proc(dst, src: []vec3) {
+normals_from_positions :: proc (dst, src: []vec3) {
 	assert(len(dst) >= len(src))
 	assert(len(src) % 3 == 0)
 
@@ -343,6 +383,23 @@ normals_from_positions :: proc(dst, src: []vec3) {
 		dst[i*3+1] = normal
 		dst[i*3+2] = normal
 	}
+}
+
+get_extents :: proc (positions: []$T) -> (v_min, v_max: T) {
+
+	v_min = positions[0]
+	v_max = positions[0]
+	
+	for pos in positions[1:] {
+		v_min.x = min(pos.x, v_min.x)
+		v_min.y = min(pos.y, v_min.y)
+		v_min.z = min(pos.z, v_min.z)
+		v_max.x = max(pos.x, v_max.x)
+		v_max.y = max(pos.y, v_max.y)
+		v_max.z = max(pos.z, v_max.z)
+	}
+	
+	return
 }
 
 vec3_on_radius :: proc (r, a, y: f32) -> vec3 {

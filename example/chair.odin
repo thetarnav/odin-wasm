@@ -34,6 +34,12 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 		obj.parse_line(&data, line)
 	}
 
+	extent_min, extent_max := get_extents(data.positions[:])
+	extent_span := hypot(extent_max-extent_min)
+
+	goal_min, goal_max: vec3 = -200, 200
+	goal_span := hypot(goal_max-goal_min)
+
 	objects: [dynamic]Object
 
 	for object in data.objects {
@@ -46,8 +52,8 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 		
 		o.positions = lines.pos[:len(lines)]
 		for &pos in o.positions {
-			pos *= 100
-			pos.y -= 300
+			pos -= (extent_max-extent_min)/2 + extent_min
+			pos *= goal_span/extent_span
 		}
 		
 		o.colors = make([]rgba, len(o.positions))
