@@ -402,6 +402,20 @@ get_extents :: proc (positions: []$T) -> (v_min, v_max: T) {
 	return
 }
 
+correct_extents :: proc (
+	positions: []vec3,
+	in_min:  vec3, in_max:  vec3,
+	out_min: vec3, out_max: vec3,
+) {
+	in_span  := hypot(in_max-in_min)
+	out_span := hypot(out_max-out_min)
+
+	for &pos in positions {
+		pos -= (in_max-in_min)/2 + in_min
+		pos *= out_span/in_span
+	}
+}
+
 vec3_on_radius :: proc (r, a, y: f32) -> vec3 {
 	return {r * cos(a), y, r * sin(a)}
 }

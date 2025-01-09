@@ -33,9 +33,7 @@ setup_book :: proc(s: ^State_Book, program: gl.Program) {
 	vertices := obj.object_to_triangles(data, data.objects[0], context.allocator)
 	
 	s.positions = vertices.pos[:len(vertices)]
-	for &pos in s.positions {
-		pos *= 1000
-	}
+	correct_extents(s.positions, ..get_extents(s.positions), -200, 200)
 	
 	s.colors = make([]rgba, len(vertices))
 	for &col, i in s.colors {

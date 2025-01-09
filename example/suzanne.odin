@@ -28,11 +28,9 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 	}
 
 	lines := obj.object_to_lines(data, data.objects[0], context.allocator)
-
+	
 	s.positions = lines.pos[:len(lines)]
-	for &pos in s.positions {
-		pos *= 100
-	}
+	correct_extents(s.positions, ..get_extents(s.positions), -200, 200)
 
 	s.colors = make([]rgba, len(s.positions))
 	slice.fill(s.colors, GREEN)

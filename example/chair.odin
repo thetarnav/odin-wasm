@@ -35,10 +35,6 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 	}
 
 	extent_min, extent_max := get_extents(data.positions[:])
-	extent_span := hypot(extent_max-extent_min)
-
-	goal_min, goal_max: vec3 = -200, 200
-	goal_span := hypot(goal_max-goal_min)
 
 	objects: [dynamic]Object
 
@@ -48,13 +44,10 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 
 		o.vao = gl.CreateVertexArray()
 
-		lines := obj.object_to_triangles(data, object, context.allocator)
+		vertices := obj.object_to_triangles(data, object, context.allocator)
 		
-		o.positions = lines.pos[:len(lines)]
-		for &pos in o.positions {
-			pos -= (extent_max-extent_min)/2 + extent_min
-			pos *= goal_span/extent_span
-		}
+		o.positions = vertices.pos[:len(vertices)]
+		correct_extents(o.positions, extent_min, extent_max, -200, 200)
 		
 		o.colors = make([]rgba, len(o.positions))
 		slice.fill(o.colors, rand_color())
@@ -71,8 +64,6 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 
 	/* Init rotation */
 	s.rotation = 1
-
-
 }
 
 @private
