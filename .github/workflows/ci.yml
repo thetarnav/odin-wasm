@@ -1,24 +1,31 @@
-name: Deploy example page
+name: Build, Test, Deploy
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - uses: laytan/setup-odin@v2
+      - name: Setup Odin and LLVM
+        uses: laytan/setup-odin@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           llvm-version: 17
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: npm
 
       - name: Install dependencies
@@ -32,9 +39,33 @@ jobs:
         with:
           path: dist/
 
-  deploy:
-    needs: build
+  Test:
+    needs: Build
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-frozen-lockfile
+
+      - name: Typecheck JS
+        run: npm run typecheck:ts
+
+      - name: Test
+        run: npm run test
+
+  Deploy:
+    needs: Build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
