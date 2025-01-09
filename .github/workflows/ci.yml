@@ -40,7 +40,6 @@ jobs:
           path: dist/
 
   Test:
-    needs: Build
     runs-on: ubuntu-latest
 
     steps:
