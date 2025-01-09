@@ -45,15 +45,13 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 		lines := obj.object_to_triangles(data, object, context.allocator)
 		
 		o.positions = lines.pos[:len(lines)]
-		o.colors    = lines.col[:len(lines)]
-
 		for &pos in o.positions {
 			pos *= 100
 			pos.y -= 300
 		}
-
+		
+		o.colors = make([]rgba, len(o.positions))
 		slice.fill(o.colors, rand_color())
-
 
 		gl.BindVertexArray(o.vao)
 	

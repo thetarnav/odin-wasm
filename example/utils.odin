@@ -69,11 +69,16 @@ u8vec4_to_vec4 :: #force_inline proc "contextless" (rgba: u8vec4) -> vec4 {
 	return {f32(rgba.r)/255, f32(rgba.g)/255, f32(rgba.b)/255, f32(rgba.a)/255}
 }
 rgba_to_vec4 :: u8vec4_to_vec4
+vec4_from_rgba :: rgba_to_vec4
 
 to_rgba_3_1 :: #force_inline proc "contextless" (color: $A/[3]u8, a: u8) -> rgba {
 	return {color.r, color.g, color.b, a}
 }
-to_rgba :: proc {to_rgba_3_1}
+vec3_to_rgba :: #force_inline proc "contextless" (v: vec3, a: u8 = 255) -> rgba {
+	return {u8(v.r*255), u8(v.g*255), u8(v.b*255), a}
+}
+to_rgba :: proc {to_rgba_3_1, vec3_to_rgba}
+
 
 last_array         :: #force_inline proc "contextless" (arr: $T/[$N]$E)       -> E  {return arr[len(arr)-1]}
 last_dyn_array     :: #force_inline proc "contextless" (arr: $T/[dynamic]$E)  -> E  {return arr[len(arr)-1]}

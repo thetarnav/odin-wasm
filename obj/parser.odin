@@ -17,9 +17,7 @@ u8vec4 :: [4]u8
 
 Index :: struct {
 	/* 
-	 indices start ar 1
-	 zero means it points to nowhere
-	 `data.positions[idx.position-1]`
+	 indices are base-1
 	*/
 	position: int,
 	texcoord: int,
@@ -99,9 +97,12 @@ Data :: struct {
 // }
 
 init_data :: proc (data: ^Data, allocator := context.allocator) {
-	data.positions  = make([dynamic]vec3,   0, 32, allocator)
-	data.texcoords  = make([dynamic]vec2,   0, 32, allocator)
-	data.normals    = make([dynamic]vec3,   0, 32, allocator)
+
+	// indices are base-1, add zero index to be able to index it normally
+	data.positions  = make([dynamic]vec3,   1, 32, allocator)
+	data.texcoords  = make([dynamic]vec2,   1, 32, allocator)
+	data.normals    = make([dynamic]vec3,   1, 32, allocator)
+
 	data.colors     = make([dynamic]vec3,   0, 32, allocator)
 	data.objects    = make([dynamic]Object, 1,  4, allocator)
 	data.objects[0] = object_make(data)
@@ -445,20 +446,20 @@ parse_line :: proc (data: ^Data, str: string)
 			parse_usemtl(data, &ptr)
 		}
 	}
-
-	// if len(data.colors) > 0 {
-	//     /* Fill the remaining slots in the colors array */
-	// 	for _ in 0 ..< len(data.positions) - len(data.colors) {
-	// 		append(&data.colors, 1)
-	// 	}
-	// }
 }
 
 Vertex :: struct {
 	pos: vec3,
-	col: u8vec4,
+	col: vec3,
 }
 Vertices :: #soa[]Vertex
+
+vertex_get_from_index :: proc (data: Data, idx: Index) -> (v: Vertex) {
+	v.pos = data.positions[idx.position]
+	// colors array is only filled if the colors data is in the file
+	v.col = data.colors[idx.position] if idx.position < len(data.colors) else 1
+	return
+}
 
 object_to_triangles :: proc (data: Data, g: Object, allocator := context.allocator) -> Vertices {
 
@@ -468,9 +469,9 @@ object_to_triangles :: proc (data: Data, g: Object, allocator := context.allocat
 		for i in 2 ..< len(indices) {
 			a, b, c := indices[0], indices[i-1], indices[i]
 			append(&vertices, ..[]Vertex{
-				{pos = data.positions[a.position-1]},
-				{pos = data.positions[b.position-1]},
-				{pos = data.positions[c.position-1]},
+				vertex_get_from_index(data, a),
+				vertex_get_from_index(data, b),
+				vertex_get_from_index(data, c),
 			})
 		}
 	}
@@ -486,12 +487,12 @@ object_to_lines :: proc (data: Data, g: Object, allocator := context.allocator) 
 		for i in 2 ..< len(indices) {
 			a, b, c := indices[0], indices[i-1], indices[i]
 			append(&vertices, ..[]Vertex{
-				{pos = data.positions[a.position-1]},
-				{pos = data.positions[b.position-1]},
-				{pos = data.positions[b.position-1]},
-				{pos = data.positions[c.position-1]},
-				{pos = data.positions[c.position-1]},
-				{pos = data.positions[a.position-1]},
+				vertex_get_from_index(data, a),
+				vertex_get_from_index(data, b),
+				vertex_get_from_index(data, b),
+				vertex_get_from_index(data, c),
+				vertex_get_from_index(data, c),
+				vertex_get_from_index(data, a),
 			})
 		}
 	}

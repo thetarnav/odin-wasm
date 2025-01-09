@@ -30,12 +30,11 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 	lines := obj.object_to_lines(data, data.objects[0], context.allocator)
 
 	s.positions = lines.pos[:len(lines)]
-	s.colors    = lines.col[:len(lines)]
-
 	for &pos in s.positions {
 		pos *= 100
 	}
 
+	s.colors = make([]rgba, len(s.positions))
 	slice.fill(s.colors, GREEN)
 
 	/* Init rotation */

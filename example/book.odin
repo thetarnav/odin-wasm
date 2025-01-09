@@ -3,21 +3,16 @@ package example
 
 import glm "core:math/linalg/glsl"
 import     "core:strings"
-import     "core:slice"
 import gl  "../wasm/webgl"
 import     "../obj"
 
 @private
 State_Book :: struct {
-	rotation:  mat4,
-	objects:    []Object,
-}
-
-Object :: struct {
 	using locations: Input_Locations_Boxes,
-	vao      : VAO,
+	vao:       VAO,
 	positions: []vec3,
-	colors   : []u8vec4,
+	colors:    []u8vec4,
+	rotation:  mat4,
 }
 
 @private
@@ -33,40 +28,30 @@ setup_book :: proc(s: ^State_Book, program: gl.Program) {
 		obj.parse_line(&data, line)
 	}
 
-	objects: [dynamic]Object
+	s.vao = gl.CreateVertexArray()
 
-	for object in data.objects {
-		append(&objects, Object{})
-		o := last(&objects)
-
-		o.vao = gl.CreateVertexArray()
-
-		lines := obj.object_to_triangles(data, object, context.allocator)
-		
-		o.positions = lines.pos[:len(lines)]
-		o.colors    = lines.col[:len(lines)]
-
-		for &pos in o.positions {
-			pos *= 1000
-		}
-
-		slice.fill(o.colors, rand_color())
-
-
-		gl.BindVertexArray(o.vao)
+	vertices := obj.object_to_triangles(data, data.objects[0], context.allocator)
 	
-		input_locations_boxes(&o.locations, program)
+	s.positions = vertices.pos[:len(vertices)]
+	for &pos in s.positions {
+		pos *= 1000
+	}
 	
-		attribute(o.a_position, gl.CreateBuffer(), o.positions)
-		attribute(o.a_color   , gl.CreateBuffer(), o.colors)
+	s.colors = make([]rgba, len(vertices))
+	for &col, i in s.colors {
+		col = to_rgba(vertices[i].col)
 	}
 
-	s.objects = objects[:]
+
+	gl.BindVertexArray(s.vao)
+
+	input_locations_boxes(&s.locations, program)
+
+	attribute(s.a_position, gl.CreateBuffer(), s.positions)
+	attribute(s.a_color   , gl.CreateBuffer(), s.colors)
 
 	/* Init rotation */
 	s.rotation = 1
-
-
 }
 
 @private
@@ -89,15 +74,9 @@ frame_book :: proc(s: ^State_Book, delta: f32) {
 	mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
 	mat *= s.rotation
 
+	gl.BindVertexArray(s.vao)
+
+	uniform(s.u_matrix, mat)
 	
-
-	for &o in s.objects {
-
-		gl.BindVertexArray(o.vao)
-
-		uniform(o.u_matrix, mat)
-		
-		gl.DrawArrays(gl.TRIANGLES, 0, len(o.positions))
-	}
-
+	gl.DrawArrays(gl.TRIANGLES, 0, len(s.positions))
 }
