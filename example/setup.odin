@@ -1,6 +1,5 @@
 package example
 
-import "core:mem"
 import "core:math/rand"
 import "core:crypto"
 
@@ -167,17 +166,11 @@ demo_state: struct #raw_union {
 	book:         State_Book,
 }
 
-
-temp_arena_buffer: [mem.Megabyte]byte
-temp_arena: mem.Arena = {data = temp_arena_buffer[:]}
-temp_arena_allocator := mem.arena_allocator(&temp_arena)
-
 @export
 start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 	example = example_kind
 	demo := demos[example]
 
-	context.temp_allocator = temp_arena_allocator
 	defer free_all(context.temp_allocator)
 
 	program: gl.Program
@@ -231,7 +224,7 @@ start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 
 @export
 frame :: proc (delta: f32) {
-	context.temp_allocator = temp_arena_allocator
+	
 	defer free_all(context.temp_allocator)
 
 	defer mouse_down_frame = false

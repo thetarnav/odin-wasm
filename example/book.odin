@@ -2,7 +2,6 @@
 package example
 
 import glm "core:math/linalg/glsl"
-import     "core:strings"
 import     "core:slice"
 import gl  "../wasm/webgl"
 import     "../obj"
@@ -22,17 +21,12 @@ setup_book :: proc(s: ^State_Book, program: gl.Program) {
 	gl.Enable(gl.CULL_FACE)  // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	data := obj.data_make(context.temp_allocator)
-	obj_file := #load("./public/book.obj", string)
-	
-	for line in strings.split_lines_iterator(&obj_file) {
-		obj.parse_line(&data, line)
-	}
+	objects := obj.parse_file(#load("./public/book.obj", string), context.temp_allocator)
 
 	s.vao = gl.CreateVertexArray()
 
 
-	object := &data.objects[0]
+	object := &objects[0]
 	s.positions = slice.clone(object.vertices.position[:len(object.vertices)])
 
 	extent_min, extent_max := get_extents(s.positions)

@@ -6,6 +6,9 @@ https://github.com/thisistherk/fast_obj
 
 package obj
 
+import "base:runtime"
+import "core:strings"
+
 vec3   :: [3]f32
 vec2   :: [2]f32
 
@@ -91,23 +94,6 @@ Data :: struct {
 // 		index_offset = len(data.indices),
 // 	}
 // }
-
-init_data :: proc (data: ^Data, allocator := context.allocator) {
-
-	// indices are base-1, add zero index to be able to index it normally
-	data.positions  = make([dynamic]vec3,   1, 32, allocator)
-	data.texcoords  = make([dynamic]vec2,   1, 32, allocator)
-	data.normals    = make([dynamic]vec3,   1, 32, allocator)
-	data.colors     = make([dynamic]vec3,   0, 32, allocator)
-	data.objects    = make([dynamic]Object, 1,  4, allocator)
-	data.objects[0] = object_make(data)
-}
-data_init :: init_data
-
-data_make :: proc (allocator := context.allocator) -> (data: Data) {
-	init_data(&data)
-	return
-}
 
 object_make :: proc (data: ^Data) -> (g: Object) {
 	g.vertices = make(#soa[dynamic]Vertex, 0, 32, data.objects.allocator)
@@ -264,32 +250,38 @@ parse_vec2 :: proc(ptr: ^[^]byte) -> vec2 {
 	return {parse_float(ptr), parse_float(ptr)}
 }
 
-parse_vertex :: proc(data: ^Data, ptr: ^[^]byte) {
+parse_vertex :: proc(data: ^Data, ptr: ^[^]byte) -> (err: runtime.Allocator_Error) {
 
-	append(&data.positions, parse_vec3(ptr))
+	append(&data.positions, parse_vec3(ptr)) or_return
 
 	skip_whitespace(ptr)
 	if is_newline(ptr[0]) do return
 
 	/* Fill the colors array until it matches the size of the positions array */
 	for _ in len(data.colors) ..< len(data.positions)-1 {
-		append(&data.colors, vec3{1, 1, 1})
+		append(&data.colors, vec3{1, 1, 1}) or_return
 	}
 
-	append(&data.colors, parse_vec3(ptr))
+	append(&data.colors, parse_vec3(ptr)) or_return
+
+	return
 }
 
-parse_texcoord :: proc (data: ^Data, ptr: ^[^]byte) {
+parse_texcoord :: proc (data: ^Data, ptr: ^[^]byte) -> (err: runtime.Allocator_Error) {
 
-	append(&data.texcoords, parse_vec2(ptr))
+	append(&data.texcoords, parse_vec2(ptr)) or_return
+
+	return
 }
 
-parse_normal :: proc (data: ^Data, ptr: ^[^]byte) {
+parse_normal :: proc (data: ^Data, ptr: ^[^]byte) -> (err: runtime.Allocator_Error) {
 
-	append(&data.normals, parse_vec3(ptr))
+	append(&data.normals, parse_vec3(ptr)) or_return
+
+	return
 }
 
-parse_face :: proc (data: ^Data, ptr: ^[^]byte) {
+parse_face :: proc (data: ^Data, ptr: ^[^]byte) -> (err: runtime.Allocator_Error) {
 
 	g := object_last(data)
 
@@ -315,33 +307,37 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte) {
 		skip_whitespace(ptr)
 		if is_newline(ptr[0]) do break
 
-		{
-			indices[0], indices[1] = indices[1], indices[2]
-			idx := &indices[2]
-	
-			idx.position = parse_int(ptr)
-	
-			if ptr[0] == '/' {
+		index: Index
+
+		index.position = parse_int(ptr)
+
+		if ptr[0] == '/' {
+			move(ptr)
+
+			if ptr[0] != '/' {
+				index.texcoord = parse_int(ptr)
+			}
+
+			if (ptr[0] == '/') {
 				move(ptr)
-	
-				if ptr[0] != '/' {
-					idx.texcoord = parse_int(ptr)
-				}
-	
-				if (ptr[0] == '/') {
-					move(ptr)
-					idx.normal = parse_int(ptr)
-				}
+				index.normal = parse_int(ptr)
 			}
-	
-			if idx.position == 0 {
-				return /* Skip lines with no valid vertex idx */
-			}
-			if idx.position < 0 do idx.position += len(data.positions)
-			if idx.texcoord < 0 do idx.texcoord += len(data.texcoords)
-			if idx.normal   < 0 do idx.normal   += len(data.normals)
 		}
 
+		if index.position == 0 {
+			return /* Skip lines with no valid vertex idx */
+		}
+		if index.position < 0 do index.position += len(data.positions)
+		if index.texcoord < 0 do index.texcoord += len(data.texcoords)
+		if index.normal   < 0 do index.normal   += len(data.normals)
+
+		if i == 0 {
+			indices[0] = index
+		} else {
+			indices[1] = indices[2]
+			indices[2] = index
+		}
+		
 		if i >= 2 {
 			vertices: [3]Vertex
 			for &v, i in vertices {
@@ -350,7 +346,7 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte) {
 				// colors array is only filled if the colors data is in the file
 				v.color = data.colors[idx.position] if idx.position < len(data.colors) else 1
 			}
-			append(&g.vertices, ..vertices[:])
+			append(&g.vertices, ..vertices[:]) or_return
 		}
 	}
 
@@ -361,6 +357,7 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte) {
 
 	// data.group.face_count  += 1
 	// data.object.face_count += 1
+	return
 }
 
 parse_object :: proc (data: ^Data, ptr: ^[^]byte)
@@ -392,7 +389,7 @@ parse_usemtl :: proc (data: ^Data, ptr: ^[^]byte) {
 	g.material = parse_name(ptr)
 }
 
-parse_line :: proc (data: ^Data, str: string)
+parse_line :: proc (data: ^Data, str: string) -> (err: runtime.Allocator_Error)
 {
 	ptr := raw_data(str)
 
@@ -466,4 +463,33 @@ parse_line :: proc (data: ^Data, str: string)
 			parse_usemtl(data, &ptr)
 		}
 	}
+
+	return
+}
+
+parse_file :: proc (
+	src: string,
+	allocator := context.allocator,
+) -> (
+	objects: []Object,
+	err: runtime.Allocator_Error,
+) #optional_allocator_error {
+	
+	data: Data
+
+	// indices are base-1, add zero index to be able to index it normally
+	data.positions  = make([dynamic]vec3,   1, 1024, context.temp_allocator)
+	data.colors     = make([dynamic]vec3,   1, 1024, context.temp_allocator)
+	data.texcoords  = make([dynamic]vec2,   1, 1024, context.temp_allocator)
+	data.normals    = make([dynamic]vec3,   1, 1024, context.temp_allocator)
+	
+	data.objects    = make([dynamic]Object, 1,  4, allocator)
+	data.objects[0] = object_make(&data)
+
+	it := src
+	for line in strings.split_lines_iterator(&it) {
+		parse_line(&data, line) or_return
+	}
+
+	return data.objects[:], nil
 }

@@ -392,7 +392,7 @@ normals_from_positions :: proc (dst, src: []vec3) {
 	}
 }
 
-get_extents :: proc (positions: []$T) -> (v_min, v_max: T) {
+get_extents :: proc (positions: []vec3) -> (v_min, v_max: vec3) {
 
 	if len(positions) == 0 {
 		return
@@ -411,6 +411,13 @@ get_extents :: proc (positions: []$T) -> (v_min, v_max: T) {
 	}
 	
 	return
+}
+
+extend_extents :: proc (v_min, v_max: ^vec3, positions: []vec3) {
+	a_min, a_max := get_extents(positions)
+	b_min, b_max := get_extents({v_min^, v_max^, a_min, a_max})
+	v_min ^= b_min
+	v_max ^= b_max
 }
 
 correct_extents :: proc (

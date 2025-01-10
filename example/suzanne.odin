@@ -2,8 +2,8 @@
 package example
 
 import glm "core:math/linalg/glsl"
-import     "core:strings"
 import     "core:slice"
+import     "core:fmt"
 import gl  "../wasm/webgl"
 import     "../obj"
 
@@ -15,18 +15,14 @@ State_Suzanne :: struct {
 	vertices:  Vertices,
 }
 
-suzanne_obj_bytes := #load("./public/suzanne.obj", string)
-
 @private
 setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 
-	data := obj.data_make(context.temp_allocator)
-	it := suzanne_obj_bytes
-	for line in strings.split_lines_iterator(&it) {
-		obj.parse_line(&data, line)
+	objects, parse_err := obj.parse_file(#load("./public/suzanne.obj", string), context.temp_allocator)
+	if parse_err != nil {
+		fmt.eprintf("Parse error: %v", parse_err)
 	}
-
-	object := &data.objects[0]
+	object := &objects[0]
 
 	vertices := make(Vertices, len(object.vertices), context.temp_allocator)
 

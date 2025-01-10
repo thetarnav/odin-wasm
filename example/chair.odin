@@ -2,7 +2,6 @@
 package example
 
 import glm "core:math/linalg/glsl"
-import     "core:strings"
 import     "core:slice"
 import gl  "../wasm/webgl"
 import     "../obj"
@@ -10,10 +9,10 @@ import     "../obj"
 @private
 State_Chair :: struct {
 	rotation:  mat4,
-	objects:    []Object,
+	shapes:    []Shape,
 }
 
-Object :: struct {
+Shape :: struct {
 	using locations: Input_Locations_Boxes,
 	vao      : VAO,
 	positions: []vec3,
@@ -28,37 +27,33 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 	gl.Enable(gl.CULL_FACE)  // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	data := obj.data_make(context.temp_allocator)
-	it := chair_obj_bytes
-	for line in strings.split_lines_iterator(&it) {
-		obj.parse_line(&data, line)
+	objects := obj.parse_file(#load("./public/chair.obj", string), context.temp_allocator)
+
+	extent_min, extent_max := get_extents(objects[0].vertices.position[:len(objects[0].vertices)])
+	for o in objects[1:] {
+		extend_extents(&extent_min, &extent_max, o.vertices.position[:len(o.vertices)])
 	}
 
-	extent_min, extent_max := get_extents(data.positions[:])
+	s.shapes = make([]Shape, len(objects))
 
-	objects: [dynamic]Object
+	for &shape, i in s.shapes {
+		o := objects[i]
 
-	for object in data.objects {
-		append(&objects, Object{})
-		o := last(&objects)
-
-		o.vao = gl.CreateVertexArray()
+		shape.vao = gl.CreateVertexArray()
 		
-		o.positions = slice.clone(object.vertices.position[:len(object.vertices)])
-		correct_extents(o.positions, extent_min, extent_max, -200, 200)
+		shape.positions = slice.clone(o.vertices.position[:len(o.vertices)])
+		correct_extents(shape.positions, extent_min, extent_max, -200, 200)
 		
-		o.colors = make([]rgba, len(o.positions))
-		slice.fill(o.colors, rand_color())
+		shape.colors = make([]rgba, len(shape.positions))
+		slice.fill(shape.colors, rand_color())
 
-		gl.BindVertexArray(o.vao)
+		gl.BindVertexArray(shape.vao)
 	
-		input_locations_boxes(&o.locations, program)
+		input_locations_boxes(&shape.locations, program)
 	
-		attribute(o.a_position, gl.CreateBuffer(), o.positions)
-		attribute(o.a_color   , gl.CreateBuffer(), o.colors)
+		attribute(shape.a_position, gl.CreateBuffer(), shape.positions)
+		attribute(shape.a_color,    gl.CreateBuffer(), shape.colors)
 	}
-
-	s.objects = objects[:]
 
 	/* Init rotation */
 	s.rotation = 1
@@ -86,7 +81,7 @@ frame_chair :: proc(s: ^State_Chair, delta: f32) {
 
 	
 
-	for &o in s.objects {
+	for &o in s.shapes {
 
 		gl.BindVertexArray(o.vao)
 
