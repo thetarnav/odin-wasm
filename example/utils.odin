@@ -117,6 +117,13 @@ to_rgba_3_1 :: #force_inline proc "contextless" (color: $A/[3]u8, a: u8) -> rgba
 vec3_to_rgba :: #force_inline proc "contextless" (v: vec3, a: u8 = 255) -> rgba {
 	return {u8(v.r*255), u8(v.g*255), u8(v.b*255), a}
 }
+vec3_slice_to_rgba :: #force_inline proc (vecs: []vec3, a: u8 = 255, allocator := context.allocator) -> []rgba {
+	r := make([]rgba, len(vecs), allocator)
+	for &col, i in r {
+		col = to_rgba(vecs[i], a)
+	}
+	return r
+}
 to_rgba :: proc {to_rgba_3_1, vec3_to_rgba}
 
 
@@ -387,6 +394,10 @@ normals_from_positions :: proc (dst, src: []vec3) {
 
 get_extents :: proc (positions: []$T) -> (v_min, v_max: T) {
 
+	if len(positions) == 0 {
+		return
+	}
+
 	v_min = positions[0]
 	v_max = positions[0]
 	
@@ -418,6 +429,28 @@ correct_extents :: proc (
 
 vec3_on_radius :: proc (r, a, y: f32) -> vec3 {
 	return {r * cos(a), y, r * sin(a)}
+}
+
+Vertex :: struct {
+	position: vec3,
+	color:    rgba,
+}
+Vertices :: #soa[]Vertex
+
+vertices_to_lines :: proc (vecs: Vertices, allocator := context.allocator) -> Vertices #no_bounds_check {
+
+	r := make(Vertices, 2*len(vecs), allocator)
+
+	for i := 0; i < len(vecs); i += 3 {
+		r[i*2 + 0] = vecs[i + 0]
+		r[i*2 + 1] = vecs[i + 1]
+		r[i*2 + 2] = vecs[i + 1]
+		r[i*2 + 3] = vecs[i + 2]
+		r[i*2 + 4] = vecs[i + 2]
+		r[i*2 + 5] = vecs[i + 0]
+	}
+
+	return r
 }
 
 

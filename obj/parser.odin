@@ -8,21 +8,17 @@ package obj
 
 vec3   :: [3]f32
 vec2   :: [2]f32
-u8vec4 :: [4]u8
+
+Vertex :: struct {
+	position: vec3,
+	color:    vec3,
+}
+Vertices :: #soa[]Vertex
 
 // Texture :: struct {
 // 	name: string, // Texture name from .mtl file
 // 	path: string, // Resolved path to texture
 // }
-
-Index :: struct {
-	/* 
-	 indices are base-1
-	*/
-	position: int,
-	texcoord: int,
-	normal  : int,
-}
 
 // Group :: struct {
 // 	name        : string,
@@ -52,7 +48,7 @@ Index :: struct {
 Object :: struct {
 	name:      string,
 	material:  string,
-	indices:   [dynamic][]Index,
+	vertices:  #soa[dynamic]Vertex,
 }
 
 Data :: struct {
@@ -102,7 +98,6 @@ init_data :: proc (data: ^Data, allocator := context.allocator) {
 	data.positions  = make([dynamic]vec3,   1, 32, allocator)
 	data.texcoords  = make([dynamic]vec2,   1, 32, allocator)
 	data.normals    = make([dynamic]vec3,   1, 32, allocator)
-
 	data.colors     = make([dynamic]vec3,   0, 32, allocator)
 	data.objects    = make([dynamic]Object, 1,  4, allocator)
 	data.objects[0] = object_make(data)
@@ -115,7 +110,7 @@ data_make :: proc (allocator := context.allocator) -> (data: Data) {
 }
 
 object_make :: proc (data: ^Data) -> (g: Object) {
-	g.indices   = make([dynamic][]Index, 0, 32, data.objects.allocator)
+	g.vertices = make(#soa[dynamic]Vertex, 0, 32, data.objects.allocator)
 	return
 }
 
@@ -196,7 +191,7 @@ parse_int :: proc (ptr: ^[^]byte) -> (val: int)
 parse_float :: proc (ptr: ^[^]byte) -> f32
 {
 	skip_whitespace(ptr)
-	
+
 	sign: f64
 	switch ptr[0] {
 	case '+':
@@ -255,7 +250,7 @@ parse_float :: proc (ptr: ^[^]byte) -> f32
 			eval = 10 * eval + int(ptr[0] - '0')
 			move(ptr)
 		}
-		
+
 		num *= eval >= MAX_POWER ? 0.0 : powers[eval]
 	}
 
@@ -298,41 +293,66 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte) {
 
 	g := object_last(data)
 
-	indices := make([dynamic]Index, 0, 3, g.indices.allocator)
+	/*          1.
+	             >----\               
+	            x x    ---------\     
+	           x   x             ----> 2.
+	          x     x             -/  
+	         x       x         --/    
+	        x         x     --/       a b c
+	       x           x  -/          1 2 3
+	      <-------------</            1 3 4
+		4.               3.           ...
+	*/
 
-	for {
+	Index :: struct {
+		// indices are base-1
+		position, texcoord, normal: int,
+	}
+	indices: [3]Index
+	
+	for i := 0;; i += 1 {
 		skip_whitespace(ptr)
 		if is_newline(ptr[0]) do break
 
-		idx: Index
-
-		idx.position = parse_int(ptr)
-		
-		if ptr[0] == '/' {
-			move(ptr)
-
-			if ptr[0] != '/' {
-				idx.texcoord = parse_int(ptr)
-			}
-
-			if (ptr[0] == '/') {
+		{
+			indices[0], indices[1] = indices[1], indices[2]
+			idx := &indices[2]
+	
+			idx.position = parse_int(ptr)
+	
+			if ptr[0] == '/' {
 				move(ptr)
-				idx.normal = parse_int(ptr)
+	
+				if ptr[0] != '/' {
+					idx.texcoord = parse_int(ptr)
+				}
+	
+				if (ptr[0] == '/') {
+					move(ptr)
+					idx.normal = parse_int(ptr)
+				}
 			}
+	
+			if idx.position == 0 {
+				return /* Skip lines with no valid vertex idx */
+			}
+			if idx.position < 0 do idx.position += len(data.positions)
+			if idx.texcoord < 0 do idx.texcoord += len(data.texcoords)
+			if idx.normal   < 0 do idx.normal   += len(data.normals)
 		}
-		
-		if idx.position == 0 {
-			return /* Skip lines with no valid vertex idx */
-		}
-		if idx.position < 0 do idx.position += len(data.positions)
-		if idx.texcoord < 0 do idx.texcoord += len(data.texcoords)
-		if idx.normal   < 0 do idx.normal   += len(data.normals)
 
-		append(&indices, idx)
+		if i >= 2 {
+			vertices: [3]Vertex
+			for &v, i in vertices {
+				idx := indices[i]
+				v.position = data.positions[idx.position]
+				// colors array is only filled if the colors data is in the file
+				v.color = data.colors[idx.position] if idx.position < len(data.colors) else 1
+			}
+			append(&g.vertices, ..vertices[:])
+		}
 	}
-
-	assert(len(indices) >= 3)
-	append(&g.indices, indices[:])
 
 	// append_soa(&data.faces, Face{
 	// 	verticis = count,
@@ -358,17 +378,17 @@ parse_object :: proc (data: ^Data, ptr: ^[^]byte)
 // parse_group :: proc (data: ^Data, ptr: ^[^]byte)
 // {
 //     flush_group(data)
-	
+
 //     skip_whitespace(ptr)
 //     data.group.name = parse_name(ptr)
 // }
 
 parse_usemtl :: proc (data: ^Data, ptr: ^[^]byte) {
-	
+
 	g := object_last(data)
 	assert(g.material == "")
-	
-	skip_whitespace(ptr)	
+
+	skip_whitespace(ptr)
 	g.material = parse_name(ptr)
 }
 
@@ -435,7 +455,7 @@ parse_line :: proc (data: ^Data, str: string)
 
 	case 'u':
 		move(&ptr)
-		
+
 		if ptr[0] == 's' &&
 		   ptr[1] == 'e' &&
 		   ptr[2] == 'm' &&
@@ -446,56 +466,4 @@ parse_line :: proc (data: ^Data, str: string)
 			parse_usemtl(data, &ptr)
 		}
 	}
-}
-
-Vertex :: struct {
-	pos: vec3,
-	col: vec3,
-}
-Vertices :: #soa[]Vertex
-
-vertex_get_from_index :: proc (data: Data, idx: Index) -> (v: Vertex) {
-	v.pos = data.positions[idx.position]
-	// colors array is only filled if the colors data is in the file
-	v.col = data.colors[idx.position] if idx.position < len(data.colors) else 1
-	return
-}
-
-object_to_triangles :: proc (data: Data, g: Object, allocator := context.allocator) -> Vertices {
-
-	vertices := make(#soa[dynamic]Vertex, 0, 3*len(g.indices), allocator)
-
-	for indices in g.indices {
-		for i in 2 ..< len(indices) {
-			a, b, c := indices[0], indices[i-1], indices[i]
-			append(&vertices, ..[]Vertex{
-				vertex_get_from_index(data, a),
-				vertex_get_from_index(data, b),
-				vertex_get_from_index(data, c),
-			})
-		}
-	}
-
-	return vertices[:]
-}
-
-object_to_lines :: proc (data: Data, g: Object, allocator := context.allocator) -> Vertices {
-
-	vertices := make(#soa[dynamic]Vertex, 0, 6*len(g.indices), allocator)
-
-	for indices in g.indices {
-		for i in 2 ..< len(indices) {
-			a, b, c := indices[0], indices[i-1], indices[i]
-			append(&vertices, ..[]Vertex{
-				vertex_get_from_index(data, a),
-				vertex_get_from_index(data, b),
-				vertex_get_from_index(data, b),
-				vertex_get_from_index(data, c),
-				vertex_get_from_index(data, c),
-				vertex_get_from_index(data, a),
-			})
-		}
-	}
-
-	return vertices[:]
 }

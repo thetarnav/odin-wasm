@@ -43,10 +43,8 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 		o := last(&objects)
 
 		o.vao = gl.CreateVertexArray()
-
-		vertices := obj.object_to_triangles(data, object, context.allocator)
 		
-		o.positions = vertices.pos[:len(vertices)]
+		o.positions = slice.clone(object.vertices.position[:len(object.vertices)])
 		correct_extents(o.positions, extent_min, extent_max, -200, 200)
 		
 		o.colors = make([]rgba, len(o.positions))

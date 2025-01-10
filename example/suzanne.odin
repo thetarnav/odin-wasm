@@ -12,8 +12,7 @@ State_Suzanne :: struct {
 	using locations: Input_Locations_Boxes,
 	vao:       VAO,
 	rotation:  mat4,
-	positions: []vec3,
-	colors:    []u8vec4,
+	vertices:  Vertices,
 }
 
 suzanne_obj_bytes := #load("./public/suzanne.obj", string)
@@ -27,15 +26,19 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 		obj.parse_line(&data, line)
 	}
 
-	lines := obj.object_to_lines(data, data.objects[0], context.allocator)
-	
-	s.positions = lines.pos[:len(lines)]
+	object := &data.objects[0]
 
-	extent_min, extent_max := get_extents(s.positions)
-	correct_extents(s.positions, extent_min, extent_max, -200, 200)
+	vertices := make(Vertices, len(object.vertices), context.temp_allocator)
 
-	s.colors = make([]rgba, len(s.positions))
-	slice.fill(s.colors, GREEN)
+	copy(vertices.position[:len(vertices)],
+		object.vertices.position[:len(object.vertices)])
+
+	extent_min, extent_max := get_extents(vertices.position[:len(vertices)])
+	correct_extents(vertices.position[:len(vertices)], extent_min, extent_max, -200, 200)
+
+	slice.fill(vertices.color[:len(vertices)], GREEN)
+
+	s.vertices = vertices_to_lines(vertices)
 
 	/* Init rotation */
 	s.rotation = 1
@@ -46,8 +49,8 @@ setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 
 	input_locations_boxes(s, program)
 
-	attribute(s.a_position, gl.CreateBuffer(), s.positions)
-	attribute(s.a_color   , gl.CreateBuffer(), s.colors)
+	attribute(s.a_position, gl.CreateBuffer(), s.vertices.position[:len(s.vertices)])
+	attribute(s.a_color   , gl.CreateBuffer(), s.vertices.color[:len(s.vertices)])
 }
 
 @private
@@ -74,5 +77,5 @@ frame_suzanne :: proc(s: ^State_Suzanne, delta: f32) {
 
 	uniform(s.u_matrix, mat)
 
-	gl.DrawArrays(gl.LINES, 0, len(s.positions))
+	gl.DrawArrays(gl.LINES, 0, len(s.vertices))
 }

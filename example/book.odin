@@ -3,6 +3,7 @@ package example
 
 import glm "core:math/linalg/glsl"
 import     "core:strings"
+import     "core:slice"
 import gl  "../wasm/webgl"
 import     "../obj"
 
@@ -30,17 +31,14 @@ setup_book :: proc(s: ^State_Book, program: gl.Program) {
 
 	s.vao = gl.CreateVertexArray()
 
-	vertices := obj.object_to_triangles(data, data.objects[0], context.allocator)
-	
-	s.positions = vertices.pos[:len(vertices)]
+
+	object := &data.objects[0]
+	s.positions = slice.clone(object.vertices.position[:len(object.vertices)])
 
 	extent_min, extent_max := get_extents(s.positions)
 	correct_extents(s.positions, extent_min, extent_max, -140, 140)
 	
-	s.colors = make([]rgba, len(vertices))
-	for &col, i in s.colors {
-		col = to_rgba(vertices[i].col)
-	}
+	s.colors = vec3_slice_to_rgba(object.vertices.color[:len(object.vertices)])
 
 
 	gl.BindVertexArray(s.vao)
