@@ -1,14 +1,62 @@
 #+private file
 package example
 
+import     "base:runtime"
 import glm "core:math/linalg/glsl"
 import gl  "../wasm/webgl"
 import     "../obj"
 
+foreign import "env"
+
+@(default_calling_convention = "contextless")
+foreign env {
+	@(link_name="fetch")
+	_fetch :: proc (resource: ^Fetch_Resource) ---
+}
+
+fetch :: proc (resource: ^Fetch_Resource, url: string, allocator := context.allocator) {
+	resource.allocator = allocator
+	resource.url       = url
+	_fetch(resource)
+}
+
+Fetch_Status :: enum u8 {
+	Idle,
+	Loading,
+	Error,
+	Done,
+}
+Fetch_Resource :: struct {
+	status:    Fetch_Status,
+	data:      []byte,
+	url:       string,
+	allocator: runtime.Allocator,
+}
+#assert(size_of(Fetch_Resource) == 28)
+
+@export
+fetch_alloc :: proc (resource: ^Fetch_Resource, len: int) {
+	data, err := make([]byte, len, resource.allocator)
+	if err != nil {
+		panic("Alloc error")
+	}
+	resource.data = data
+}
+
+Load_State :: enum {
+	Init,
+	Obj_Done,
+	Mtl_Done,
+}
+
 @private
 State_Windmill :: struct {
+	program:   gl.Program,
 	rotation:  mat4,
 	shapes:    []Shape,
+	obj_res:   Fetch_Resource,
+	mtl_res:   Fetch_Resource,
+	load:      Load_State,
 }
 
 Shape :: struct {
@@ -19,53 +67,15 @@ Shape :: struct {
 	material:       obj.Material,
 }
 
-chair_obj_src := #load("./public/windmill.obj", string)
-chair_mtl_src := #load("./public/windmill.mtl", string)
-
 @private
 setup_windmill :: proc(s: ^State_Windmill, program: gl.Program) {
+
+	s.program = program
 	
 	gl.Enable(gl.CULL_FACE)  // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	obj_data, obj_parse_err := obj.parse_file(chair_obj_src, context.temp_allocator)
-	if obj_parse_err != nil {
-		fmt.eprintf("Obj parse error: %v", obj_parse_err)
-	}
-
-	materials, mtl_parse_err := obj.parse_mtl_file(chair_mtl_src)
-	if obj_parse_err != nil {
-		fmt.eprintf("Mtl parse error: %v", mtl_parse_err)
-	}
-
-	extent_min, extent_max := get_extents(obj_data.positions[:])
-
-	s.shapes = make([]Shape, len(obj_data.objects))
-
-	for &shape, i in s.shapes {
-		o := obj_data.objects[i]
-
-		shape.vao = gl.CreateVertexArray()
-
-		shape.vertices = convert_obj_vertices(o.vertices[:])
-
-		correct_extents(shape.vertices.position[:len(shape.vertices)], extent_min, extent_max, -200, 200)
-
-		for m in materials {
-			if m.name == o.material {
-				shape.material = m
-				break
-			}
-		}
-
-		gl.BindVertexArray(shape.vao)
-	
-		input_locations_chair(&shape.locations, program)
-	
-		attribute(shape.locations.a_position, gl.CreateBuffer(), shape.vertices.position[:len(shape.vertices)])
-		attribute(shape.locations.a_color,    gl.CreateBuffer(), shape.vertices.color[:len(shape.vertices)])
-		attribute(shape.locations.a_normal,   gl.CreateBuffer(), shape.vertices.normal[:len(shape.vertices)])
-	}
+	fetch(&s.obj_res, "./public/windmill.obj")
 
 	/* Init rotation */
 	s.rotation = 1
@@ -73,6 +83,60 @@ setup_windmill :: proc(s: ^State_Windmill, program: gl.Program) {
 
 @private
 frame_windmill :: proc(s: ^State_Windmill, delta: f32) {
+
+	if s.obj_res.status == .Done && s.load == .Init {
+		s.load = .Obj_Done
+
+		obj_data, obj_parse_err := obj.parse_file(string(s.obj_res.data), context.temp_allocator)
+		if obj_parse_err != nil {
+			fmt.eprintf("Obj parse error: %v", obj_parse_err)
+		}
+
+		extent_min, extent_max := get_extents(obj_data.positions[:])
+	
+		s.shapes = make([]Shape, len(obj_data.objects))
+
+		for &shape, i in s.shapes {
+			o := obj_data.objects[i]
+
+			shape.material.name    = o.material
+			shape.material.opacity = 1 // display it even before material is loaded}
+	
+			shape.vao = gl.CreateVertexArray()
+	
+			shape.vertices = convert_obj_vertices(o.vertices[:])
+	
+			correct_extents(shape.vertices.position[:len(shape.vertices)], extent_min, extent_max, -200, 200)
+	
+			gl.BindVertexArray(shape.vao)
+		
+			input_locations_chair(&shape.locations, s.program)
+		
+			attribute(shape.locations.a_position, gl.CreateBuffer(), shape.vertices.position[:len(shape.vertices)])
+			attribute(shape.locations.a_color,    gl.CreateBuffer(), shape.vertices.color[:len(shape.vertices)])
+			attribute(shape.locations.a_normal,   gl.CreateBuffer(), shape.vertices.normal[:len(shape.vertices)])
+		}
+
+		fetch(&s.mtl_res, obj_data.mtllibs[0])
+	}
+
+	if s.mtl_res.status == .Done && s.load == .Obj_Done {
+		s.load = .Mtl_Done
+
+		materials, mtl_parse_err := obj.parse_mtl_file(string(s.mtl_res.data))
+		if mtl_parse_err != nil {
+			fmt.eprintf("Mtl parse error: %v", mtl_parse_err)
+		}
+	
+		for &shape in s.shapes {
+			for m in materials {
+				if m.name == shape.material.name {
+					shape.material = m
+					break
+				}
+			}
+		}
+	}
 
 	gl.Viewport(0, 0, canvas_res.x, canvas_res.y)
 	gl.ClearColor(0, 0, 0, 0)

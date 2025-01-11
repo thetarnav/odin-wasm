@@ -5,7 +5,6 @@ foreign import "odin_ls"
 
 @(default_calling_convention = "contextless")
 foreign odin_ls {
-    // odinfmt: disable
 	key        :: proc(index: int, key: []byte) -> int ---
 	key_bytes  :: proc(index: int, key: []byte) -> int ---
 	get_bytes  :: proc(key: string, value: []byte) -> int ---
@@ -15,5 +14,4 @@ foreign odin_ls {
 	remove     :: proc(key: string) ---
 	length     :: proc() -> int ---
 	clear      :: proc() ---
-    // odinfmt: enable
 }

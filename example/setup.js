@@ -1,4 +1,5 @@
 import * as wasm from "../wasm/runtime.js"
+import * as mem  from "../wasm/memory.js"
 
 import {IS_DEV, RELOAD_URL, WASM_FILENAME} from "./_config.js"
 
@@ -103,36 +104,99 @@ Wasm instance
  * @property {Example_Start           } start
  * @property {Example_Frame           } frame
  * @property {Example_On_Window_Resize} on_window_resize
+ * @property {Fetch_Alloc}              fetch_alloc
  *
  * @typedef {wasm.OdinExports & Example_Exports} Wasm_Exports
  *
  * @callback Example_Start
  * @param   {Example_Kind} example_type
- * @param   {wasm.rawptr } ctx
- * @returns {wasm.bool   }
+ * @param   {mem.rawptr } ctx
+ * @returns {mem.bool   }
  *
  * @callback Example_Frame
- * @param   {wasm.f32   } delta
- * @param   {wasm.rawptr} ctx
+ * @param   {mem.f32   } delta
+ * @param   {mem.rawptr} ctx
  * @returns {void       }
  *
  * @callback Example_On_Window_Resize
- * @param   {wasm.f32}    window_w
- * @param   {wasm.f32}    window_h
- * @param   {wasm.f32}    canvas_w
- * @param   {wasm.f32}    canvas_h
- * @param   {wasm.f32}    canvas_x
- * @param   {wasm.f32}    canvas_y
- * @param   {wasm.rawptr} ctx
+ * @param   {mem.f32}    window_w
+ * @param   {mem.f32}    window_h
+ * @param   {mem.f32}    canvas_w
+ * @param   {mem.f32}    canvas_h
+ * @param   {mem.f32}    canvas_x
+ * @param   {mem.f32}    canvas_y
+ * @param   {mem.rawptr} ctx
  * @returns {void}
+ * 
+ * @callback Fetch_Alloc
+ * @param    {mem.rawptr} res_ptr
+ * @param    {mem.int}    data_len
  */
+
+/*
+Fetch_Status :: enum u8 {
+	Idle,
+	Loading,
+	Error,
+	Done,
+}
+Fetch_Resource :: struct {
+	status:    Fetch_Status,      // u8          4   4
+	data:      []byte,            // [ptr, len]  8  12
+	url:       string,            // [ptr, len]  8  20
+	allocator: runtime.Allocator, // [ptr, ptr]  8  28
+}
+*/
 
 const wasm_state  = wasm.makeWasmState()
 const webgl_state = wasm.webgl.makeWebGLState()
 const ctx2d_state = new wasm.ctx2d.Ctx2d_State()
 
 const src_instance = await wasm.fetchInstanciateWasm(WASM_FILENAME, {
-	env: {}, // TODO
+	env: {
+		/**
+		@param   {mem.rawptr} res_ptr
+		@returns {void}        */
+		fetch(res_ptr) {
+
+			let data = new DataView(exports.memory.buffer)
+			let url = mem.load_string(data, res_ptr+12)
+			mem.store_u8(data, res_ptr, 1)
+
+			;(async () => {
+				try {
+					let r = await fetch(url)
+					let bytes = await r.arrayBuffer()
+
+					exports.fetch_alloc(res_ptr, bytes.byteLength)
+					data = new DataView(exports.memory.buffer)
+					mem.store_bytes(
+						exports.memory.buffer,
+						mem.load_ptr(data, res_ptr+mem.REG_SIZE),
+						new Uint8Array(bytes))
+					mem.store_u8(data, res_ptr, 3)
+					// if (r.body == null) {
+					// 	throw new Error('No response body')
+					// }
+					// let reader = r.body.getReader()
+					// for (;;) {
+					// 	let res = await reader.read()
+					// 	if (res.value != null) {
+					// 		console.log('data', res.value)
+					// 		exports.fetch_alloc(res_ptr, res.value.byteLength)
+					// 	}
+					// 	if (res.done) {
+					// 		break
+					// 	}
+					// }
+				} catch (err) {
+					console.error('Fetch error:', err)
+					let data = new DataView(exports.memory.buffer)
+					mem.store_u8(data, res_ptr, 2)
+				}
+			})()
+		},
+	},
 	odin_env: wasm.env  .makeOdinEnv    (wasm_state),
 	odin_dom: wasm.dom  .makeOdinDOM    (wasm_state),
 	webgl   : wasm.webgl.makeOdinWebGL  (wasm_state, webgl_state),

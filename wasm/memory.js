@@ -1,4 +1,60 @@
-import {assert} from "./console.js"
+/** @typedef {boolean} bool */
+/** @typedef {boolean} b8 */
+/** @typedef {boolean} b16 */
+/** @typedef {boolean} b32 */
+/** @typedef {boolean} b64 */
+
+/** @typedef {number} int */
+/** @typedef {number} i8 */
+/** @typedef {number} i16 */
+/** @typedef {number} i32 */
+/** @typedef {number} i64 */
+/** @typedef {number} i128 */
+/** @typedef {number} uint */
+/** @typedef {number} u8 */
+/** @typedef {number} u16 */
+/** @typedef {number} u32 */
+/** @typedef {number} u64 */
+/** @typedef {number} u128 */
+/** @typedef {number} uintptr */
+
+/** @typedef {number} i16le */
+/** @typedef {number} i32le */
+/** @typedef {number} i64le */
+/** @typedef {number} i128le */
+/** @typedef {number} u16le */
+/** @typedef {number} u32le */
+/** @typedef {number} u64le */
+/** @typedef {number} u128le */
+/** @typedef {number} i16be */
+/** @typedef {number} i32be */
+/** @typedef {number} i64be */
+/** @typedef {number} i128be */
+/** @typedef {number} u16be */
+/** @typedef {number} u32be */
+/** @typedef {number} u64be */
+/** @typedef {number} u128be */
+
+/** @typedef {number} f16 */
+/** @typedef {number} f32 */
+/** @typedef {number} f64 */
+
+/** @typedef {number} f16le */
+/** @typedef {number} f32le */
+/** @typedef {number} f64le */
+/** @typedef {number} f16be */
+/** @typedef {number} f32be */
+/** @typedef {number} f64be */
+
+/** @typedef {number} byte */
+/** @typedef {number} rune */
+/** @typedef {number} cstring */
+/** @typedef {number} rawptr */
+
+/** @typedef {Uint8Array} u8array */
+/** @typedef {Uint8Array} bytes */
+
+export const u8array = Uint8Array
 
 /** Register size in bytes. */
 export const REG_SIZE = 4 // 32-bit
@@ -14,30 +70,80 @@ export const LITTLE_ENDIAN = /*#__PURE__*/ (() => {
 
 export const STRING_SIZE = 2 * REG_SIZE
 
-/**
- * @param {number} offset
- * @param {number} alignment
- */
-export function ByteOffset(offset = 0, alignment = ALIGNMENT) {
-	this.offset    = offset
-	this.alignment = alignment
+export class Cursor {
+	offset    = 0
+	alignment = ALIGNMENT
+
+	/**
+	@param {DataView} data
+	*/
+	constructor (data) {
+		this.data = data
+	}
 }
+
+/**
+@param   {DataView} data
+@param   {number}   offset
+@param   {number}   alignment
+@returns {Cursor} */
+export function make_cursor(data, offset = 0, alignment = ALIGNMENT) {
+	return {data, offset, alignment}
+}
+
+/**
+@param   {u8array} data
+@param   {number}  offset
+@param   {number}  alignment
+@returns {Cursor} */
+export function make_cursor_from_bytes(data, offset = 0, alignment = ALIGNMENT) {
+	return {data: new DataView(data.buffer, data.byteOffset, data.byteLength), offset, alignment}
+}
+export const cursor_from_bytes = make_cursor_from_bytes
 
 /**
  * Move the offset by the given amount.
  *
- * @param   {ByteOffset} offset
- * @param   {number}     amount      The amount of bytes to move by
- * @param   {number}     [alignment]
- * @returns {number}                 The previous offset
+ * @param   {Cursor} offset
+ * @param   {number} amount      The amount of bytes to move by
+ * @param   {number} [alignment] 1 for no-alignment
+ * @returns {number}             The previous offset
  */
 export function off(offset, amount, alignment = Math.min(amount, offset.alignment)) {
 	if (offset.offset % alignment != 0) {
 		offset.offset += alignment - (offset.offset % alignment)
 	}
-	const x = offset.offset
+	let prev = offset.offset
 	offset.offset += amount
-	return x
+	return prev
+}
+
+/**
+@param   {Cursor} cursor 
+@returns {bool}   */
+export function cursor_eof(cursor) {
+	return cursor.offset >= cursor.data.byteLength
+}
+
+/**
+Progress the offset by length and return the slice.
+@param   {Cursor} cursor 
+@param   {number} length 
+@returns {ArrayBuffer | SharedArrayBuffer}  */
+export function cursor_slice(cursor, length) {
+	let slice = cursor.data.buffer.slice(cursor.offset, cursor.offset+length)
+	off(cursor, length)
+	return slice
+}
+
+/**
+@param {Cursor} cursor 
+@param {bytes}  bytes
+*/
+export function cursor_write_bytes(cursor, bytes) {
+	let view = new Uint8Array(cursor.data.buffer, cursor.data.byteOffset+cursor.offset, bytes.byteLength)
+	view.set(bytes)
+	off(cursor, bytes.byteLength)
 }
 
 /**
@@ -55,35 +161,35 @@ export const load_bool = load_b8
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {boolean}
  */
-export const load_offset_b8 = (mem, offset) => {
+export const cursor_load_b8 = (mem, offset) => {
 	return load_b8(mem, off(offset, 1))
 }
-export const load_offset_bool = load_offset_b8
+export const cursor_load_bool = cursor_load_b8
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {boolean}
  */
-export const load_offset_b16 = (mem, offset) => {
+export const cursor_load_b16 = (mem, offset) => {
 	return load_b16(mem, off(offset, 2))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {boolean}
  */
-export const load_offset_b32 = (mem, offset) => {
+export const cursor_load_b32 = (mem, offset) => {
 	return load_b32(mem, off(offset, 4))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {boolean}
  */
-export const load_offset_b64 = (mem, offset) => {
+export const cursor_load_b64 = (mem, offset) => {
 	return load_b64(mem, off(offset, 8))
 }
 
@@ -97,43 +203,43 @@ export const store_bool = (
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {boolean}    value
  * @returns {void}
  */
-export const store_offset_bool = (mem, offset, value) => {
+export const cursor_store_bool = (mem, offset, value) => {
 	mem.setUint8(off(offset, 1), /** @type {any} */ (value))
 }
 export const store_b8 = store_bool
-export const store_offset_b8 = store_offset_bool
+export const cursor_store_b8 = cursor_store_bool
 export const store_b16 = store_bool
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {boolean}    value
  * @returns {void}
  */
-export const store_offset_b16 = (mem, offset, value) => {
+export const cursor_store_b16 = (mem, offset, value) => {
 	mem.setUint8(off(offset, 2), /** @type {any} */ (value))
 }
 export const store_b32 = store_bool
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {boolean}    value
  * @returns {void}
  */
-export const store_offset_b32 = (mem, offset, value) => {
+export const cursor_store_b32 = (mem, offset, value) => {
 	mem.setUint8(off(offset, 4), /** @type {any} */ (value))
 }
 export const store_b64 = store_bool
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {boolean}    value
  * @returns {void}
  */
-export const store_offset_b64 = (mem, offset, value) => {
+export const cursor_store_b64 = (mem, offset, value) => {
 	mem.setUint8(off(offset, 8), /** @type {any} */ (value))
 }
 
@@ -156,20 +262,19 @@ export const load_i8 = (mem, addr) => {
 }
 
 /**
- * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} cursor
  * @returns {number}
  */
-export const load_offset_u8 = (mem, offset) => {
-	return load_u8(mem, off(offset, 1))
+export const cursor_load_u8 = (cursor) => {
+	return load_u8(cursor.data, off(cursor, 1))
 }
-export const load_offset_byte = load_offset_u8
+export const cursor_load_byte = cursor_load_u8
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_i8 = (mem, offset) => {
+export const cursor_load_i8 = (mem, offset) => {
 	return load_i8(mem, off(offset, 1))
 }
 
@@ -183,15 +288,15 @@ export const store_u8 = (
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_u8 = (mem, offset, value) => {
+export const cursor_store_u8 = (mem, offset, value) => {
 	mem.setUint8(off(offset, 1), value)
 }
 export const store_byte = store_u8
-export const store_offset_byte = store_offset_u8
+export const cursor_store_byte = cursor_store_u8
 /** @returns {void} */
 export const store_i8 = (
 	/** @type {DataView} */ mem,
@@ -202,11 +307,11 @@ export const store_i8 = (
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_i8 = (mem, offset, value) => {
+export const cursor_store_i8 = (mem, offset, value) => {
 	mem.setInt8(off(offset, 1), value)
 }
 
@@ -261,50 +366,50 @@ export const load_i16be = (mem, addr) => {
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_u16 = (mem, offset) => {
+export const cursor_load_u16 = (mem, offset) => {
 	return load_u16(mem, off(offset, 2))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_i16 = (mem, offset) => {
+export const cursor_load_i16 = (mem, offset) => {
 	return load_i16(mem, off(offset, 2))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_u16le = (mem, offset) => {
+export const cursor_load_u16le = (mem, offset) => {
 	return load_u16le(mem, off(offset, 2))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_i16le = (mem, offset) => {
+export const cursor_load_i16le = (mem, offset) => {
 	return load_i16le(mem, off(offset, 2))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_u16be = (mem, offset) => {
+export const cursor_load_u16be = (mem, offset) => {
 	return load_u16be(mem, off(offset, 2))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_i16be = (mem, offset) => {
+export const cursor_load_i16be = (mem, offset) => {
 	return load_i16be(mem, off(offset, 2))
 }
 
@@ -319,11 +424,11 @@ export const store_u16 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_u16 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_u16 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	mem.setUint16(off(offset, 2), value, le)
 }
 /**
@@ -337,11 +442,11 @@ export const store_i16 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_i16 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_i16 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	mem.setInt16(off(offset, 2), value, le)
 }
 
@@ -364,18 +469,18 @@ export const load_i32 = (mem, addr, le = LITTLE_ENDIAN) => {
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_u32 = (mem, offset) => {
+export const cursor_load_u32 = (mem, offset) => {
 	return load_u32(mem, off(offset, 4))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_i32 = (mem, offset) => {
+export const cursor_load_i32 = (mem, offset) => {
 	return load_i32(mem, off(offset, 4))
 }
 
@@ -390,11 +495,11 @@ export const store_u32 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_u32 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_u32 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	mem.setUint32(off(offset, 4), value, le)
 }
 /**
@@ -408,11 +513,11 @@ export const store_i32 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_i32 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_i32 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	mem.setInt32(off(offset, 4), value, le)
 }
 
@@ -436,19 +541,19 @@ export const load_ptr = load_uint
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_uint = (mem, offset) => {
+export const cursor_load_uint = (mem, offset) => {
 	return load_uint(mem, off(offset, 4))
 }
-export const load_offset_ptr = load_offset_uint
+export const cursor_load_ptr = cursor_load_uint
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_int = (mem, offset) => {
+export const cursor_load_int = (mem, offset) => {
 	return load_int(mem, off(offset, 4))
 }
 
@@ -462,15 +567,15 @@ export const store_uint = (
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_uint = (mem, offset, value) => {
+export const cursor_store_uint = (mem, offset, value) => {
 	mem.setUint32(off(offset, 4), value, LITTLE_ENDIAN)
 }
 export const store_ptr = store_uint
-export const store_offset_ptr = store_offset_uint
+export const cursor_store_ptr = cursor_store_uint
 /** @returns {void} */
 export const store_int = (
 	/** @type {DataView} */ mem,
@@ -481,11 +586,11 @@ export const store_int = (
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_int = (mem, offset, value) => {
+export const cursor_store_int = (mem, offset, value) => {
 	mem.setInt32(off(offset, 4), value, LITTLE_ENDIAN)
 }
 
@@ -508,18 +613,18 @@ export const load_i64 = (mem, addr, le = LITTLE_ENDIAN) => {
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {bigint}
  */
-export const load_offset_u64 = (mem, offset) => {
+export const cursor_load_u64 = (mem, offset) => {
 	return load_u64(mem, off(offset, 8))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {bigint}
  */
-export const load_offset_i64 = (mem, offset) => {
+export const cursor_load_i64 = (mem, offset) => {
 	return load_i64(mem, off(offset, 8))
 }
 
@@ -534,11 +639,11 @@ export const store_u64 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {bigint}     value
  * @returns {void}
  */
-export const store_offset_u64 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_u64 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	mem.setBigUint64(off(offset, 8), value, le)
 }
 /**
@@ -552,11 +657,11 @@ export const store_i64 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {bigint}     value
  * @returns {void}
  */
-export const store_offset_i64 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_i64 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	mem.setBigInt64(off(offset, 8), value, le)
 }
 
@@ -603,37 +708,37 @@ export const store_i64_number = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_u64_number = (mem, offset) => {
+export const cursor_load_u64_number = (mem, offset) => {
 	return load_u64_number(mem, off(offset, 8))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_i64_number = (mem, offset) => {
+export const cursor_load_i64_number = (mem, offset) => {
 	return load_i64_number(mem, off(offset, 8))
 }
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_u64_number = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_u64_number = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	store_u64_number(mem, off(offset, 8), value, le)
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_i64_number = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_i64_number = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	store_i64_number(mem, off(offset, 8), value, le)
 }
 
@@ -680,37 +785,37 @@ export const store_i128 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {bigint}
  */
-export const load_offset_u128 = (mem, offset) => {
+export const cursor_load_u128 = (mem, offset) => {
 	return load_u128(mem, off(offset, 16))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {bigint}
  */
-export const load_offset_i128 = (mem, offset) => {
+export const cursor_load_i128 = (mem, offset) => {
 	return load_i128(mem, off(offset, 16))
 }
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {bigint}     value
  * @returns {void}
  */
-export const store_offset_u128 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_u128 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	store_u128(mem, off(offset, 16), value, le)
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {bigint}     value
  * @returns {void}
  */
-export const store_offset_i128 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_i128 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	store_i128(mem, off(offset, 16), value, le)
 }
 
@@ -737,10 +842,10 @@ export const load_f16 = (mem, addr, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_f16 = (mem, offset) => {
+export const cursor_load_f16 = (mem, offset) => {
 	return load_f16(mem, off(offset, 2))
 }
 
@@ -784,11 +889,11 @@ export const store_f16 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_f16 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_f16 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	store_f16(mem, off(offset, 2), value, le)
 }
 
@@ -802,10 +907,10 @@ export const load_f32 = (mem, addr, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_f32 = (mem, offset) => {
+export const cursor_load_f32 = (mem, offset) => {
 	return load_f32(mem, off(offset, 4))
 }
 
@@ -820,11 +925,11 @@ export const store_f32 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_f32 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_f32 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	mem.setFloat32(off(offset, 4), value, le)
 }
 
@@ -838,10 +943,10 @@ export const load_f64 = (mem, addr, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {number}
  */
-export const load_offset_f64 = (mem, offset) => {
+export const cursor_load_f64 = (mem, offset) => {
 	return load_f64(mem, off(offset, 8))
 }
 
@@ -856,29 +961,30 @@ export const store_f64 = (mem, ptr, value, le = LITTLE_ENDIAN) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {number}     value
  * @returns {void}
  */
-export const store_offset_f64 = (mem, offset, value, le = LITTLE_ENDIAN) => {
+export const cursor_store_f64 = (mem, offset, value, le = LITTLE_ENDIAN) => {
 	mem.setFloat64(off(offset, 8), value, le)
 }
 
 /**
  * @template T
- * @param   {DataView}                                 mem
- * @param   {number}                                   slice_ptr
- * @param   {(mem: DataView, offset: ByteOffset) => T} mapFn
+ * @param   {DataView}                                  mem
+ * @param   {number}                                    slice_ptr
+ * @param   {(mem: DataView, offset: Cursor) => T} mapFn
  * @returns {T[]}
  */
 export const load_slice = (mem, slice_ptr, mapFn) => {
-	const raw_data_ptr = load_ptr(mem, slice_ptr)
-	const raw_data_len = load_int(mem, slice_ptr + REG_SIZE)
+	let raw_data_ptr = load_ptr(mem, slice_ptr)
+	let raw_data_len = load_int(mem, slice_ptr+REG_SIZE)
 
-	const offset = new ByteOffset(raw_data_ptr)
-	const items = new Array(raw_data_len)
+	let cursor = make_cursor(mem, raw_data_ptr)
+
+	let items = new Array(raw_data_len)
 	for (let i = 0; i < raw_data_len; i++) {
-		items[i] = mapFn(mem, offset)
+		items[i] = mapFn(mem, cursor)
 	}
 
 	return items
@@ -886,11 +992,11 @@ export const load_slice = (mem, slice_ptr, mapFn) => {
 /**
  * @template T
  * @param   {DataView}                                 mem
- * @param   {ByteOffset}                               offset
- * @param   {(mem: DataView, offset: ByteOffset) => T} mapFn
+ * @param   {Cursor}                               offset
+ * @param   {(mem: DataView, offset: Cursor) => T} mapFn
  * @returns {T[]}
  */
-export const load_offset_slice = (mem, offset, mapFn) => {
+export const cursor_load_slice = (mem, offset, mapFn) => {
 	return load_slice(mem, off(offset, REG_SIZE + REG_SIZE), mapFn)
 }
 
@@ -902,6 +1008,16 @@ export const load_offset_slice = (mem, offset, mapFn) => {
  */
 export const load_bytes = (buffer, ptr, len) => {
 	return new Uint8Array(buffer, ptr, len)
+}
+
+/**
+@param   {ArrayBufferLike} buffer
+@param   {number}          dst_ptr
+@param   {Uint8Array}      src
+@returns {void}            */
+export const store_bytes = (buffer, dst_ptr, src) => {
+	const dst = new Uint8Array(buffer, dst_ptr, src.length)
+	dst.set(src)
 }
 
 /**
@@ -993,37 +1109,37 @@ export const load_string_lbp = (mem, ptr) => {
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {string}
  */
-export const load_offset_string_lbp = (mem, offset) => {
-	assert(offset.alignment === 1, "Alignment must be 1 for LBP strings")
+export const cursor_load_string_lbp = (mem, offset) => {
+	console.assert(offset.alignment === 1, "Alignment must be 1 for LBP strings")
 	const len = load_u64_number(mem, off(offset, 8))
 	return load_string_raw(mem.buffer, off(offset, len), len)
 }
 
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {string}
  */
-export const load_offset_string = (mem, offset) => {
+export const cursor_load_string = (mem, offset) => {
 	return load_string(mem, off(offset, 8))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {string}
  */
-export const load_offset_cstring = (mem, offset) => {
+export const cursor_load_cstring = (mem, offset) => {
 	return load_cstring(mem, off(offset, 4))
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @returns {string}
  */
-export const load_offset_rune = (mem, offset) => {
+export const cursor_load_rune = (mem, offset) => {
 	return load_rune(mem, off(offset, 4))
 }
 
@@ -1072,11 +1188,11 @@ export const store_rune = (
 }
 /**
  * @param   {DataView}   mem
- * @param   {ByteOffset} offset
+ * @param   {Cursor} offset
  * @param   {string}     value
  * @returns {void}
  */
-export const store_offset_rune = (mem, offset, value) => {
+export const cursor_store_rune = (mem, offset, value) => {
 	store_rune(mem, off(offset, 4), value)
 }
 
@@ -1101,11 +1217,11 @@ and then [ptr:len] to it can be returned to js
 // }
 // /**
 //  * @param   {DataView}   mem
-//  * @param   {ByteOffset} offset
+//  * @param   {Byte_Cursor} offset
 //  * @param   {string}     value
 //  * @returns {void}
 //  */
-// export const store_offset_string = (mem, offset, value) => {
+// export const cursor_store_string = (mem, offset, value) => {
 // 	store_string(mem, off(offset, 8), value)
 // }
 // /** @returns {void} */
@@ -1119,11 +1235,11 @@ and then [ptr:len] to it can be returned to js
 // }
 // /**
 //  * @param   {DataView}   mem
-//  * @param   {ByteOffset} offset
+//  * @param   {Byte_Cursor} offset
 //  * @param   {string}     value
 //  * @returns {void}
 //  */
-// export const store_offset_cstring = (mem, offset, value) => {
+// export const cursor_store_cstring = (mem, offset, value) => {
 // 	store_cstring(mem, off(offset, 4), value)
 // }
 
@@ -1162,4 +1278,94 @@ export const load_u32_array = (buffer, addr, len) => {
  */
 export const load_i32_array = (buffer, addr, len) => {
 	return new Int32Array(buffer, addr, len)
+}
+
+/**
+@param   {u8array} bytes
+@param   {rawptr}  [addr]
+@param   {bool}    [le]
+@returns {u32} */
+export function bytes_to_u32(bytes, addr = 0, le = LITTLE_ENDIAN) {
+	return load_u32(new DataView(bytes.buffer, bytes.byteOffset, bytes.length), addr, le)
+}
+/**
+@param   {u8array} bytes
+@param   {rawptr}  [addr]
+@returns {u32} */
+export function bytes_to_u32le(bytes, addr = 0) {
+	return load_u32(new DataView(bytes.buffer, bytes.byteOffset, bytes.length), addr, true)
+}
+/**
+@param   {u8array} bytes
+@param   {rawptr}  [addr]
+@returns {u32} */
+export function bytes_to_u32be(bytes, addr = 0) {
+	return load_u32(new DataView(bytes.buffer, bytes.byteOffset, bytes.length), addr, false)
+}
+
+
+
+/**
+@param   {string} str
+@returns {u8array} */
+export function string_to_bytes(str) {
+	return new TextEncoder().encode(str)
+}
+export const bytes_from_string = string_to_bytes
+
+/**
+@param   {AllowSharedBufferSource} buf
+@returns {string} */
+export function bytes_to_string(buf) {
+	return new TextDecoder().decode(buf)
+}
+export const string_from_bytes = bytes_to_string
+
+/**
+@param   {u8array} a
+@param   {u8array} b
+@returns {u8array} */
+export function concat_bytes_ab(a, b) {
+	let c = new Uint8Array(a.length + b.length)
+	c.set(a, 0)
+	c.set(b, a.length)
+	return c
+}
+
+/**
+@param   {u8array[]} arrays
+@param   {number} size
+@returns {u8array} */
+export function concat_bytes(arrays, size) {
+	let result = new Uint8Array(size)
+	let next_idx = 0
+	for (let buffer of arrays) {
+		result.set(buffer, next_idx)
+		next_idx += buffer.byteLength
+	}
+	return result
+}
+
+/**
+@param   {Iterable<u8array>} iterable
+@returns {u8array} */
+export function collect_bytes(iterable) {
+	let size = 0
+	let buffers = []
+	for (let value of iterable) {
+		buffers.push(value)
+		size += value.byteLength
+	}
+	return concat_bytes(buffers, size)
+}
+
+/**
+@param   {ArrayBufferLike[]} buffers 
+@returns {number} */
+export function buffers_length(buffers) {
+	let len = 0
+	for (let buf of buffers) {
+		len += buf.byteLength
+	}
+	return len
 }

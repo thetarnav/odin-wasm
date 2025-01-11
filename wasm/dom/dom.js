@@ -46,32 +46,32 @@ export function makeOdinDOM(_wasm) {
 		 * @returns {void}
 		 */
 		init_event_raw(event_ptr) {
-			const offset = new mem.ByteOffset(event_ptr)
-			const data = new DataView(wasm.memory.buffer)
-			const e = temp_event
-			const name_code = temp_name_code
-			const id_ptr = temp_id_ptr
-			const id_len = temp_id_len
+			let data      = new DataView(wasm.memory.buffer)
+			let cursor    = mem.make_cursor(data, event_ptr)
+			let e         = temp_event
+			let name_code = temp_name_code
+			let id_ptr    = temp_id_ptr
+			let id_len    = temp_id_len
 
 			/* kind: Event_Kind */
-			mem.store_offset_u32(data, offset, name_code)
+			mem.cursor_store_u32(data, cursor, name_code)
 
 			/* target_kind: Event_Target_Kind */
-			mem.store_offset_u32(data, offset, targetToKind(e.target))
+			mem.cursor_store_u32(data, cursor, targetToKind(e.target))
 
 			/* current_target_kind: Event_Target_Kind */
-			mem.store_offset_u32(data, offset, targetToKind(e.currentTarget))
+			mem.cursor_store_u32(data, cursor, targetToKind(e.currentTarget))
 
 			/* id: string */
-			mem.store_offset_uint(data, offset, id_ptr)
-			mem.store_offset_uint(data, offset, id_len)
-			mem.store_offset_uint(data, offset, 0) // padding
+			mem.cursor_store_uint(data, cursor, id_ptr)
+			mem.cursor_store_uint(data, cursor, id_len)
+			mem.cursor_store_uint(data, cursor, 0) // padding
 
 			/* timestamp: f64 */
-			mem.store_offset_f64(data, offset, e.timeStamp * 1e-3)
+			mem.cursor_store_f64(data, cursor, e.timeStamp * 1e-3)
 
 			/* phase: Event_Phase */
-			mem.store_offset_u8(data, offset, e.eventPhase)
+			mem.cursor_store_u8(data, cursor, e.eventPhase)
 
 			/* Event_Options bitset */
 			let options = 0
@@ -84,81 +84,81 @@ export function makeOdinDOM(_wasm) {
 			if (!!e.composed) {
 				options |= 1 << 2 // 4
 			}
-			mem.store_offset_u8(data, offset, options)
+			mem.cursor_store_u8(data, cursor, options)
 
-			mem.store_offset_bool(data, offset, !!(/** @type {InputEvent} */ (e).isComposing))
-			mem.store_offset_bool(data, offset, !!e.isTrusted)
+			mem.cursor_store_bool(data, cursor, !!(/** @type {InputEvent} */ (e).isComposing))
+			mem.cursor_store_bool(data, cursor, !!e.isTrusted)
 
-			void mem.off(offset, 0, 8) // padding
+			void mem.off(cursor, 0, 8) // padding
 			// scroll
 			if (e.type === "scroll") {
-				mem.store_offset_f64(data, offset, window.scrollX)
-				mem.store_offset_f64(data, offset, window.scrollY)
+				mem.cursor_store_f64(data, cursor, window.scrollX)
+				mem.cursor_store_f64(data, cursor, window.scrollY)
 			}
 			// visibility_change
 			else if (e.type === "visibilitychange") {
-				mem.store_offset_bool(data, offset, !document.hidden)
+				mem.cursor_store_bool(data, cursor, !document.hidden)
 			}
 			// wheel
 			else if (e instanceof WheelEvent) {
-				mem.store_offset_f64(data, offset, e.deltaX)
-				mem.store_offset_f64(data, offset, e.deltaY)
-				mem.store_offset_f64(data, offset, e.deltaZ)
-				mem.store_offset_u32(data, offset, e.deltaMode)
+				mem.cursor_store_f64(data, cursor, e.deltaX)
+				mem.cursor_store_f64(data, cursor, e.deltaY)
+				mem.cursor_store_f64(data, cursor, e.deltaZ)
+				mem.cursor_store_u32(data, cursor, e.deltaMode)
 			}
 			// key
 			else if (e instanceof KeyboardEvent) {
 				// Note: those strings are constructed
 				// on the native side from buffers that
 				// are filled later, so skip them
-				void mem.off(offset, mem.REG_SIZE * 2, mem.REG_SIZE)
-				void mem.off(offset, mem.REG_SIZE * 2, mem.REG_SIZE)
+				void mem.off(cursor, mem.REG_SIZE * 2, mem.REG_SIZE)
+				void mem.off(cursor, mem.REG_SIZE * 2, mem.REG_SIZE)
 
 				/* Key_Location */
-				mem.store_offset_u8(data, offset, e.location)
+				mem.cursor_store_u8(data, cursor, e.location)
 
-				mem.store_offset_bool(data, offset, !!e.ctrlKey)
-				mem.store_offset_bool(data, offset, !!e.shiftKey)
-				mem.store_offset_bool(data, offset, !!e.altKey)
-				mem.store_offset_bool(data, offset, !!e.metaKey)
+				mem.cursor_store_bool(data, cursor, !!e.ctrlKey)
+				mem.cursor_store_bool(data, cursor, !!e.shiftKey)
+				mem.cursor_store_bool(data, cursor, !!e.altKey)
+				mem.cursor_store_bool(data, cursor, !!e.metaKey)
 
-				mem.store_offset_bool(data, offset, !!e.repeat)
+				mem.cursor_store_bool(data, cursor, !!e.repeat)
 
-				mem.store_offset_i32(data, offset, e.key.length)
-				mem.store_offset_i32(data, offset, e.code.length)
+				mem.cursor_store_i32(data, cursor, e.key.length)
+				mem.cursor_store_i32(data, cursor, e.code.length)
 				void mem.store_string_raw(
 					wasm.memory.buffer,
-					mem.off(offset, 16, 1),
+					mem.off(cursor, 16, 1),
 					KEYBOARD_MAX_KEY_SIZE,
 					e.key,
 				)
 				void mem.store_string_raw(
 					wasm.memory.buffer,
-					mem.off(offset, 16, 1),
+					mem.off(cursor, 16, 1),
 					KEYBOARD_MAX_CODE_SIZE,
 					e.code,
 				)
 			}
 			// mouse
 			else if (e instanceof MouseEvent) {
-				mem.store_offset_i64_number(data, offset, e.screenX)
-				mem.store_offset_i64_number(data, offset, e.screenY)
-				mem.store_offset_i64_number(data, offset, e.clientX)
-				mem.store_offset_i64_number(data, offset, e.clientY)
-				mem.store_offset_i64_number(data, offset, e.offsetX)
-				mem.store_offset_i64_number(data, offset, e.offsetY)
-				mem.store_offset_i64_number(data, offset, e.pageX)
-				mem.store_offset_i64_number(data, offset, e.pageY)
-				mem.store_offset_i64_number(data, offset, e.movementX)
-				mem.store_offset_i64_number(data, offset, e.movementY)
+				mem.cursor_store_i64_number(data, cursor, e.screenX)
+				mem.cursor_store_i64_number(data, cursor, e.screenY)
+				mem.cursor_store_i64_number(data, cursor, e.clientX)
+				mem.cursor_store_i64_number(data, cursor, e.clientY)
+				mem.cursor_store_i64_number(data, cursor, e.offsetX)
+				mem.cursor_store_i64_number(data, cursor, e.offsetY)
+				mem.cursor_store_i64_number(data, cursor, e.pageX)
+				mem.cursor_store_i64_number(data, cursor, e.pageY)
+				mem.cursor_store_i64_number(data, cursor, e.movementX)
+				mem.cursor_store_i64_number(data, cursor, e.movementY)
 
-				mem.store_offset_b8(data, offset, !!e.ctrlKey)
-				mem.store_offset_b8(data, offset, !!e.shiftKey)
-				mem.store_offset_b8(data, offset, !!e.altKey)
-				mem.store_offset_b8(data, offset, !!e.metaKey)
+				mem.cursor_store_b8(data, cursor, !!e.ctrlKey)
+				mem.cursor_store_b8(data, cursor, !!e.shiftKey)
+				mem.cursor_store_b8(data, cursor, !!e.altKey)
+				mem.cursor_store_b8(data, cursor, !!e.metaKey)
 
-				mem.store_offset_i16(data, offset, e.button)
-				mem.store_offset_u16(data, offset, e.buttons)
+				mem.cursor_store_i16(data, cursor, e.button)
+				mem.cursor_store_u16(data, cursor, e.buttons)
 			}
 		},
 		/**
