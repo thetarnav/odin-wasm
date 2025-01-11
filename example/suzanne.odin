@@ -18,18 +18,15 @@ State_Suzanne :: struct {
 @private
 setup_suzanne :: proc(s: ^State_Suzanne, program: gl.Program) {
 
-	objects, parse_err := obj.parse_file(#load("./public/suzanne.obj", string), context.temp_allocator)
+	obj_data, parse_err := obj.parse_file(#load("./public/suzanne.obj", string), context.temp_allocator)
 	if parse_err != nil {
 		fmt.eprintf("Parse error: %v", parse_err)
 	}
-	object := &objects[0]
+	o := &obj_data.objects[0]
 
-	vertices := make(Vertices, len(object.vertices), context.temp_allocator)
+	vertices := convert_obj_vertices(o.vertices[:], context.temp_allocator)
 
-	copy(vertices.position[:len(vertices)],
-		object.vertices.position[:len(object.vertices)])
-
-	extent_min, extent_max := get_extents(vertices.position[:len(vertices)])
+	extent_min, extent_max := get_extents(obj_data.positions[:])
 	correct_extents(vertices.position[:len(vertices)], extent_min, extent_max, -200, 200)
 
 	slice.fill(vertices.color[:len(vertices)], GREEN)
@@ -64,11 +61,11 @@ frame_suzanne :: proc(s: ^State_Suzanne, delta: f32) {
 
 	mat: mat4 = 1
 	mat *= glm.mat4PerspectiveInfinite(
-		fovy   = glm.radians_f32(80),
+		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
+	mat *= mat4_translate({0, 0, -900 + scale * 720})
 	mat *= s.rotation
 
 	uniform(s.u_matrix, mat)

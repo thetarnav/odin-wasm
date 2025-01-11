@@ -77,13 +77,13 @@ frame_boxes :: proc(s: ^State_Boxes, delta: f32) {
 	rotation := -0.01 * delta * mouse_rel.yx
 	s.rotation = mat4_rotate_x(rotation.x) * mat4_rotate_y(rotation.y) * s.rotation
 
-	mat: mat4 = 1
+	mat := mat4(1)
 	mat *= glm.mat4PerspectiveInfinite(
-		fovy   = glm.radians_f32(80),
+		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
+	mat *= mat4_translate({0, 0, -900 + scale * 720})
 	mat *= s.rotation
 
 	uniform(s.u_matrix, mat)

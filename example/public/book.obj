@@ -1,7 +1,7 @@
 # Book model by Oleaf
 # License: CC-BY-NC
 # https://sketchfab.com/3d-models/book-vertex-chameleon-study-51b0b3bdcd844a9e951a9ede6f192da8
-mtllib ./book.obj.mtl
+mtllib book.mtl
 
 vn -0.000000 0.002373 -0.000000
 vt 0.000000 0.316049

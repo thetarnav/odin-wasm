@@ -66,18 +66,18 @@ frame_specular :: proc(s: ^State_Specular, delta: f32) {
 	// Clear the canvas AND the depth buffer.
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	camera_pos := vec3{0, 0, 500 - 500 * (scale-0.5)}
+	eye_pos := vec3{0, 0, 500 - 500 * (scale-0.5)}
 
-	camera_mat: mat4 = 1
-	camera_mat *= mat4_translate(camera_pos)
-	camera_mat = glm.inverse_mat4(camera_mat)
+	eye_mat := mat4(1)
+	eye_mat *= mat4_translate(eye_pos)
+	eye_mat  = glm.inverse_mat4(eye_mat)
 
 	view_mat := glm.mat4PerspectiveInfinite(
 		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	view_mat *= camera_mat
+	view_mat *= eye_mat
 
 	s.cube_angle += 0.01 * delta * mouse_rel.x
 
@@ -86,14 +86,14 @@ frame_specular :: proc(s: ^State_Specular, delta: f32) {
 	cube_pos.x = CUBE_RADIUS * cos(s.cube_angle)
 	cube_pos.z = CUBE_RADIUS * sin(s.cube_angle)
 
-	cube_mat: mat4 = 1
+	cube_mat := mat4(1)
 	cube_mat *= mat4_translate(cube_pos)
 	cube_mat *= mat4_rotate_y(s.cube_angle)
 
 
 	uniform(s.u_light_pos, cube_pos)
-	uniform(s.u_eye_pos, camera_pos)
-	uniform(s.u_view, view_mat)
+	uniform(s.u_eye_pos,   eye_pos)
+	uniform(s.u_view,      view_mat)
 
 	/* Draw cube */
 	uniform(s.u_local, cube_mat)

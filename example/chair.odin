@@ -2,7 +2,6 @@
 package example
 
 import glm "core:math/linalg/glsl"
-import     "core:slice"
 import gl  "../wasm/webgl"
 import     "../obj"
 
@@ -13,13 +12,15 @@ State_Chair :: struct {
 }
 
 Shape :: struct {
-	using locations: Input_Locations_Boxes,
-	vao      : VAO,
-	positions: []vec3,
-	colors   : []u8vec4,
+	using uniforms: Uniform_Values_Chair,
+	locations:      Input_Locations_Chair,
+	vao:            VAO,
+	vertices:       Vertices,
+	material:       obj.Material,
 }
 
-chair_obj_bytes := #load("./public/chair.obj", string)
+chair_obj_src := #load("./public/chair.obj", string)
+chair_mtl_src := #load("./public/chair.mtl", string)
 
 @private
 setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
@@ -27,32 +28,43 @@ setup_chair :: proc(s: ^State_Chair, program: gl.Program) {
 	gl.Enable(gl.CULL_FACE)  // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	objects := obj.parse_file(#load("./public/chair.obj", string), context.temp_allocator)
-
-	extent_min, extent_max := get_extents(objects[0].vertices.position[:len(objects[0].vertices)])
-	for o in objects[1:] {
-		extend_extents(&extent_min, &extent_max, o.vertices.position[:len(o.vertices)])
+	obj_data, obj_parse_err := obj.parse_file(chair_obj_src, context.temp_allocator)
+	if obj_parse_err != nil {
+		fmt.eprintf("Obj parse error: %v", obj_parse_err)
 	}
 
-	s.shapes = make([]Shape, len(objects))
+	materials, mtl_parse_err := obj.parse_mtl_file(chair_mtl_src)
+	if obj_parse_err != nil {
+		fmt.eprintf("Mtl parse error: %v", mtl_parse_err)
+	}
+
+	extent_min, extent_max := get_extents(obj_data.positions[:])
+
+	s.shapes = make([]Shape, len(obj_data.objects))
 
 	for &shape, i in s.shapes {
-		o := objects[i]
+		o := obj_data.objects[i]
 
 		shape.vao = gl.CreateVertexArray()
-		
-		shape.positions = slice.clone(o.vertices.position[:len(o.vertices)])
-		correct_extents(shape.positions, extent_min, extent_max, -200, 200)
-		
-		shape.colors = make([]rgba, len(shape.positions))
-		slice.fill(shape.colors, rand_color())
+
+		shape.vertices = convert_obj_vertices(o.vertices[:])
+
+		correct_extents(shape.vertices.position[:len(shape.vertices)], extent_min, extent_max, -200, 200)
+
+		for m in materials {
+			if m.name == o.material {
+				shape.material = m
+				break
+			}
+		}
 
 		gl.BindVertexArray(shape.vao)
 	
-		input_locations_boxes(&shape.locations, program)
+		input_locations_chair(&shape.locations, program)
 	
-		attribute(shape.a_position, gl.CreateBuffer(), shape.positions)
-		attribute(shape.a_color,    gl.CreateBuffer(), shape.colors)
+		attribute(shape.locations.a_position, gl.CreateBuffer(), shape.vertices.position[:len(shape.vertices)])
+		attribute(shape.locations.a_color,    gl.CreateBuffer(), shape.vertices.color[:len(shape.vertices)])
+		attribute(shape.locations.a_normal,   gl.CreateBuffer(), shape.vertices.normal[:len(shape.vertices)])
 	}
 
 	/* Init rotation */
@@ -70,24 +82,40 @@ frame_chair :: proc(s: ^State_Chair, delta: f32) {
 	rotation := -0.01 * delta * mouse_rel.yx
 	s.rotation = mat4_rotate_x(rotation.x) * mat4_rotate_y(rotation.y) * s.rotation
 
-	mat: mat4 = 1
-	mat *= glm.mat4PerspectiveInfinite(
-		fovy   = glm.radians_f32(80),
+	eye_pos := vec3{0, 0, 500 - 500 * (scale-0.5)}
+
+	eye_mat := mat4(1)
+	eye_mat *= mat4_translate(eye_pos)
+	eye_mat  = glm.inverse_mat4(eye_mat)
+
+	view_mat := glm.mat4PerspectiveInfinite(
+		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
-	mat *= s.rotation
+	view_mat *= eye_mat
 
+	local_mat: mat4 = 1
+	local_mat *= s.rotation
 	
+	for &shape in s.shapes {
 
-	for &o in s.shapes {
+		shape.u_local        = local_mat
+		shape.u_view         = view_mat
+		shape.u_eye_position = eye_pos
+		shape.u_light_dir    = normalize(vec3{-1, 3, 5})
 
-		gl.BindVertexArray(o.vao)
+		shape.u_diffuse      = shape.material.diffuse
+		shape.u_ambient      = shape.material.ambient
+		shape.u_emissive     = shape.material.emissive
+		shape.u_specular     = shape.material.specular
+		shape.u_shininess    = shape.material.shininess
+		shape.u_opacity      = shape.material.opacity
 
-		uniform(o.u_matrix, mat)
+		gl.BindVertexArray(shape.vao)
+
+		uniforms_chair(shape.locations, shape)
 		
-		gl.DrawArrays(gl.TRIANGLES, 0, len(o.positions))
+		gl.DrawArrays(gl.TRIANGLES, 0, len(shape.vertices))
 	}
-
 }

@@ -139,8 +139,8 @@ demos: [Example_Kind]struct {
 		fs_sources = {#load("./simple.frag", string)},
 	},
 	.Chair = {
-		vs_sources = {#load("./boxes.vert", string)},
-		fs_sources = {#load("./simple.frag", string)},
+		vs_sources = {#load("./chair.vert", string)},
+		fs_sources = {#load("./chair.frag", string)},
 	},
 	.Book = {
 		vs_sources = {#load("./boxes.vert", string)},

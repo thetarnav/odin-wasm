@@ -2,7 +2,6 @@
 package example
 
 import glm "core:math/linalg/glsl"
-import     "core:slice"
 import gl  "../wasm/webgl"
 import     "../obj"
 
@@ -10,8 +9,7 @@ import     "../obj"
 State_Book :: struct {
 	using locations: Input_Locations_Boxes,
 	vao:       VAO,
-	positions: []vec3,
-	colors:    []u8vec4,
+	vertices:  Vertices,
 	rotation:  mat4,
 }
 
@@ -21,26 +19,24 @@ setup_book :: proc(s: ^State_Book, program: gl.Program) {
 	gl.Enable(gl.CULL_FACE)  // don't draw back faces
 	gl.Enable(gl.DEPTH_TEST) // draw only closest faces
 
-	objects := obj.parse_file(#load("./public/book.obj", string), context.temp_allocator)
-
-	s.vao = gl.CreateVertexArray()
-
-
-	object := &objects[0]
-	s.positions = slice.clone(object.vertices.position[:len(object.vertices)])
-
-	extent_min, extent_max := get_extents(s.positions)
-	correct_extents(s.positions, extent_min, extent_max, -140, 140)
+	obj_data := obj.parse_file(#load("./public/book.obj", string), context.temp_allocator)
 	
-	s.colors = vec3_slice_to_rgba(object.vertices.color[:len(object.vertices)])
+	s.vao = gl.CreateVertexArray()
+		
+	o := &obj_data.objects[0]
+
+	s.vertices = convert_obj_vertices(o.vertices[:])
+	
+	extent_min, extent_max := get_extents(obj_data.positions[:])
+	correct_extents(s.vertices.position[:len(s.vertices)], extent_min, extent_max, -140, 140)
 
 
 	gl.BindVertexArray(s.vao)
 
 	input_locations_boxes(&s.locations, program)
 
-	attribute(s.a_position, gl.CreateBuffer(), s.positions)
-	attribute(s.a_color   , gl.CreateBuffer(), s.colors)
+	attribute(s.a_position, gl.CreateBuffer(), s.vertices.position[:len(s.vertices)])
+	attribute(s.a_color,    gl.CreateBuffer(), s.vertices.color[:len(s.vertices)])
 
 	/* Init rotation */
 	s.rotation = 1
@@ -59,16 +55,16 @@ frame_book :: proc(s: ^State_Book, delta: f32) {
 
 	mat: mat4 = 1
 	mat *= glm.mat4PerspectiveInfinite(
-		fovy   = glm.radians_f32(80),
+		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
+	mat *= mat4_translate({0, 0, -900 + scale * 720})
 	mat *= s.rotation
 
 	gl.BindVertexArray(s.vao)
 
 	uniform(s.u_matrix, mat)
 	
-	gl.DrawArrays(gl.TRIANGLES, 0, len(s.positions))
+	gl.DrawArrays(gl.TRIANGLES, 0, len(s.vertices))
 }

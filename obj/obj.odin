@@ -15,6 +15,7 @@ vec2   :: [2]f32
 Vertex :: struct {
 	position: vec3,
 	color:    vec3,
+	normal:   vec3,
 }
 Vertices :: #soa[]Vertex
 
@@ -60,11 +61,7 @@ Data :: struct {
 	texcoords: [dynamic]vec2,
 	normals:   [dynamic]vec3,
 	colors:    [dynamic]vec3,
-	// mesh    : Mesh,   // Final mesh
-	// object  : Group,  // Current object
-	// group   : Group,  // Current group
-	// material: int,    // Current material index
-	// base    : string, // Base path for materials/textures
+	mtllibs:   [dynamic]string,
 }
 
 // flush_object :: proc (data: ^Data)
@@ -291,7 +288,7 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte) -> (err: runtime.Allocator_Error
 	           x   x             ----> 2.
 	          x     x             -/  
 	         x       x         --/    
-	        x         x     --/       a b c
+	        x         x     --/       A B C
 	       x           x  -/          1 2 3
 	      <-------------</            1 3 4
 		4.               3.           ...
@@ -301,14 +298,16 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte) -> (err: runtime.Allocator_Error
 		// indices are base-1
 		position, texcoord, normal: int,
 	}
-	indices: [3]Index
+	indices: [3]Index // A B C
 	
 	for i := 0;; i += 1 {
 		skip_whitespace(ptr)
 		if is_newline(ptr[0]) do break
 
+		/*
+		 Parse index
+		*/
 		index: Index
-
 		index.position = parse_int(ptr)
 
 		if ptr[0] == '/' {
@@ -331,6 +330,13 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte) -> (err: runtime.Allocator_Error
 		if index.texcoord < 0 do index.texcoord += len(data.texcoords)
 		if index.normal   < 0 do index.normal   += len(data.normals)
 
+		/*
+		 i A B C
+		 0 1 - -
+		 1 1 - 2
+		 2 1 2 3
+		 3 1 3 4
+		*/
 		if i == 0 {
 			indices[0] = index
 		} else {
@@ -338,25 +344,23 @@ parse_face :: proc (data: ^Data, ptr: ^[^]byte) -> (err: runtime.Allocator_Error
 			indices[2] = index
 		}
 		
+		/*
+		 Add 3 vertices for every triangle
+		*/
 		if i >= 2 {
 			vertices: [3]Vertex
 			for &v, i in vertices {
 				idx := indices[i]
+
 				v.position = data.positions[idx.position]
 				// colors array is only filled if the colors data is in the file
 				v.color = data.colors[idx.position] if idx.position < len(data.colors) else 1
+				v.normal = data.normals[idx.normal]
 			}
 			append(&g.vertices, ..vertices[:]) or_return
 		}
 	}
 
-	// append_soa(&data.faces, Face{
-	// 	verticis = count,
-	// 	material = data.material,
-	// })
-
-	// data.group.face_count  += 1
-	// data.object.face_count += 1
 	return
 }
 
@@ -447,7 +451,9 @@ parse_line :: proc (data: ^Data, str: string) -> (err: runtime.Allocator_Error)
 		   ptr[3] == 'i' &&
 		   ptr[4] == 'b' &&
 		   is_whitespace(ptr[5]) {
-			// parse_mtllib(data, p + 5, callbacks, user_data)
+			move(&ptr, 5)
+			skip_whitespace(&ptr)
+			append(&data.mtllibs, parse_name(&ptr))
 		}
 
 	case 'u':
@@ -471,17 +477,16 @@ parse_file :: proc (
 	src: string,
 	allocator := context.allocator,
 ) -> (
-	objects: []Object,
+	data: Data,
 	err: runtime.Allocator_Error,
 ) #optional_allocator_error {
-	
-	data: Data
 
 	// indices are base-1, add zero index to be able to index it normally
-	data.positions  = make([dynamic]vec3,   1, 256, context.temp_allocator)
-	data.colors     = make([dynamic]vec3,   1, 256, context.temp_allocator)
-	data.texcoords  = make([dynamic]vec2,   1, 256, context.temp_allocator)
-	data.normals    = make([dynamic]vec3,   1, 256, context.temp_allocator)
+	data.positions  = make([dynamic]vec3,   1, 256, allocator)
+	data.colors     = make([dynamic]vec3,   1, 256, allocator)
+	data.texcoords  = make([dynamic]vec2,   1, 256, allocator)
+	data.normals    = make([dynamic]vec3,   1, 256, allocator)
+	data.mtllibs    = make([dynamic]string, 0, 4,   allocator)
 	
 	data.objects    = make([dynamic]Object, 1, 4, allocator)
 	data.objects[0] = object_make(&data)
@@ -491,5 +496,5 @@ parse_file :: proc (
 		parse_line(&data, line) or_return
 	}
 
-	return data.objects[:], nil
+	return
 }

@@ -205,6 +205,76 @@ Attribute_Values_Specular :: struct {
 	a_color: vec4,
 }
 
+Input_Locations_Chair :: struct {
+	u_diffuse      : Uniform_vec3,
+	u_ambient      : Uniform_vec3,
+	u_emissive     : Uniform_vec3,
+	u_specular     : Uniform_vec3,
+	u_shininess    : Uniform_float,
+	u_opacity      : Uniform_float,
+	u_light_dir    : Uniform_vec3,
+	u_light_ambient: Uniform_vec3,
+	a_position: Attribute_vec3,
+	a_normal  : Attribute_vec3,
+	a_color   : Attribute_vec4,
+	u_view         : Uniform_mat4,
+	u_local        : Uniform_mat4,
+	u_eye_position : Uniform_vec3,
+}
+
+input_locations_chair :: proc(s: ^Input_Locations_Chair, program: gl.Program) {
+	s.u_diffuse          = uniform_location_vec3(program, "u_diffuse")
+	s.u_ambient          = uniform_location_vec3(program, "u_ambient")
+	s.u_emissive         = uniform_location_vec3(program, "u_emissive")
+	s.u_specular         = uniform_location_vec3(program, "u_specular")
+	s.u_shininess        = uniform_location_float(program, "u_shininess")
+	s.u_opacity          = uniform_location_float(program, "u_opacity")
+	s.u_light_dir        = uniform_location_vec3(program, "u_light_dir")
+	s.u_light_ambient    = uniform_location_vec3(program, "u_light_ambient")
+	s.a_position    = attribute_location_vec3(program, "a_position")
+	s.a_normal      = attribute_location_vec3(program, "a_normal")
+	s.a_color       = attribute_location_vec4(program, "a_color")
+	s.u_view             = uniform_location_mat4(program, "u_view")
+	s.u_local            = uniform_location_mat4(program, "u_local")
+	s.u_eye_position     = uniform_location_vec3(program, "u_eye_position")
+}
+
+Uniform_Values_Chair :: struct {
+	u_diffuse      : vec3,
+	u_ambient      : vec3,
+	u_emissive     : vec3,
+	u_specular     : vec3,
+	u_shininess    : float,
+	u_opacity      : float,
+	u_light_dir    : vec3,
+	u_light_ambient: vec3,
+	u_view         : mat4,
+	u_local        : mat4,
+	u_eye_position : vec3,
+}
+
+uniforms_chair :: proc(loc: Input_Locations_Chair, v: Uniform_Values_Chair) {
+	@static last: Uniform_Values_Chair
+	if v.u_diffuse          != last.u_diffuse          do uniform_vec3(loc.u_diffuse         , v.u_diffuse         )
+	if v.u_ambient          != last.u_ambient          do uniform_vec3(loc.u_ambient         , v.u_ambient         )
+	if v.u_emissive         != last.u_emissive         do uniform_vec3(loc.u_emissive        , v.u_emissive        )
+	if v.u_specular         != last.u_specular         do uniform_vec3(loc.u_specular        , v.u_specular        )
+	if v.u_shininess        != last.u_shininess        do uniform_float(loc.u_shininess       , v.u_shininess       )
+	if v.u_opacity          != last.u_opacity          do uniform_float(loc.u_opacity         , v.u_opacity         )
+	if v.u_light_dir        != last.u_light_dir        do uniform_vec3(loc.u_light_dir       , v.u_light_dir       )
+	if v.u_light_ambient    != last.u_light_ambient    do uniform_vec3(loc.u_light_ambient   , v.u_light_ambient   )
+	if v.u_view             != last.u_view             do uniform_mat4(loc.u_view            , v.u_view            )
+	if v.u_local            != last.u_local            do uniform_mat4(loc.u_local           , v.u_local           )
+	if v.u_eye_position     != last.u_eye_position     do uniform_vec3(loc.u_eye_position    , v.u_eye_position    )
+	last = v
+}
+
+Attribute_Values_Chair :: struct {
+	a_position: vec3,
+	a_normal: vec3,
+	a_color: vec4,
+}
+
 Input_Locations_Boxes :: struct {
 	a_position: Attribute_vec3,
 	a_color   : Attribute_vec4,

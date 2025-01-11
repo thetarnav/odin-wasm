@@ -154,11 +154,11 @@ frame_candy :: proc(s: ^State_Candy, delta: f32) {
 
 	view_mat: mat4 = 1
 	view_mat *= glm.mat4PerspectiveInfinite(
-		fovy   = glm.radians_f32(80),
+		fovy   = radians(80),
 		aspect = aspect_ratio,
 		near   = 1,
 	)
-	view_mat *= glm.mat4Translate({0, 0, -900 + scale * 720})
+	view_mat *= mat4_translate({0, 0, -900 + scale * 720})
 	view_mat *= s.rotation
 
 

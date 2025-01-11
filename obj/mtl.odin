@@ -8,15 +8,15 @@ import "base:runtime"
 import "core:strings"
 
 Material :: struct {
-	name:  string, // Material name
-	Ns:    f32,    // Specular exponent (ranges 0-1000)
-	Ka:    vec3,   // Ambient color
-	Kd:    vec3,   // Diffuse color
-	Ks:    vec3,   // Specular color
-	Ke:    vec3,   // Emissive color
-	Ni:    f32,    // Optical density / Index of refraction
-	d:     f32,    // Dissolve (1.0 is fully opaque)
-	illum: int,    // illumination model (0-10)
+	name:            string, // newmtl : Material name
+	shininess:       f32,    // Ns     : Specular exponent (ranges 0-1000)
+	ambient:         vec3,   // Ka     : Ambient color
+	diffuse:         vec3,   // Kd     : Diffuse color
+	specular:        vec3,   // Ks     : Specular color
+	emissive:        vec3,   // Ke     : Emissive color
+	optical_density: f32,    // Ni     : Optical density / Index of refraction
+	opacity:         f32,    // d      : Dissolve (1.0 is fully opaque)
+	illum:           int,    // illum  : illumination model (0-10)
 }
 
 parse_mtl_file :: proc(
@@ -25,9 +25,10 @@ parse_mtl_file :: proc(
 ) -> (
 	materials: []Material,
 	err: runtime.Allocator_Error,
-) {
+) #optional_allocator_error {
 	mats := make([dynamic]Material, 0, 4, allocator)
-	m := &mats[0]
+	m: ^Material
+	#no_bounds_check {m = &mats[0]}
 
 	it := src
 	for line in strings.split_lines_iterator(&it) {
@@ -44,11 +45,12 @@ parse_mtl_file :: proc(
 			   ptr[5] == 'l' &&
 			   is_whitespace(ptr[6]) {
 				move(&ptr, 6)
+				skip_whitespace(&ptr)
 
 				mat := Material{
 					name = parse_name(&ptr),
-					Ni   = 1,
-					d    = 1,
+					optical_density = 1,
+					opacity         = 1,
 				}
 				append(&mats, mat) or_return
 				m = &mats[len(mats)-1]
@@ -60,8 +62,8 @@ parse_mtl_file :: proc(
 		
 			v: ^f32
 			switch ptr[1] {
-			case 's': v = &m.Ns
-			case 'i': v = &m.Ni
+			case 's': v = &m.shininess
+			case 'i': v = &m.optical_density
 			case: continue
 			}
 		
@@ -72,10 +74,10 @@ parse_mtl_file :: proc(
 		
 			v: ^vec3
 			switch ptr[1] {
-			case 'a': v = &m.Ka
-			case 'd': v = &m.Kd
-			case 's': v = &m.Ks
-			case 'e': v = &m.Ke
+			case 'a': v = &m.ambient
+			case 'd': v = &m.diffuse
+			case 's': v = &m.specular
+			case 'e': v = &m.emissive
 			case: continue
 			}
 		
@@ -84,7 +86,7 @@ parse_mtl_file :: proc(
 		
 		case 'd': // d (dissolve)
 			move(&ptr)
-			m.d = parse_float(&ptr)
+			m.opacity = parse_float(&ptr)
 		
 		case 'i': // illum
 			if ptr[1] == 'l' &&

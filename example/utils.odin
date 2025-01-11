@@ -1,11 +1,13 @@
 package example
 
 import      "base:intrinsics"
+import      "base:runtime"
 import      "core:math/rand"
 import      "core:math"
 import _fmt "core:fmt"
 import glm  "core:math/linalg/glsl"
 import gl   "../wasm/webgl"
+import      "../obj"
 
 fmt :: _fmt // make available everywhere without importing
 
@@ -441,6 +443,7 @@ vec3_on_radius :: proc (r, a, y: f32) -> vec3 {
 Vertex :: struct {
 	position: vec3,
 	color:    rgba,
+	normal:   vec3,
 }
 Vertices :: #soa[]Vertex
 
@@ -458,6 +461,29 @@ vertices_to_lines :: proc (vecs: Vertices, allocator := context.allocator) -> Ve
 	}
 
 	return r
+}
+
+convert_obj_vertices :: proc (
+	obj_vertices: obj.Vertices,
+	allocator := context.allocator,
+) -> (
+	vertices: Vertices,
+	err: runtime.Allocator_Error,
+) #optional_allocator_error {
+
+	vertices = make(Vertices, len(obj_vertices), allocator) or_return
+
+	copy(vertices.position[:len(vertices)],
+	     obj_vertices.position[:len(vertices)])
+
+	copy(vertices.normal[:len(vertices)],
+	     obj_vertices.normal[:len(vertices)])
+
+	for &col, i in vertices.color[:len(vertices)] {
+		col = to_rgba(obj_vertices.color[i], 255)
+	}
+	
+	return
 }
 
 
