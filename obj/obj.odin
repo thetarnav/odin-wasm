@@ -478,12 +478,12 @@ parse_file :: proc (
 	data: Data
 
 	// indices are base-1, add zero index to be able to index it normally
-	data.positions  = make([dynamic]vec3,   1, 1024, context.temp_allocator)
-	data.colors     = make([dynamic]vec3,   1, 1024, context.temp_allocator)
-	data.texcoords  = make([dynamic]vec2,   1, 1024, context.temp_allocator)
-	data.normals    = make([dynamic]vec3,   1, 1024, context.temp_allocator)
+	data.positions  = make([dynamic]vec3,   1, 256, context.temp_allocator)
+	data.colors     = make([dynamic]vec3,   1, 256, context.temp_allocator)
+	data.texcoords  = make([dynamic]vec2,   1, 256, context.temp_allocator)
+	data.normals    = make([dynamic]vec3,   1, 256, context.temp_allocator)
 	
-	data.objects    = make([dynamic]Object, 1,  4, allocator)
+	data.objects    = make([dynamic]Object, 1, 4, allocator)
 	data.objects[0] = object_make(&data)
 
 	it := src
