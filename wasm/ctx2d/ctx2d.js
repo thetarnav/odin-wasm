@@ -513,23 +513,23 @@ export function make_odin_ctx2d(wasm, s) {
 			/** @type {number} */ text_len,
 			/** @type {number} */ ptr,
 		) {
-			const text    = mem.load_string_raw(wasm.memory.buffer, text_ptr, text_len)
-			const metrics = s.ctx.measureText(text)
-			const offset  = new mem.ByteOffset(ptr)
-			const data    = new DataView(wasm.memory.buffer)
+			let text    = mem.load_string_raw(wasm.memory.buffer, text_ptr, text_len)
+			let metrics = s.ctx.measureText(text)
+			let data    = new DataView(wasm.memory.buffer)
+			let cursor  = mem.make_cursor(data, ptr)
 
-			mem.store_offset_f32(data, offset, metrics.actualBoundingBoxAscent)
-			mem.store_offset_f32(data, offset, metrics.actualBoundingBoxDescent)
-			mem.store_offset_f32(data, offset, metrics.actualBoundingBoxLeft)
-			mem.store_offset_f32(data, offset, metrics.actualBoundingBoxRight)
-			mem.store_offset_f32(data, offset, metrics.alphabeticBaseline)
-			mem.store_offset_f32(data, offset, metrics.emHeightAscent)
-			mem.store_offset_f32(data, offset, metrics.emHeightDescent)
-			mem.store_offset_f32(data, offset, metrics.fontBoundingBoxAscent)
-			mem.store_offset_f32(data, offset, metrics.fontBoundingBoxDescent)
-			mem.store_offset_f32(data, offset, metrics.hangingBaseline)
-			mem.store_offset_f32(data, offset, metrics.ideographicBaseline)
-			mem.store_offset_f32(data, offset, metrics.width)
+			mem.cursor_store_f32(data, cursor, metrics.actualBoundingBoxAscent)
+			mem.cursor_store_f32(data, cursor, metrics.actualBoundingBoxDescent)
+			mem.cursor_store_f32(data, cursor, metrics.actualBoundingBoxLeft)
+			mem.cursor_store_f32(data, cursor, metrics.actualBoundingBoxRight)
+			mem.cursor_store_f32(data, cursor, metrics.alphabeticBaseline)
+			mem.cursor_store_f32(data, cursor, metrics.emHeightAscent)
+			mem.cursor_store_f32(data, cursor, metrics.emHeightDescent)
+			mem.cursor_store_f32(data, cursor, metrics.fontBoundingBoxAscent)
+			mem.cursor_store_f32(data, cursor, metrics.fontBoundingBoxDescent)
+			mem.cursor_store_f32(data, cursor, metrics.hangingBaseline)
+			mem.cursor_store_f32(data, cursor, metrics.ideographicBaseline)
+			mem.cursor_store_f32(data, cursor, metrics.width)
 		},
 
 		// ------------------------------ /
