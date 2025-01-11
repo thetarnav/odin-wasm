@@ -41,6 +41,7 @@ const Example_Kind = /** @type {const} */ ({
 	Suzanne     : 11,
 	Chair       : 12,
 	Book        : 13,
+	Windmill    : 14,
 })
 /** @type {Example_Kind[]} */
 const example_kinds = Object.values(Example_Kind)
@@ -61,6 +62,7 @@ const example_kind_href_hashes = {
 	[Example_Kind.Suzanne]     : "#suzanne",
 	[Example_Kind.Chair]       : "#chair",
 	[Example_Kind.Book]        : "#book",
+	[Example_Kind.Windmill]    : "#windmill",
 }
 
 /** @type {Example_Kind} */

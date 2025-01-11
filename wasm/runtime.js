@@ -45,6 +45,6 @@ export function fetchInstanciateWasm(path, imports) {
 	return typeof WebAssembly.instantiateStreaming == "function"
 		? WebAssembly.instantiateStreaming(wasm_fetch, imports)
 		: wasm_fetch
-				.then(r => r.arrayBuffer())
-				.then(wasm_file => WebAssembly.instantiate(wasm_file, imports))
+			.then(r => r.arrayBuffer())
+			.then(wasm_file => WebAssembly.instantiate(wasm_file, imports))
 }

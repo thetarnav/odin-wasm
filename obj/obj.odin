@@ -111,6 +111,18 @@ is_newline    :: proc (c: byte) -> bool {return c == '\n' || c == 0}
 is_digit      :: proc (c: byte) -> bool {return c >= '0' && c <= '9'}
 is_exponent   :: proc (c: byte) -> bool {return c == 'e' || c == 'E'}
 
+check_keyword :: proc (ptr: ^[^]byte, keyword: string) -> bool {
+
+	if string(ptr[:len(keyword)]) == keyword &&
+	   is_whitespace(ptr[len(keyword)])
+	{
+		move(ptr, len(keyword))
+		return true
+	}
+
+	return false
+}
+
 skip_name :: proc (ptr: ^[^]byte)
 {
 	start := ptr^
@@ -123,7 +135,6 @@ skip_name :: proc (ptr: ^[^]byte)
 		move(ptr, -1)
 	}
 }
-
 
 skip_whitespace :: proc (ptr: ^[^]byte)
 {
@@ -418,8 +429,7 @@ parse_line :: proc (data: ^Data, str: string) -> (err: runtime.Allocator_Error)
 	case 'f':
 		move(&ptr)
 
-		switch ptr[0] {
-		case ' ', '\t':
+		if is_whitespace(ptr[0]) {
 			move(&ptr)
 			parse_face(data, &ptr)
 		}
@@ -427,8 +437,7 @@ parse_line :: proc (data: ^Data, str: string) -> (err: runtime.Allocator_Error)
 	case 'o':
 		move(&ptr)
 
-		switch ptr[0] {
-		case ' ', '\t':
+		if is_whitespace(ptr[0]) {
 			move(&ptr)
 			parse_object(data, &ptr)
 		}
@@ -443,29 +452,13 @@ parse_line :: proc (data: ^Data, str: string) -> (err: runtime.Allocator_Error)
 	// 	}
 
 	case 'm':
-		move(&ptr)
-
-		if ptr[0] == 't' &&
-		   ptr[1] == 'l' &&
-		   ptr[2] == 'l' &&
-		   ptr[3] == 'i' &&
-		   ptr[4] == 'b' &&
-		   is_whitespace(ptr[5]) {
-			move(&ptr, 5)
+		if check_keyword(&ptr, "mtllib") {
 			skip_whitespace(&ptr)
 			append(&data.mtllibs, parse_name(&ptr))
 		}
 
 	case 'u':
-		move(&ptr)
-
-		if ptr[0] == 's' &&
-		   ptr[1] == 'e' &&
-		   ptr[2] == 'm' &&
-		   ptr[3] == 't' &&
-		   ptr[4] == 'l' &&
-		   is_whitespace(ptr[5]) {
-			move(&ptr, 5)
+		if check_keyword(&ptr, "usemtl") {
 			parse_usemtl(data, &ptr)
 		}
 	}
@@ -482,13 +475,13 @@ parse_file :: proc (
 ) #optional_allocator_error {
 
 	// indices are base-1, add zero index to be able to index it normally
-	data.positions  = make([dynamic]vec3,   1, 256, allocator)
-	data.colors     = make([dynamic]vec3,   1, 256, allocator)
-	data.texcoords  = make([dynamic]vec2,   1, 256, allocator)
-	data.normals    = make([dynamic]vec3,   1, 256, allocator)
-	data.mtllibs    = make([dynamic]string, 0, 4,   allocator)
+	data.positions  = make([dynamic]vec3,   1, 1024, allocator)
+	data.colors     = make([dynamic]vec3,   1, 1024, allocator)
+	data.texcoords  = make([dynamic]vec2,   1, 1024, allocator)
+	data.normals    = make([dynamic]vec3,   1, 1024, allocator)
+	data.mtllibs    = make([dynamic]string, 0,    4, allocator)
 	
-	data.objects    = make([dynamic]Object, 1, 4, allocator)
+	data.objects    = make([dynamic]Object, 1,    4, allocator)
 	data.objects[0] = object_make(&data)
 
 	it := src

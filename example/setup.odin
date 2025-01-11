@@ -87,6 +87,7 @@ Example_Kind :: enum {
 	Suzanne      = 11,
 	Chair        = 12,
 	Book         = 13,
+	Windmill     = 14,
 }
 example: Example_Kind
 
@@ -146,6 +147,10 @@ demos: [Example_Kind]struct {
 		vs_sources = {#load("./boxes.vert", string)},
 		fs_sources = {#load("./simple.frag", string)},
 	},
+	.Windmill = {
+		vs_sources = {#load("./chair.vert", string)},
+		fs_sources = {#load("./chair.frag", string)},
+	},
 }
 
 // state is a union because it is being used by only one of the examples
@@ -164,6 +169,7 @@ demo_state: struct #raw_union {
 	suzanne:      State_Suzanne,
 	chair:        State_Chair,
 	book:         State_Book,
+	windmill:     State_Windmill,
 }
 
 @export
@@ -212,6 +218,7 @@ start :: proc (example_kind: Example_Kind) -> (ok: bool) {
 	case .Suzanne:      setup_suzanne     (&demo_state.suzanne,      program)
 	case .Chair:        setup_chair       (&demo_state.chair,        program)
 	case .Book:         setup_book        (&demo_state.book,         program)
+	case .Windmill:     setup_windmill    (&demo_state.windmill,     program)
 	}
 
 	if err := gl.GetError(); err != gl.NO_ERROR {
@@ -249,5 +256,6 @@ frame :: proc (delta: f32) {
 	case .Suzanne:      frame_suzanne     (&demo_state.suzanne,      delta)
 	case .Chair:        frame_chair       (&demo_state.chair,        delta)
 	case .Book:         frame_book        (&demo_state.book,         delta)
+	case .Windmill:     frame_windmill    (&demo_state.windmill,     delta)
 	}
 }
